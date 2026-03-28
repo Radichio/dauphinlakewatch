@@ -1169,6 +1169,7 @@ function renderChart(liveData) {
                     }
                 },
                 tooltip: {
+                    enabled: !('ontouchstart' in window),
                     callbacks: {
                         title: items => {
                             const d = items[0].parsed.x;
