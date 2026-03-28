@@ -612,7 +612,117 @@
             .chart-wrap { height: 240px; }
             .header-title h1 { font-size: 18px; }
         }
-    </style>
+
+        /* ─────────── SHARE CARD ─────────── */
+        .share-btn {
+            background: var(--navy);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 11px 20px;
+            font-family: var(--cond);
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: block;
+            margin: 0 auto 16px;
+            transition: background .2s;
+        }
+        .share-btn:hover { background: var(--navy-mid); }
+        #shareCard {
+            display: none;
+            background: var(--navy);
+            color: white;
+            border-radius: 8px;
+            padding: 24px 20px 20px;
+            margin-bottom: 16px;
+            max-width: 380px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #shareCard.visible { display: block; }
+        .sc-header {
+            font-family: var(--cond);
+            font-weight: 800;
+            font-size: 17px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            opacity: .65;
+            margin-bottom: 14px;
+            text-align: center;
+        }
+        .sc-level {
+            font-family: var(--cond);
+            font-weight: 800;
+            font-size: 68px;
+            line-height: 1;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+        .sc-unit {
+            font-family: var(--mono);
+            font-size: 10px;
+            opacity: .5;
+            text-align: center;
+            letter-spacing: .08em;
+            margin-bottom: 6px;
+        }
+        .sc-trend {
+            font-family: var(--mono);
+            font-size: 12px;
+            text-align: center;
+            opacity: .75;
+            margin-bottom: 16px;
+        }
+        .sc-divider { border:none; border-top:1px solid rgba(255,255,255,.15); margin:14px 0; }
+        .sc-therm { display:flex; flex-direction:column; gap:3px; margin-bottom:14px; }
+        .sc-rung {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 10px;
+            border-radius: 4px;
+            opacity: .32;
+            border-left: 3px solid transparent;
+        }
+        .sc-rung.active { opacity:1; border-left-color:white; background:rgba(255,255,255,.07); }
+        .sc-rung-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+        .sc-rung-name {
+            font-family: var(--cond);
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            flex: 1;
+        }
+        .sc-rung.active .sc-rung-name { font-size:15px; }
+        .sc-rung-range { font-family:var(--mono); font-size:10px; opacity:.65; }
+        .sc-note {
+            background: rgba(255,255,255,.08);
+            border-radius: 4px;
+            padding: 10px 13px;
+            font-size: 13px;
+            line-height: 1.5;
+            margin-bottom: 14px;
+        }
+        .sc-url { font-family:var(--mono); font-size:11px; opacity:.45; text-align:center; }
+        .sc-ts  { font-family:var(--mono); font-size:10px; opacity:.38; text-align:center; margin-top:3px; }
+        .sc-actions { display:flex; gap:8px; margin-top:12px; justify-content:center; }
+        .sc-action-btn {
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.2);
+            color: white;
+            border-radius: 4px;
+            padding: 8px 16px;
+            font-family: var(--mono);
+            font-size: 11px;
+            cursor: pointer;
+            transition: background .15s;
+        }
+        .sc-action-btn:hover { background:rgba(255,255,255,.22); }
+        .sc-copied { font-family:var(--mono); font-size:11px; color:#4ade80; text-align:center; margin-top:6px; min-height:16px; }    </style>
 </head>
 <body>
 
@@ -820,6 +930,29 @@
             Watch for: Rain during melt accelerates lake rise significantly. Cold snaps are temporary pauses, not resets. Above-normal temperatures are forecast for April–June 2026 (IRI / all models agree on the temperature signal).
         </div>
     </div>
+    <!-- ── SHARE CARD ── -->
+    <div class="card" style="margin-top:16px;">
+        <div class="card-label">Share Current Status</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">Generate a status card to screenshot and share with neighbours, post to Facebook groups, or text to family at the lake.</p>
+        <button class="share-btn" onclick="toggleShareCard()">📊 &nbsp;Generate Status Card</button>
+        <div id="shareCard">
+            <div class="sc-header">Dauphin Lake Watch</div>
+            <div class="sc-level" id="scLevel">—</div>
+            <div class="sc-unit">FEET ABOVE SEA LEVEL · WSC PROVISIONAL</div>
+            <div class="sc-trend" id="scTrend">—</div>
+            <hr class="sc-divider">
+            <div class="sc-therm" id="scTherm"></div>
+            <div class="sc-note" id="scNote">—</div>
+            <hr class="sc-divider">
+            <div class="sc-url">dauphinlakewatch.ca</div>
+            <div class="sc-ts" id="scTs">—</div>
+            <div class="sc-actions">
+                <button class="sc-action-btn" onclick="copyShareLink()">Copy Link</button>
+                <button class="sc-action-btn" onclick="closeShareCard()">Close</button>
+            </div>
+            <div class="sc-copied" id="scCopied"></div>
+        </div>
+    </div>
 
 </main>
 
@@ -974,7 +1107,7 @@ function renderBeacon(ft, series) {
     if (series && series.length) {
         const ts = series[0].dt;
         const tz = 'America/Winnipeg';
-        tsStr = `${ts.toLocaleDateString('en-CA',{month:'short',day:'numeric',timeZone:tz})} ${ts.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit',timeZoneName:'short',timeZone:tz})}`;
+        tsStr = `${ts.toLocaleDateString('en-CA',{month:'short',day:'numeric',timeZone:tz})} ${ts.toLocaleTimeString('en-CA',{hour:'numeric',minute:'2-digit',hour12:true,timeZoneName:'short',timeZone:tz})}`;
         document.getElementById('lastUpdate').textContent = `Updated: ${tsStr}`;
     }
 
@@ -989,6 +1122,9 @@ function renderBeacon(ft, series) {
     const dot = document.getElementById('liveDot');
     dot.className = 'dot';
     document.getElementById('liveText').textContent = 'Live — Water Survey of Canada';
+
+    // Store for share card
+    _shareData = { ft, st, tr, tsStr };
 }
 
 // ─────────────────────────────────────────────────────────
@@ -1398,6 +1534,77 @@ async function init() {
 
     // ── Schedule refresh
     setTimeout(init, CFG.refresh);
+}
+
+// ─────────────────────────────────────────────────────────
+// SHARE CARD
+// ─────────────────────────────────────────────────────────
+const THERM_RUNGS = [
+    { key:'flood',    lbl:'Flood Stage', range:'858.0+ ft',      dot:'#8b0000' },
+    { key:'critical', lbl:'Critical',    range:'857.0–858.0 ft', dot:'#b84c00' },
+    { key:'high',     lbl:'High',        range:'856.5–857.0 ft', dot:'#c47000' },
+    { key:'elevated', lbl:'Elevated',    range:'855.5–856.5 ft', dot:'#b84c00' },
+    { key:'advisory', lbl:'Advisory',    range:'854.8–855.5 ft', dot:'#c8a200' },
+    { key:'watch',    lbl:'Watch',       range:'854.0–854.8 ft', dot:'#c8a200' },
+    { key:'normal',   lbl:'Normal',      range:'Below 854.0 ft', dot:'#1a6b3a' },
+];
+
+const THERM_NOTES = {
+    flood:    'At or above flood stage. Follow Manitoba provincial emergency guidance.',
+    critical: 'Approaching flood stage. Full sandbagging underway. Coordinate with RM.',
+    high:     'Road impacts possible. Move vehicles to high ground.',
+    elevated: 'Low-lying flooding possible. Sandbag vulnerable low points now.',
+    advisory: 'Above operating range. Confirm sandbag supply is ready.',
+    watch:    'Approaching operating range. Check sump pumps and drainage paths. Spring melt is coming.',
+    normal:   'No action needed. Monitoring continues.',
+};
+
+let _shareData = {};
+
+function toggleShareCard() {
+    const card = document.getElementById('shareCard');
+    if (card.classList.contains('visible')) {
+        card.classList.remove('visible');
+        return;
+    }
+    renderShareCard();
+    card.classList.add('visible');
+    card.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function closeShareCard() {
+    document.getElementById('shareCard').classList.remove('visible');
+}
+
+function renderShareCard() {
+    const ft   = _shareData.ft   || 854.17;
+    const st   = _shareData.st   || lakeStatus(ft);
+    const tr   = _shareData.tr   || { t:'→ Steady', c:'flat' };
+    const tsStr= _shareData.tsStr|| '';
+
+    document.getElementById('scLevel').textContent = ft.toFixed(2);
+    document.getElementById('scTrend').textContent = tr.t;
+    document.getElementById('scTs').textContent    = tsStr ? `Updated ${tsStr}` : '';
+
+    // Thermometer — flood at top, normal at bottom
+    document.getElementById('scTherm').innerHTML = THERM_RUNGS.map(r => `
+        <div class="sc-rung ${r.key === st.key ? 'active' : ''}">
+            <div class="sc-rung-dot" style="background:${r.dot}"></div>
+            <div class="sc-rung-name">${r.lbl}</div>
+            <div class="sc-rung-range">${r.range}</div>
+        </div>
+    `).join('');
+
+    document.getElementById('scNote').textContent = THERM_NOTES[st.key] || '';
+}
+
+function copyShareLink() {
+    const url = 'https://dauphinlakewatch.ca';
+    navigator.clipboard.writeText(url).then(() => {
+        const el = document.getElementById('scCopied');
+        el.textContent = '✓ Link copied — paste anywhere to share';
+        setTimeout(() => el.textContent = '', 3000);
+    });
 }
 
 init();
