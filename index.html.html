@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dauphin Lake Watch — iConnect Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --navy:        #0d2137;
+            --navy-mid:    #1a3a5c;
+            --blue:        #2c5f7c;
+            --blue-light:  #3d7fa3;
+            --paper:       #f0ebe1;
+            --paper-mid:   #e8e1d6;
+            --paper-dark:  #d8cfc0;
+            --white:       #ffffff;
+            --text:        #1c1c2e;
+            --muted:       #6a7182;
+            --mono:        'IBM Plex Mono', monospace;
+            --sans:        'IBM Plex Sans', sans-serif;
+            --cond:        'Barlow Condensed', sans-serif;
+            --green:       #1a6b3a;
+            --green-bg:    #ebf7f0;
+            --yellow:      #8a6500;
+            --yellow-bg:   #fdf8e0;
+            --amber:       #b84c00;
+            --amber-bg:    #fff1e8;
+            --red:         #8b0000;
+            --red-bg:      #ffe8e8;
+        }
+
+        body {
+            font-family: var(--sans);
+            background: var(--paper);
+            color: var(--text);
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        /* ─────────── HEADER ─────────── */
+        .site-header {
+            background: var(--navy);
+            color: white;
+        }
+        .header-main {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            max-width: 1120px;
+            margin: 0 auto;
+            gap: 12px;
+        }
+        .header-title h1 {
+            font-family: var(--cond);
+            font-weight: 800;
+            font-size: 21px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            line-height: 1;
+        }
+        .header-title .sub {
+            font-family: var(--mono);
+            font-size: 10px;
+            opacity: 0.55;
+            margin-top: 4px;
+            letter-spacing: 0.04em;
+        }
+        .header-live {
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .last-update {
+            font-family: var(--mono);
+            font-size: 10px;
+            opacity: 0.6;
+        }
+        .live-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 4px;
+            font-family: var(--mono);
+            font-size: 10px;
+            opacity: 0.75;
+        }
+        .dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #4ade80;
+            flex-shrink: 0;
+        }
+        .dot.spinning { background: #facc15; animation: none; }
+        .dot.err      { background: #f87171; animation: none; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+        .dot:not(.spinning):not(.err) { animation: blink 2s infinite; }
+
+        /* ─────────── LAYOUT ─────────── */
+        .container {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 20px 16px 48px;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* ─────────── CARDS ─────────── */
+        .card {
+            background: var(--white);
+            border-radius: 6px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.07), 0 0 0 1px rgba(0,0,0,.04);
+            margin-bottom: 16px;
+            animation: fadeUp .35s ease both;
+        }
+        .card:nth-child(1){animation-delay:.04s}
+        .card:nth-child(2){animation-delay:.08s}
+        .card:nth-child(3){animation-delay:.12s}
+        .card:nth-child(4){animation-delay:.16s}
+        .card:nth-child(5){animation-delay:.20s}
+        .card:nth-child(6){animation-delay:.24s}
+        @keyframes fadeUp {
+            from { opacity:0; transform:translateY(8px); }
+            to   { opacity:1; transform:translateY(0);   }
+        }
+        .card-label {
+            font-family: var(--mono);
+            font-size: 9.5px;
+            font-weight: 600;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 14px;
+            padding-bottom: 9px;
+            border-bottom: 1px solid var(--paper-mid);
+        }
+
+        /* ─────────── DEMO BANNER ─────────── */
+        .demo-banner {
+            background: var(--yellow-bg);
+            border: 1px solid #c8a200;
+            border-radius: 5px;
+            padding: 9px 14px;
+            font-family: var(--mono);
+            font-size: 11.5px;
+            color: #6a4f00;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .demo-banner.show { display: block; }
+
+        /* ─────────── STATUS BEACON ─────────── */
+        .beacon-wrap {
+            display: flex;
+            align-items: flex-start;
+            gap: 24px;
+        }
+        .beacon-num-block { flex-shrink: 0; }
+        .level-num {
+            font-family: var(--cond);
+            font-weight: 800;
+            font-size: 82px;
+            line-height: 1;
+            letter-spacing: -.01em;
+            transition: color .5s;
+        }
+        .level-unit {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--muted);
+            letter-spacing: .05em;
+            margin-top: 3px;
+        }
+        .beacon-details { flex: 1; min-width: 0; }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 5px 13px;
+            border-radius: 3px;
+            font-family: var(--cond);
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+        .badge-green  { background: var(--green-bg);  color: var(--green);  }
+        .badge-yellow { background: var(--yellow-bg); color: var(--yellow); }
+        .badge-amber  { background: var(--amber-bg);  color: var(--amber);  }
+        .badge-red    { background: var(--red-bg);    color: var(--red);    }
+
+        .stat-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .stat-box {
+            background: var(--paper);
+            border-radius: 4px;
+            padding: 10px 12px;
+        }
+        .stat-lbl {
+            font-family: var(--mono);
+            font-size: 9px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+        .stat-val {
+            font-family: var(--mono);
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .up    { color: var(--amber); }
+        .down  { color: var(--green); }
+        .flat  { color: var(--muted); }
+
+        /* ─────────── THRESHOLD LADDER ─────────── */
+        .rung {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            border-left: 3px solid transparent;
+            opacity: .38;
+            border-bottom: 1px solid var(--paper-mid);
+            transition: opacity .3s, background .3s;
+        }
+        .rung:last-child { border-bottom: none; }
+        .rung.active { opacity: 1; background: var(--paper); }
+        .rung.active.g { border-color: var(--green); }
+        .rung.active.y { border-color: #c8a200; }
+        .rung.active.a { border-color: var(--amber); }
+        .rung.active.r { border-color: var(--red);   }
+        .rung-range {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--muted);
+            min-width: 115px;
+            flex-shrink: 0;
+        }
+        .rung-name {
+            font-family: var(--cond);
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: .04em;
+            min-width: 96px;
+            flex-shrink: 0;
+        }
+        .rung-text {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+        .rung.active .rung-text { color: var(--text); }
+
+        /* ─────────── HISTORICAL CHART ─────────── */
+        .chart-wrap {
+            position: relative;
+            height: 310px;
+        }
+        .chart-note {
+            font-size: 12.5px;
+            color: var(--muted);
+            font-style: italic;
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid var(--paper-mid);
+            line-height: 1.5;
+        }
+
+        /* ─────────── TRIBUTARY PANEL ─────────── */
+        .trib-insight {
+            background: #e6eef6;
+            border-left: 3px solid var(--blue);
+            border-radius: 0 4px 4px 0;
+            padding: 10px 14px;
+            font-size: 13px;
+            line-height: 1.55;
+            color: var(--navy-mid);
+            margin-bottom: 14px;
+        }
+        .trib-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .trib-table th {
+            font-family: var(--mono);
+            font-size: 9px;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            text-align: left;
+            padding: 5px 10px;
+            border-bottom: 2px solid var(--paper-mid);
+        }
+        .trib-table td {
+            padding: 9px 10px;
+            border-bottom: 1px solid var(--paper-mid);
+            vertical-align: middle;
+        }
+        .trib-table tr:last-child td { border-bottom: none; }
+        .trib-table tr:hover td     { background: var(--paper); }
+        .river-name   { font-weight: 500; }
+        .river-sub    { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+        .flow-num     { font-family: var(--mono); font-size: 13px; font-weight: 600; }
+        .spill {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 9px;
+            border-radius: 10px;
+            font-size: 10.5px;
+            font-family: var(--mono);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .s-frozen  { background: #e6eaf4; color: #3a4e70; }
+        .s-dormant { background: #eeeeee; color: #555555; }
+        .s-waking  { background: #fff8dc; color: #7a5500; }
+        .s-running { background: #fff0e0; color: var(--amber); }
+        .s-hard    { background: #ffe0e0; color: var(--red); }
+
+        /* ─────────── OUTLET MONITOR ─────────── */
+        .gauge-bg {
+            background: var(--paper-mid);
+            border-radius: 5px;
+            height: 28px;
+            overflow: hidden;
+            margin: 10px 0 4px;
+        }
+        .gauge-fill {
+            height: 100%;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            font-family: var(--mono);
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+            transition: width 1.2s ease;
+            white-space: nowrap;
+        }
+        .gauge-ends {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--muted);
+        }
+        .outlet-note {
+            margin-top: 12px;
+            font-size: 13px;
+            padding: 10px 13px;
+            background: var(--paper);
+            border-radius: 4px;
+            line-height: 1.5;
+        }
+
+        /* ─────────── SCENARIO TRACKER ─────────── */
+        .scenario-stack { display: flex; flex-direction: column; gap: 8px; }
+        .s-band {
+            display: flex;
+            align-items: center;
+            padding: 10px 14px;
+            border-radius: 4px;
+            gap: 13px;
+            border: 1px solid rgba(0,0,0,.055);
+        }
+        .s-fav    { background: #f0faf4; }
+        .s-likely { background: #fffde4; border: 2px solid #c8a200; }
+        .s-unfav  { background: #fff6f0; }
+        .s-severe { background: #fff0f0; }
+        .s-prob {
+            font-family: var(--cond);
+            font-weight: 800;
+            font-size: 22px;
+            line-height: 1;
+            min-width: 50px;
+        }
+        .s-info { flex: 1; }
+        .s-name  { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+        .s-range { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+        .s-desc  { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+        .now-tag {
+            background: var(--blue);
+            color: white;
+            font-family: var(--mono);
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 9px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        /* ─────────── WEATHER ─────────── */
+        .wx-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+        .wx-now {
+            background: var(--navy);
+            color: white;
+            border-radius: 6px;
+            padding: 16px 18px;
+            min-width: 130px;
+            text-align: center;
+        }
+        .wx-temp {
+            font-family: var(--cond);
+            font-weight: 700;
+            font-size: 46px;
+            line-height: 1;
+        }
+        .wx-cond { font-size: 12.5px; opacity: .8; margin-top: 4px; }
+        .wx-wind { font-family: var(--mono); font-size: 10px; opacity: .55; margin-top: 6px; }
+        .wx-days {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .wx-day {
+            background: var(--paper);
+            border-radius: 4px;
+            padding: 10px;
+            text-align: center;
+        }
+        .wx-dayname {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: .07em;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .wx-icon { font-size: 20px; margin-bottom: 4px; }
+        .wx-hi   { font-family: var(--mono); font-weight: 600; font-size: 13px; }
+        .wx-lo   { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+        .rain-tag {
+            display: inline-block;
+            margin-top: 4px;
+            background: #dceeff;
+            color: #1a4878;
+            font-family: var(--mono);
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 8px;
+        }
+        .rain-tag.warn { background: #ffebd8; color: #8b3a00; }
+        .wx-note {
+            margin-top: 12px;
+            font-size: 12px;
+            color: var(--muted);
+            font-style: italic;
+            line-height: 1.5;
+        }
+
+        /* ─────────── FOOTER ─────────── */
+        .site-footer {
+            background: var(--navy);
+            color: rgba(255,255,255,.6);
+            font-family: var(--mono);
+            font-size: 11px;
+            padding: 20px;
+            line-height: 1.75;
+        }
+        .footer-in { max-width: 1120px; margin: 0 auto; }
+        .footer-brand { color: white; font-size: 12px; font-weight: 500; margin-bottom: 5px; }
+
+        /* ─────────── RESPONSIVE ─────────── */
+        @media (max-width: 720px) {
+            .grid-2 { grid-template-columns: 1fr; }
+            .beacon-wrap { flex-direction: column; gap: 14px; }
+            .level-num { font-size: 64px; }
+            .stat-row { grid-template-columns: 1fr 1fr; }
+            .rung-range { min-width: 82px; }
+            .hide-sm { display: none; }
+            .wx-grid { grid-template-columns: 1fr; }
+            .wx-now  { min-width: auto; }
+        }
+        @media (max-width: 480px) {
+            .header-main { flex-direction: column; align-items: flex-start; }
+            .header-live { text-align: left; }
+            .chart-wrap { height: 240px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     HEADER
+════════════════════════════════════════════════════════ -->
+<header class="site-header">
+    <div class="header-main">
+        <div class="header-title">
+            <h1>Dauphin Lake Watch</h1>
+            <div class="sub">OCHRE BEACH / DAUPHIN LAKE BASIN &nbsp;·&nbsp; SPRING 2026 FLOOD MONITOR</div>
+        </div>
+        <div class="header-live">
+            <div class="last-update" id="lastUpdate">Connecting to Water Survey of Canada…</div>
+            <div class="live-pill">
+                <span class="dot spinning" id="liveDot"></span>
+                <span id="liveText">Loading station data</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════
+     MAIN
+════════════════════════════════════════════════════════ -->
+<main class="container">
+
+    <div class="demo-banner" id="demoBanner">
+        ⚠&nbsp; Live API unreachable — displaying verified March 27 readings. For real-time data: <strong>wateroffice.ec.gc.ca</strong>
+    </div>
+
+    <!-- ── 1. STATUS BEACON ── -->
+    <div class="card">
+        <div class="card-label">Current Lake Level &nbsp;·&nbsp; Station 05LJ009, Dauphin Lake at Outlet</div>
+        <div class="beacon-wrap">
+            <div class="beacon-num-block">
+                <div class="level-num" id="levelNum" style="color:var(--yellow)">—</div>
+                <div class="level-unit">FEET ABOVE SEA LEVEL (ASL) &nbsp;·&nbsp; WSC PROVISIONAL</div>
+            </div>
+            <div class="beacon-details">
+                <div class="status-badge badge-yellow" id="statusBadge">
+                    <span>●</span>
+                    <span id="statusLabel">WATCH</span>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-box">
+                        <div class="stat-lbl">Trend</div>
+                        <div class="stat-val" id="trendVal">—</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-lbl">vs. Operating Range</div>
+                        <div class="stat-val" id="vsRange">—</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-lbl">to Flood Stage</div>
+                        <div class="stat-val" id="toFlood">—</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── 2. THRESHOLD ACTION BAR ── -->
+    <div class="card">
+        <div class="card-label">Threshold Action Guidance — What property owners should do right now</div>
+        <div id="thresholdLadder"></div>
+    </div>
+
+    <!-- ── 3. HISTORICAL COMPARISON CHART ── -->
+    <div class="card">
+        <div class="card-label">2026 Lake Level vs. Historic Flood Years &nbsp;·&nbsp; Feet ASL, Jan–Jul</div>
+        <div class="chart-wrap">
+            <canvas id="histChart"></canvas>
+        </div>
+        <div class="chart-note">
+            Spring melt has not yet begun. The lake is currently tracking below 2011, 2013, and 2014 at this point in the season.
+            The Riding Mountain snowpack (157 mm SWE) is the highest in Manitoba and larger than what preceded the 2011 record flood.
+            Drier soils at freeze-up are the key mitigating factor. April will determine which scenario unfolds.
+        </div>
+    </div>
+
+    <!-- ── 4. TRIBUTARY EARLY WARNING ── -->
+    <div class="card">
+        <div class="card-label">Tributary Early Warning &nbsp;·&nbsp; Basin Feeder Rivers — Water Survey of Canada (Provisional)</div>
+        <div class="trib-insight" id="tribInsight">Loading tributary data…</div>
+        <table class="trib-table">
+            <thead>
+                <tr>
+                    <th>River</th>
+                    <th>Flow (cfs)</th>
+                    <th>Status</th>
+                    <th class="hide-sm">7-Day Trend</th>
+                </tr>
+            </thead>
+            <tbody id="tribBody">
+                <tr><td colspan="4" style="padding:16px;text-align:center;font-family:var(--mono);font-size:12px;color:var(--muted)">Loading…</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ── 5+6. OUTLET + SCENARIOS (two-col on desktop) ── -->
+    <div class="grid-2">
+
+        <!-- OUTLET MONITOR -->
+        <div class="card" style="margin-bottom:0">
+            <div class="card-label">Outlet Monitor &nbsp;·&nbsp; Mossy River Dam (05LJ025)</div>
+            <p style="font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:2px;">
+                Water exits through the Mossy River dam. When melt inflow exceeds outlet capacity, the lake rises. In 2011, peak inflow reached ~60,000 cfs against a ~500 cfs maximum outflow.
+            </p>
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:14px;">
+                <span style="font-family:var(--mono);font-size:11px;color:var(--muted);">CURRENT OUTFLOW</span>
+                <span style="font-family:var(--mono);font-size:22px;font-weight:600;" id="outletCfs">— cfs</span>
+            </div>
+            <div class="gauge-bg">
+                <div class="gauge-fill" id="outletBar" style="width:0%;background:var(--amber);">
+                    <span id="outletPct"></span>
+                </div>
+            </div>
+            <div class="gauge-ends">
+                <span>0 cfs</span>
+                <span>Max capacity ~500 cfs</span>
+            </div>
+            <div class="outlet-note" id="outletNote">—</div>
+        </div>
+
+        <!-- SCENARIO TRACKER -->
+        <div class="card" style="margin-bottom:0">
+            <div class="card-label">Spring Scenario Tracker &nbsp;·&nbsp; Projected Peak Range</div>
+            <div class="scenario-stack">
+                <div class="s-band s-fav">
+                    <div class="s-prob" style="color:var(--green)">~15%</div>
+                    <div class="s-info">
+                        <div class="s-name">Favourable</div>
+                        <div class="s-range">855.0 – 855.5 ft</div>
+                        <div class="s-desc">Slow gradual melt, dry April–May. Near or slightly above operating range. Minor nuisance at most.</div>
+                    </div>
+                </div>
+                <div class="s-band s-likely">
+                    <div class="s-prob" style="color:var(--yellow)">~55%</div>
+                    <div class="s-info">
+                        <div class="s-name">Most Likely <span class="now-tag">Tracking ▸</span></div>
+                        <div class="s-range">855.5 – 856.5 ft</div>
+                        <div class="s-desc">Normal melt pace, near-average precipitation. Above operating range. Low-lying areas see water. Road impacts likely.</div>
+                    </div>
+                </div>
+                <div class="s-band s-unfav">
+                    <div class="s-prob" style="color:var(--amber)">~25%</div>
+                    <div class="s-info">
+                        <div class="s-name">Unfavourable</div>
+                        <div class="s-range">857.0 – 858.0 ft</div>
+                        <div class="s-desc">Fast melt with wet April (CFS model correct). Approaching or reaching flood stage. Sandbagging required.</div>
+                    </div>
+                </div>
+                <div class="s-band s-severe">
+                    <div class="s-prob" style="color:var(--red)">~5%</div>
+                    <div class="s-info">
+                        <div class="s-name">Severe</div>
+                        <div class="s-range">858.0 ft+</div>
+                        <div class="s-desc">Rapid melt with rain-on-snow events. At or above flood stage. Significant flooding.</div>
+                    </div>
+                </div>
+            </div>
+            <p style="margin-top:11px;font-size:11.5px;color:var(--muted);line-height:1.5;padding-top:10px;border-top:1px solid var(--paper-mid);">
+                Based on 157 mm snowpack, current soil conditions, and provincial flood model guidance (March 20, 2026). Updated manually as conditions evolve.
+            </p>
+        </div>
+
+    </div>
+
+    <!-- ── 7. WEATHER ── -->
+    <div class="card" style="margin-top:16px;">
+        <div class="card-label">Current Conditions &amp; Outlook &nbsp;·&nbsp; Dauphin, MB</div>
+        <div class="wx-grid">
+            <div class="wx-now">
+                <div class="wx-temp" id="wxTemp">—°</div>
+                <div class="wx-cond" id="wxCond">Loading</div>
+                <div class="wx-wind" id="wxWind">—</div>
+            </div>
+            <div class="wx-days" id="wxDays">
+                <div style="grid-column:1/-1;font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px;">Loading forecast…</div>
+            </div>
+        </div>
+        <div class="wx-note">
+            Watch for: Rain during melt accelerates lake rise significantly. Cold snaps are temporary pauses, not resets. Above-normal temperatures are forecast for April–June 2026 (IRI / all models agree on the temperature signal).
+        </div>
+    </div>
+
+</main>
+
+<!-- ══════════════════════════════════════════════════════
+     FOOTER
+════════════════════════════════════════════════════════ -->
+<footer class="site-footer">
+    <div class="footer-in">
+        <div class="footer-brand">iConnect Studio — Independent Community Hydrological Research &amp; Advisory</div>
+        <div>Water level data: Water Survey of Canada, Environment and Climate Change Canada. Provisional real-time data subject to revision. Source: wateroffice.ec.gc.ca</div>
+        <div style="margin-top:4px;">This is an independent community monitoring tool, not an official government forecast. For official provincial flood guidance: <span style="color:rgba(255,255,255,.85)">www.manitoba.ca/floodinfo/</span></div>
+        <div style="margin-top:4px;opacity:.45;">Compiled from federal and provincial open data sources. Dashboard refreshes every 15 minutes.</div>
+    </div>
+</footer>
+
+
+<!-- ══════════════════════════════════════════════════════
+     SCRIPT
+════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+// ─────────────────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────────────────
+const CFG = {
+    api:     'https://api.weather.gc.ca/collections/hydrometric-realtime/items',
+    weather: 'https://api.open-meteo.com/v1/forecast',
+    lat: 51.15, lon: -100.05,
+    st: {
+        lake:      '05LJ009',
+        outlet:    '05LJ025',
+        turtle:    '05LJ007',
+        vermilion: '05LJ012',
+        ochre:     '05LJ005',
+        wilson:    '05LJ045',
+        valley:    '05LJ010',
+        mink:      '05LJ019',
+        mckinnon:  '05LJ027',
+    },
+    upperRange: 854.8,
+    floodStage: 858.0,
+    outletMax:  500,
+    refresh:    15 * 60 * 1000,
+};
+
+// Verified seed data — Water Survey of Canada, March 27, 2026 5:20 PM CST
+const SEED = {
+    lakeFt:  854.17,
+    outletCfs: 427,
+    tribs: {
+        turtle:    { cfs: 13.6,  prev: 1.8,  elev: 911  },
+        vermilion: { cfs: 9.5,   prev: 2.2,  elev: 907  },
+        ochre:     { cfs: 3.4,   prev: 2.5,  elev: 915  },
+        wilson:    { cfs: 0.5,   prev: 0.4,  elev: 1131 },
+        valley:    { cfs: 38.1,  prev: 28.7, elev: 876  },
+        mink:      { cfs: 0.7,   prev: 0.7,  elev: 1107 },
+        mckinnon:  { cfs: 15.2,  prev: 44.5, elev: null },
+    }
+};
+
+// ─────────────────────────────────────────────────────────
+// UNIT HELPERS
+// ─────────────────────────────────────────────────────────
+const mToFt  = m  => m  * 3.28084;
+const m3sCfs = q  => q  * 35.3147;
+const doy    = dt => {
+    const y = dt.getFullYear();
+    return Math.floor((dt - new Date(y, 0, 0)) / 86400000);
+};
+
+// ─────────────────────────────────────────────────────────
+// API
+// ─────────────────────────────────────────────────────────
+async function fetchStn(id, limit = 48) {
+    const url = `${CFG.api}?STATION_NUMBER=${id}&sortby=-DATETIME&limit=${limit}&f=json`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const j = await r.json();
+    return j.features.map(f => ({
+        dt:    new Date(f.properties.DATETIME),
+        level: f.properties.LEVEL,
+        q:     f.properties.DISCHARGE,
+    }));
+}
+
+// ─────────────────────────────────────────────────────────
+// STATUS LOGIC
+// ─────────────────────────────────────────────────────────
+function lakeStatus(ft) {
+    if (ft >= 858.0) return { key:'flood',    lbl:'Flood Stage', cls:'r', bg:'badge-red'    };
+    if (ft >= 857.0) return { key:'critical', lbl:'Critical',    cls:'r', bg:'badge-red'    };
+    if (ft >= 856.5) return { key:'high',     lbl:'High',        cls:'a', bg:'badge-amber'  };
+    if (ft >= 855.5) return { key:'elevated', lbl:'Elevated',    cls:'a', bg:'badge-amber'  };
+    if (ft >= 854.8) return { key:'advisory', lbl:'Advisory',    cls:'a', bg:'badge-amber'  };
+    if (ft >= 854.0) return { key:'watch',    lbl:'Watch',       cls:'y', bg:'badge-yellow' };
+    return                  { key:'normal',   lbl:'Normal',      cls:'g', bg:'badge-green'  };
+}
+
+function tribStatus(cfs, elev) {
+    if (elev > 1000 && cfs < 2)  return { lbl:'Frozen',      cls:'s-frozen'  };
+    if (cfs < 3)                  return { lbl:'Dormant',     cls:'s-dormant' };
+    if (cfs < 15)                 return { lbl:'Waking Up',   cls:'s-waking'  };
+    if (cfs < 80)                 return { lbl:'Running',     cls:'s-running' };
+    return                               { lbl:'Running Hard',cls:'s-hard'    };
+}
+
+function trendOf(series) {
+    if (!series || series.length < 6) return { t:'→ Steady', c:'flat' };
+    const r = series.slice(0, 6).map(x => mToFt(x.level || 0));
+    const o = series.slice(-6).map(x => mToFt(x.level || 0));
+    const avg = a => a.reduce((s,v)=>s+v,0)/a.length;
+    const d = avg(r) - avg(o);
+    if (d >  0.02) return { t:'↑ Rising',  c:'up'   };
+    if (d < -0.02) return { t:'↓ Falling', c:'down' };
+    return               { t:'→ Steady',  c:'flat' };
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER: BEACON
+// ─────────────────────────────────────────────────────────
+function renderBeacon(ft, series) {
+    const st = lakeStatus(ft);
+    const tr = trendOf(series);
+    const colorMap = { g:'#1a6b3a', y:'#8a6500', a:'#b84c00', r:'#8b0000' };
+
+    document.getElementById('levelNum').textContent = ft.toFixed(2);
+    document.getElementById('levelNum').style.color = colorMap[st.cls];
+
+    const badge = document.getElementById('statusBadge');
+    badge.className = `status-badge ${st.bg}`;
+    document.getElementById('statusLabel').textContent = st.lbl;
+
+    const tv = document.getElementById('trendVal');
+    tv.textContent  = tr.t;
+    tv.className    = `stat-val ${tr.c}`;
+
+    const diff = ft - CFG.upperRange;
+    const vr = document.getElementById('vsRange');
+    if (diff < 0) {
+        vr.textContent = `${Math.abs(diff).toFixed(2)} ft below`;
+        vr.className = 'stat-val flat';
+    } else {
+        vr.textContent = `${diff.toFixed(2)} ft above`;
+        vr.className = 'stat-val up';
+    }
+
+    document.getElementById('toFlood').textContent = `${(CFG.floodStage - ft).toFixed(2)} ft`;
+
+    if (series && series.length) {
+        const ts = series[0].dt;
+        document.getElementById('lastUpdate').textContent =
+            `Updated: ${ts.toLocaleDateString('en-CA',{month:'short',day:'numeric'})} ${ts.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit',timeZoneName:'short'})}`;
+    }
+    const dot = document.getElementById('liveDot');
+    dot.className = 'dot';
+    document.getElementById('liveText').textContent = 'Live — Water Survey of Canada';
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER: THRESHOLD LADDER
+// ─────────────────────────────────────────────────────────
+function renderLadder(ft) {
+    const st = lakeStatus(ft);
+    const rungs = [
+        { range:'858.0+ ft',      key:'flood',    lbl:'Flood Stage', cls:'r', note:'At or above flood stage. Follow Manitoba provincial emergency guidance. See <strong>manitoba.ca/floodinfo/</strong>' },
+        { range:'857.0–858.0 ft', key:'critical', lbl:'Critical',    cls:'r', note:'Approaching flood stage. Full sandbagging underway. Coordinate with RM of Ochre River for equipment and staging.' },
+        { range:'856.5–857.0 ft', key:'high',     lbl:'High',        cls:'a', note:'Road impacts possible. Active property protection underway. Move vehicles to high ground. Monitor RM communications.' },
+        { range:'855.5–856.5 ft', key:'elevated', lbl:'Elevated',    cls:'a', note:'Low-lying flooding possible. Sandbag vulnerable low points. Move basement valuables and appliances above water line.' },
+        { range:'854.8–855.5 ft', key:'advisory', lbl:'Advisory',    cls:'a', note:'Above operating range. Confirm sandbag supply is ready and accessible. Clear low-lying storage areas now.' },
+        { range:'854.0–854.8 ft', key:'watch',    lbl:'Watch',       cls:'y', note:'Approaching operating range. Check sump pumps and drainage paths. Good time to prepare while conditions allow. Spring melt is coming.' },
+        { range:'Below 854.0 ft', key:'normal',   lbl:'Normal',      cls:'g', note:'No action needed at this time. Monitoring continues. Review preparation checklist before spring melt begins in early April.' },
+    ];
+
+    document.getElementById('thresholdLadder').innerHTML = rungs.map(r => `
+        <div class="rung ${r.key === st.key ? 'active ' + r.cls : ''}">
+            <div class="rung-range">${r.range}</div>
+            <div class="rung-name">${r.lbl}</div>
+            <div class="rung-text">${r.note}</div>
+        </div>
+    `).join('');
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER: HISTORICAL CHART
+// ─────────────────────────────────────────────────────────
+let chartInst = null;
+
+// Reference line plugin (no external plugin needed)
+const refLinesPlugin = {
+    id: 'refLines',
+    beforeDraw(chart) {
+        if (chart.canvas.id !== 'histChart') return;
+        const { ctx, chartArea: ca, scales } = chart;
+        if (!ca) return;
+
+        const line = (y, color, lbl) => {
+            const py = scales.y.getPixelForValue(y);
+            ctx.save();
+            ctx.setLineDash([4,3]);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(ca.left, py);
+            ctx.lineTo(ca.right, py);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.font = '9px IBM Plex Mono, monospace';
+            ctx.fillStyle = color;
+            ctx.fillText(lbl, ca.left + 5, py - 4);
+            ctx.restore();
+        };
+
+        line(858.0, 'rgba(139,0,0,.75)',   '─ Flood Stage  858.0 ft');
+        line(854.8, 'rgba(160,100,0,.65)', '─ Upper Operating Range  854.8 ft');
+    }
+};
+Chart.register(refLinesPlugin);
+
+function renderChart(liveData) {
+    // Approximate historical curves derived from IWMP hydrology reports
+    const h2011 = [
+        {x:1,y:854.5},{x:32,y:854.3},{x:60,y:854.0},{x:75,y:854.05},
+        {x:86,y:854.1},{x:91,y:854.35},{x:100,y:854.9},{x:110,y:856.1},
+        {x:121,y:857.2},{x:132,y:858.9},{x:143,y:860.1},{x:169,y:860.7},
+        {x:182,y:860.15}
+    ];
+    const h2014 = [
+        {x:1,y:854.2},{x:32,y:854.0},{x:60,y:853.7},{x:75,y:853.72},
+        {x:86,y:853.78},{x:91,y:853.9},{x:100,y:854.5},{x:110,y:855.6},
+        {x:121,y:856.6},{x:132,y:857.9},{x:143,y:859.0},{x:163,y:859.8},
+        {x:182,y:859.0}
+    ];
+    const h2013 = [
+        {x:1,y:853.8},{x:32,y:853.6},{x:60,y:853.2},{x:75,y:853.22},
+        {x:86,y:853.28},{x:91,y:853.42},{x:100,y:854.0},{x:110,y:855.2},
+        {x:121,y:856.0},{x:132,y:857.1},{x:143,y:857.8},{x:158,y:858.0},
+        {x:182,y:857.2}
+    ];
+
+    // 2026 live from API (or seed point)
+    let live26 = [];
+    if (liveData && liveData.length > 1) {
+        live26 = [...liveData].reverse()
+            .filter(r => r.level)
+            .map(r => ({ x: doy(r.dt), y: parseFloat(mToFt(r.level).toFixed(3)) }))
+            .filter(p => p.y > 850);
+    } else {
+        // Approximate early-season 2026 curve based on known readings
+        live26 = [
+            {x:1,y:853.8},{x:32,y:854.0},{x:55,y:854.06},{x:60,y:854.08},
+            {x:75,y:854.12},{x:86,y:854.17}
+        ];
+    }
+
+    // Scenario projections from March 27 (day 86) forward
+    const scenLikely = [
+        {x:86,y:854.17},{x:96,y:854.35},{x:107,y:854.85},{x:118,y:855.4},
+        {x:130,y:856.0},{x:143,y:856.4},{x:157,y:856.2},{x:175,y:855.6}
+    ];
+    const scenUnfav = [
+        {x:86,y:854.17},{x:96,y:854.6},{x:107,y:855.5},{x:118,y:856.5},
+        {x:130,y:857.3},{x:143,y:857.8},{x:157,y:857.5},{x:175,y:856.7}
+    ];
+
+    const xTicks = { 1:'JAN', 32:'FEB', 60:'MAR', 91:'APR', 121:'MAY', 152:'JUN' };
+    const ctx = document.getElementById('histChart').getContext('2d');
+
+    if (chartInst) chartInst.destroy();
+
+    chartInst = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [
+                { label:'2011 — record 860.7 ft', data:h2011,       borderColor:'#8b1a1a', borderWidth:1.5, borderDash:[4,2], showLine:true, pointRadius:0, tension:.4 },
+                { label:'2014 — 859.8 ft',        data:h2014,       borderColor:'#6b7280', borderWidth:1.5, borderDash:[4,2], showLine:true, pointRadius:0, tension:.4 },
+                { label:'2013 — 858.0 ft',        data:h2013,       borderColor:'#4a5568', borderWidth:1.5, borderDash:[4,2], showLine:true, pointRadius:0, tension:.4 },
+                { label:'2026 — Live',            data:live26,      borderColor:'#2c5f7c', borderWidth:2.5, showLine:true,    pointRadius:0, tension:.3   },
+                { label:'2026 — Most Likely (55%)',data:scenLikely, borderColor:'#2c5f7c', borderWidth:1.5, borderDash:[6,3], showLine:true, pointRadius:0, tension:.4 },
+                { label:'2026 — Unfavourable (25%)',data:scenUnfav, borderColor:'#b84c00', borderWidth:1.5, borderDash:[6,3], showLine:true, pointRadius:0, tension:.4 },
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode:'index', intersect:false },
+            plugins: {
+                legend: {
+                    position:'bottom',
+                    labels: {
+                        font:{ family:'IBM Plex Mono, monospace', size:10 },
+                        boxWidth:20, padding:10, color:'#6a7182'
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        title: items => {
+                            const d = items[0].parsed.x;
+                            const m = ['','Jan','Feb','Mar','Apr','May','Jun','Jul'];
+                            const b = [0,31,59,90,120,151,181];
+                            let mi = 1;
+                            for(let i=b.length-1;i>=1;i--) { if(d>=b[i]){ mi=i; break; } }
+                            return `${m[mi]} (day ${d})`;
+                        },
+                        label: item => `${item.dataset.label}: ${item.parsed.y.toFixed(2)} ft`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type:'linear', min:1, max:182,
+                    ticks: {
+                        font:{ family:'IBM Plex Mono, monospace', size:9 },
+                        color:'#9a9a9a',
+                        callback: v => xTicks[v] || '',
+                        maxTicksLimit: 8
+                    },
+                    grid: { color:'rgba(0,0,0,.04)' }
+                },
+                y: {
+                    min:852, max:862,
+                    ticks: {
+                        font:{ family:'IBM Plex Mono, monospace', size:10 },
+                        color:'#9a9a9a',
+                        callback: v => v + ' ft'
+                    },
+                    grid: { color:'rgba(0,0,0,.05)' }
+                }
+            }
+        }
+    });
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER: TRIBUTARIES
+// ─────────────────────────────────────────────────────────
+const TRIBS = [
+    { key:'turtle',    name:'Turtle River',    sub:'near Laurier',   zone:'Riding Mtn', elev:911  },
+    { key:'vermilion', name:'Vermilion River', sub:'near Dauphin',   zone:'Riding Mtn', elev:907  },
+    { key:'ochre',     name:'Ochre River',     sub:'at Ochre River', zone:'Riding Mtn', elev:915  },
+    { key:'wilson',    name:'Wilson River',    sub:'near Ashville',  zone:'Riding Mtn ↑',elev:1131},
+    { key:'valley',    name:'Valley River',    sub:'near Dauphin',   zone:'Duck Mtn',   elev:876  },
+    { key:'mink',      name:'Mink Creek',      sub:'near Ethelbert', zone:'Duck Mtn ↑', elev:1107 },
+    { key:'mckinnon',  name:'McKinnon Creek',  sub:'near McCreary',  zone:'Other',      elev:null },
+];
+
+function renderTribs(data) {
+    const tbody = document.getElementById('tribBody');
+    tbody.innerHTML = TRIBS.map(def => {
+        const d = data[def.key] || SEED.tribs[def.key] || { cfs:0, prev:0, elev:def.elev };
+        const st = tribStatus(d.cfs, def.elev || 0);
+        const ratio = d.prev > 0 ? d.cfs / d.prev : 1;
+        let tc, tt;
+        if (ratio > 1.5) { tc='up';   tt=`↑ ${ratio.toFixed(1)}×`; }
+        else if(ratio<.7){ tc='down'; tt=`↓ ${ratio.toFixed(1)}×`; }
+        else              { tc='flat'; tt='→ stable'; }
+
+        return `<tr>
+            <td>
+                <div class="river-name">${def.name}</div>
+                <div class="river-sub">${def.zone} · ${def.elev ? def.elev+' ft elev' : 'Other'}</div>
+            </td>
+            <td><span class="flow-num">${d.cfs.toFixed(1)}</span></td>
+            <td><span class="spill ${st.cls}">${st.lbl}</span></td>
+            <td class="hide-sm"><span class="${tc}" style="font-family:var(--mono);font-size:12px;">${tt}</span></td>
+        </tr>`;
+    }).join('');
+
+    // Insight line
+    const t = data.turtle    || SEED.tribs.turtle;
+    const w = data.wilson    || SEED.tribs.wilson;
+    const m = data.mink      || SEED.tribs.mink;
+    const ins = document.getElementById('tribInsight');
+
+    if (w.cfs > 15 || m.cfs > 15) {
+        ins.innerHTML = '<strong>⚠ High-elevation headwaters are breaking.</strong> Major inflows to the lake are beginning. Lake rise expected over coming days. Watch the outlet monitor closely.';
+    } else if (t.cfs > 8 && w.cfs < 3) {
+        ins.innerHTML = `<strong>Lower Riding Mountain tributaries are moving — Turtle River is up ${(t.cfs / (SEED.tribs.turtle.prev||1)).toFixed(1)}× over the past week.</strong> The high-elevation headwaters (Wilson River at 1,131 ft, Mink Creek at 1,107 ft) remain frozen. That is where the heaviest snowpack sits. When those break, the major inflows begin.`;
+    } else {
+        ins.textContent = 'Monitoring all 7 basin tributaries. Lower-elevation rivers showing early movement; high-elevation stations remain dormant.';
+    }
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER: OUTLET
+// ─────────────────────────────────────────────────────────
+function renderOutlet(cfs) {
+    const pct = Math.min(100, (cfs / CFG.outletMax) * 100);
+    document.getElementById('outletCfs').textContent = `${Math.round(cfs)} cfs`;
+    const bar = document.getElementById('outletBar');
+    bar.style.width = `${pct.toFixed(0)}%`;
+    bar.style.background = pct > 80 ? '#b84c00' : '#2c5f7c';
+    document.getElementById('outletPct').textContent = `${pct.toFixed(0)}% of max`;
+
+    let note;
+    if (pct > 85)       note = `<strong>Near capacity.</strong> The dam is releasing ${Math.round(cfs)} cfs — close to its practical maximum of ~500 cfs. Incoming meltwater now exceeds what the outlet can remove.`;
+    else if (pct > 60)  note = `Running at ${pct.toFixed(0)}% of outlet capacity. Some headroom remains. Dam will be pushed to maximum as spring melt accelerates in April.`;
+    else                note = `Outlet has capacity available (${pct.toFixed(0)}%). Lake is draining normally for now.`;
+    document.getElementById('outletNote').innerHTML = note;
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER: WEATHER
+// ─────────────────────────────────────────────────────────
+const WMO = {
+    0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',
+    45:'Fog',48:'Freezing fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',
+    61:'Light rain',63:'Rain',65:'Heavy rain',
+    71:'Light snow',73:'Snow',75:'Heavy snow',77:'Snow grains',
+    80:'Showers',81:'Heavy showers',85:'Snow showers',95:'Thunderstorm'
+};
+const WMO_ICON = c => {
+    if (c <= 1) return '☀️';
+    if (c <= 3) return '☁️';
+    if (c <= 48) return '🌫️';
+    if (c <= 67) return '🌧️';
+    if (c <= 77) return '🌨️';
+    if (c <= 82) return '🌦️';
+    return '⛈️';
+};
+
+async function fetchWeather() {
+    const url = `${CFG.weather}?latitude=${CFG.lat}&longitude=${CFG.lon}`
+        + `&current=temperature_2m,weathercode,windspeed_10m`
+        + `&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum`
+        + `&timezone=America%2FWinnipeg&forecast_days=4`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) throw new Error('wx failed');
+    return r.json();
+}
+
+function renderWeather(j) {
+    document.getElementById('wxTemp').textContent = `${Math.round(j.current.temperature_2m)}°C`;
+    document.getElementById('wxCond').textContent = WMO[j.current.weathercode] || 'Updating';
+    document.getElementById('wxWind').textContent = `Wind: ${Math.round(j.current.windspeed_10m)} km/h`;
+
+    const days = document.getElementById('wxDays');
+    const d = j.daily;
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    days.innerHTML = [1,2,3].map(i => {
+        const dt = new Date(); dt.setDate(dt.getDate() + i);
+        const p = d.precipitation_sum[i] || 0;
+        return `<div class="wx-day">
+            <div class="wx-dayname">${dayNames[dt.getDay()]}</div>
+            <div class="wx-icon">${WMO_ICON(d.weathercode[i])}</div>
+            <div class="wx-hi">${Math.round(d.temperature_2m_max[i])}°</div>
+            <div class="wx-lo">${Math.round(d.temperature_2m_min[i])}°</div>
+            ${p > 0.5 ? `<div class="rain-tag${p > 8 ? ' warn' : ''}">${p.toFixed(1)} mm</div>` : ''}
+        </div>`;
+    }).join('');
+}
+
+// ─────────────────────────────────────────────────────────
+// MAIN
+// ─────────────────────────────────────────────────────────
+async function init() {
+    let demo = false;
+
+    // ── Lake level
+    let lakeData = null, lakeFt = SEED.lakeFt;
+    try {
+        lakeData = await fetchStn(CFG.st.lake, 48);
+        const recent = lakeData.find(r => r.level != null);
+        if (recent) lakeFt = mToFt(recent.level);
+    } catch (e) {
+        console.warn('[lake]', e.message);
+        demo = true;
+    }
+
+    // ── Outlet
+    let outCfs = SEED.outletCfs;
+    try {
+        const od = await fetchStn(CFG.st.outlet, 6);
+        const r = od.find(x => x.q != null);
+        if (r) outCfs = m3sCfs(r.q);
+    } catch (e) { console.warn('[outlet]', e.message); }
+
+    // ── Tributaries
+    const tribData = {};
+    await Promise.allSettled(TRIBS.map(async def => {
+        try {
+            const rows = await fetchStn(CFG.st[def.key], 16);
+            const now  = rows.find(r => r.q != null);
+            const week = rows.find((r,i) => i > 5 && r.q != null);
+            if (now) {
+                tribData[def.key] = {
+                    cfs:  m3sCfs(now.q),
+                    prev: week ? m3sCfs(week.q) : (SEED.tribs[def.key]?.prev || 0),
+                    elev: def.elev
+                };
+            }
+        } catch (e) { console.warn(`[trib:${def.key}]`, e.message); }
+    }));
+
+    // Fill gaps from seed
+    TRIBS.forEach(d => { if (!tribData[d.key]) tribData[d.key] = SEED.tribs[d.key]; });
+
+    // ── Weather
+    try {
+        const wx = await fetchWeather();
+        renderWeather(wx);
+    } catch (e) {
+        console.warn('[weather]', e.message);
+        document.getElementById('wxTemp').textContent = '—';
+        document.getElementById('wxCond').textContent = 'Check weather.gc.ca';
+    }
+
+    // ── Render all
+    renderBeacon(lakeFt, lakeData);
+    renderLadder(lakeFt);
+    renderChart(lakeData);
+    renderTribs(tribData);
+    renderOutlet(outCfs);
+
+    if (demo) {
+        document.getElementById('demoBanner').classList.add('show');
+        document.getElementById('liveDot').className = 'dot err';
+        document.getElementById('liveText').textContent = 'Demo mode — verified March 27 readings';
+        document.getElementById('lastUpdate').textContent = 'Last verified: March 27, 2026 · 17:20 CST';
+    }
+
+    // ── Schedule refresh
+    setTimeout(init, CFG.refresh);
+}
+
+init();
+</script>
+</body>
+</html>
