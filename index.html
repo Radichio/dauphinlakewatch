@@ -1624,79 +1624,94 @@ function setHydroRange(days, btn) {
 
 async function fetchHydroData() {
     try {
-        const rows = await fetchStn(CFG.st.lake, 288); // ~30 days at 15-min intervals
+        // WSC API returns last 30 days max — fetch max records available
+        const rows = await fetchStn(CFG.st.lake, 500);
         hydroAllData = [...rows].reverse()
             .filter(r => r.level != null)
-            .map(r => ({ x: r.dt, y: parseFloat(mToFt(r.level).toFixed(3)) }));
+            .map(r => ({
+                x: r.dt instanceof Date ? r.dt : new Date(r.dt),
+                y: parseFloat(mToFt(r.level).toFixed(3))
+            }));
         renderHydro();
     } catch(e) {
         console.warn('[hydro]', e.message);
     }
 }
 
+function setHydroRange(days, btn) {
+    hydroDays = days;
+    document.querySelectorAll('.hydro-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderHydro();
+}
+
 function renderHydro() {
     if (!hydroAllData.length) return;
 
-    // Filter to selected range
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - hydroDays);
-    const data = hydroAllData.filter(p => p.x >= cutoff);
+    // Filter using millisecond timestamp comparison
+    const cutoffMs = Date.now() - (hydroDays * 24 * 60 * 60 * 1000);
+    const data = hydroAllData.filter(p => {
+        const t = p.x instanceof Date ? p.x.getTime() : new Date(p.x).getTime();
+        return t >= cutoffMs;
+    });
 
-    if (!data.length) return;
+    // Fall back to all data if filter returns nothing
+    const chartData = data.length > 5 ? data : hydroAllData;
 
-    // Stats
-    const levels = data.map(p => p.y);
+    const levels = chartData.map(p => p.y);
     const latest = levels[levels.length - 1];
     const oldest = levels[0];
     const change = latest - oldest;
     const maxL   = Math.max(...levels);
     const minL   = Math.min(...levels);
-    const rate   = change / hydroDays;
 
     const summary = document.getElementById('hydroSummary');
-    const dir = change > 0.01 ? '↑ Rising' : change < -0.01 ? '↓ Falling' : '→ Steady';
-    const col = change > 0.01 ? 'var(--amber)' : change < -0.01 ? 'var(--green)' : 'var(--muted)';
+    const dir = change > 0.005 ? '↑ Rising' : change < -0.005 ? '↓ Falling' : '→ Steady';
+    const col = change > 0.005 ? 'var(--amber)' : change < -0.005 ? 'var(--green)' : 'var(--muted)';
     summary.innerHTML = `<span style="font-weight:600;color:${col}">${dir}</span> &nbsp;${Math.abs(change).toFixed(3)} ft over ${hydroDays} days &nbsp;·&nbsp; Range: ${minL.toFixed(2)}–${maxL.toFixed(2)} ft`;
 
     const ctx = document.getElementById('hydroChart').getContext('2d');
     if (hydroInst) hydroInst.destroy();
 
-    // Operating range fill plugin
     const rangePlugin = {
         id: 'hydroRange',
         beforeDraw(chart) {
             const { ctx: c, chartArea: ca, scales } = chart;
             if (!ca) return;
-            c.save();
-            // Upper operating range line
             const uy = scales.y.getPixelForValue(CFG.upperRange);
-            c.setLineDash([4,3]);
-            c.strokeStyle = 'rgba(180,120,0,.6)';
-            c.lineWidth = 1.2;
-            c.beginPath(); c.moveTo(ca.left, uy); c.lineTo(ca.right, uy); c.stroke();
-            c.setLineDash([]);
-            c.font = 'bold 9px IBM Plex Mono, monospace';
-            c.fillStyle = 'rgba(180,120,0,.7)';
-            c.fillText('854.8 ft operating range', ca.left + 5, uy - 4);
-            c.restore();
+            if (uy > ca.top && uy < ca.bottom) {
+                c.save();
+                c.setLineDash([4,3]);
+                c.strokeStyle = 'rgba(180,120,0,.6)';
+                c.lineWidth = 1.2;
+                c.beginPath(); c.moveTo(ca.left, uy); c.lineTo(ca.right, uy); c.stroke();
+                c.setLineDash([]);
+                c.font = 'bold 9px IBM Plex Mono, monospace';
+                c.fillStyle = 'rgba(180,120,0,.7)';
+                c.fillText('854.8 ft operating range', ca.left + 5, uy - 4);
+                c.restore();
+            }
         }
     };
+
+    const tickUnit = hydroDays <= 1 ? 'hour' : 'day';
+    const maxTicks = hydroDays <= 7 ? 7 : 10;
 
     hydroInst = new Chart(ctx, {
         type: 'line',
         data: {
             datasets: [{
                 label: 'Lake Level (ft)',
-                data: data.map(p => ({ x: p.x, y: p.y })),
+                data: chartData.map(p => ({
+                    x: p.x instanceof Date ? p.x.getTime() : new Date(p.x).getTime(),
+                    y: p.y
+                })),
                 borderColor: '#2c5f7c',
                 borderWidth: 2,
                 pointRadius: 0,
                 pointHoverRadius: 4,
                 tension: 0.3,
-                fill: {
-                    target: 'origin',
-                    above: 'rgba(44,95,124,.08)',
-                }
+                fill: { target: 'origin', above: 'rgba(44,95,124,.08)' }
             }]
         },
         options: {
@@ -1705,7 +1720,6 @@ function renderHydro() {
             interaction: { mode:'index', intersect:false },
             plugins: {
                 legend: { display: false },
-                hydroRange: true,
                 tooltip: {
                     enabled: !('ontouchstart' in window),
                     callbacks: {
@@ -1722,11 +1736,17 @@ function renderHydro() {
             scales: {
                 x: {
                     type: 'time',
-                    time: { unit: hydroDays <= 7 ? 'day' : hydroDays <= 14 ? 'day' : 'week' },
+                    time: {
+                        unit: tickUnit,
+                        displayFormats: { hour:'h a', day:'MMM d' }
+                    },
                     ticks: {
                         font: { family:'IBM Plex Mono, monospace', size:9 },
                         color: '#777',
-                        maxTicksLimit: 8
+                        maxTicksLimit: maxTicks,
+                        maxRotation: 0,
+                        autoSkip: true,
+                        autoSkipPadding: 10,
                     },
                     grid: { color:'rgba(0,0,0,.04)' }
                 },
@@ -1734,7 +1754,8 @@ function renderHydro() {
                     ticks: {
                         font: { family:'IBM Plex Mono, monospace', size:10 },
                         color: '#777',
-                        callback: v => v.toFixed(2) + ' ft'
+                        callback: v => v.toFixed(2) + ' ft',
+                        maxTicksLimit: 5,
                     },
                     grid: { color:'rgba(0,0,0,.05)' }
                 }
