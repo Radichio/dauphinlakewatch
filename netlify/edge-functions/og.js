@@ -43,7 +43,7 @@ export default async (request, context) => {
 
   const levelStr  = level ? `${level} ft` : 'Live Monitoring';
   const title     = `Dauphin Lake Watch — ${levelStr} · ${status}`;
-  const desc      = `${statusNote} Normal range: 853.0–854.8 ft · Flood stage: 858.0 ft · dauphinlakewatch.ca`;
+  const desc      = `${statusNote} · Normal range: 853–854.8 ft · Flood stage: 858 ft · Updated ${new Date().toLocaleTimeString('en-CA',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:'America/Winnipeg'})} CDT`;
   const imageUrl  = 'https://dauphinlakewatch.ca/share-image.png';
   const siteUrl   = 'https://dauphinlakewatch.ca';
 
