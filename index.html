@@ -633,12 +633,13 @@
         .share-btn:hover { background: var(--navy-mid); }
         #shareCard {
             display: none;
-            background: var(--navy);
-            color: white;
+            background: white;
+            color: var(--text);
             border-radius: 8px;
-            padding: 24px 20px 20px;
+            border: 2px solid var(--paper-dark);
+            padding: 20px;
             margin-bottom: 16px;
-            max-width: 380px;
+            max-width: 340px;
             margin-left: auto;
             margin-right: auto;
         }
@@ -646,83 +647,95 @@
         .sc-header {
             font-family: var(--cond);
             font-weight: 800;
-            font-size: 17px;
-            letter-spacing: .1em;
+            font-size: 13px;
+            letter-spacing: .12em;
             text-transform: uppercase;
-            opacity: .65;
-            margin-bottom: 14px;
+            color: var(--muted);
             text-align: center;
+            margin-bottom: 10px;
         }
         .sc-level {
             font-family: var(--cond);
             font-weight: 800;
-            font-size: 68px;
+            font-size: 62px;
             line-height: 1;
             text-align: center;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
         .sc-unit {
             font-family: var(--mono);
-            font-size: 10px;
-            opacity: .5;
+            font-size: 9px;
+            color: var(--muted);
             text-align: center;
-            letter-spacing: .08em;
-            margin-bottom: 6px;
+            letter-spacing: .07em;
+            margin-bottom: 4px;
         }
         .sc-trend {
             font-family: var(--mono);
-            font-size: 12px;
+            font-size: 11px;
+            color: var(--muted);
             text-align: center;
-            opacity: .75;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
-        .sc-divider { border:none; border-top:1px solid rgba(255,255,255,.15); margin:14px 0; }
-        .sc-therm { display:flex; flex-direction:column; gap:3px; margin-bottom:14px; }
+        .sc-divider { border:none; border-top:1px solid var(--paper-mid); margin:12px 0; }
+        .sc-therm { display:flex; flex-direction:column; gap:2px; margin-bottom:12px; }
         .sc-rung {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 7px 10px;
-            border-radius: 4px;
-            opacity: .32;
+            gap: 8px;
+            padding: 5px 8px;
+            border-radius: 3px;
+            opacity: .28;
             border-left: 3px solid transparent;
         }
-        .sc-rung.active { opacity:1; border-left-color:white; background:rgba(255,255,255,.07); }
-        .sc-rung-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+        .sc-rung.active {
+            opacity: 1;
+            border-radius: 4px;
+        }
+        .sc-rung-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
         .sc-rung-name {
+            font-family: var(--cond);
+            font-weight: 700;
+            font-size: 12px;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            flex: 1;
+            color: var(--text);
+        }
+        .sc-rung.active .sc-rung-name { font-size: 14px; }
+        .sc-rung-range { font-family:var(--mono); font-size:9px; color:var(--muted); }
+        .sc-active-note {
+            font-size: 12.5px;
+            line-height: 1.45;
+            color: var(--text);
+            text-align: center;
+            padding: 8px 10px;
+            border-radius: 4px;
+            background: var(--paper);
+            margin-bottom: 12px;
+        }
+        .sc-url { font-family:var(--mono); font-size:10px; color:var(--muted); text-align:center; }
+        .sc-ts  { font-family:var(--mono); font-size:9px; color:var(--muted); opacity:.6; text-align:center; margin-top:2px; }
+        .sc-actions { display:flex; gap:8px; margin-top:12px; justify-content:center; }
+        .sc-action-btn {
+            background: var(--navy);
+            border: none;
+            color: white;
+            border-radius: 4px;
+            padding: 9px 18px;
             font-family: var(--cond);
             font-weight: 700;
             font-size: 13px;
             letter-spacing: .04em;
-            text-transform: uppercase;
-            flex: 1;
-        }
-        .sc-rung.active .sc-rung-name { font-size:15px; }
-        .sc-rung-range { font-family:var(--mono); font-size:10px; opacity:.65; }
-        .sc-note {
-            background: rgba(255,255,255,.08);
-            border-radius: 4px;
-            padding: 10px 13px;
-            font-size: 13px;
-            line-height: 1.5;
-            margin-bottom: 14px;
-        }
-        .sc-url { font-family:var(--mono); font-size:11px; opacity:.45; text-align:center; }
-        .sc-ts  { font-family:var(--mono); font-size:10px; opacity:.38; text-align:center; margin-top:3px; }
-        .sc-actions { display:flex; gap:8px; margin-top:12px; justify-content:center; }
-        .sc-action-btn {
-            background: rgba(255,255,255,.12);
-            border: 1px solid rgba(255,255,255,.2);
-            color: white;
-            border-radius: 4px;
-            padding: 8px 16px;
-            font-family: var(--mono);
-            font-size: 11px;
             cursor: pointer;
             transition: background .15s;
         }
-        .sc-action-btn:hover { background:rgba(255,255,255,.22); }
-        .sc-copied { font-family:var(--mono); font-size:11px; color:#4ade80; text-align:center; margin-top:6px; min-height:16px; }    </style>
+        .sc-action-btn.secondary {
+            background: var(--paper-mid);
+            color: var(--text);
+        }
+        .sc-action-btn:hover { opacity: .85; }
+        .sc-copied { font-family:var(--mono); font-size:11px; color:var(--green); text-align:center; margin-top:6px; min-height:16px; }    </style>
 </head>
 <body>
 
@@ -933,7 +946,7 @@
     <!-- ── SHARE CARD ── -->
     <div class="card" style="margin-top:16px;">
         <div class="card-label">Share Current Status</div>
-        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">Generate a status card to screenshot and share with neighbours, post to Facebook groups, or text to family at the lake.</p>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">One tap to share current lake status with neighbours, Facebook groups, or family at the lake.</p>
         <button class="share-btn" onclick="toggleShareCard()">📊 &nbsp;Generate Status Card</button>
         <div id="shareCard">
             <div class="sc-header">Dauphin Lake Watch</div>
@@ -942,13 +955,12 @@
             <div class="sc-trend" id="scTrend">—</div>
             <hr class="sc-divider">
             <div class="sc-therm" id="scTherm"></div>
-            <div class="sc-note" id="scNote">—</div>
-            <hr class="sc-divider">
+            <div class="sc-active-note" id="scNote">—</div>
             <div class="sc-url">dauphinlakewatch.ca</div>
             <div class="sc-ts" id="scTs">—</div>
             <div class="sc-actions">
-                <button class="sc-action-btn" onclick="copyShareLink()">Copy Link</button>
-                <button class="sc-action-btn" onclick="closeShareCard()">Close</button>
+                <button class="sc-action-btn" onclick="shareCard()">↑ Share</button>
+                <button class="sc-action-btn secondary" onclick="closeShareCard()">Close</button>
             </div>
             <div class="sc-copied" id="scCopied"></div>
         </div>
@@ -1545,17 +1557,17 @@ const THERM_RUNGS = [
     { key:'high',     lbl:'High',        range:'856.5–857.0 ft', dot:'#c47000' },
     { key:'elevated', lbl:'Elevated',    range:'855.5–856.5 ft', dot:'#b84c00' },
     { key:'advisory', lbl:'Advisory',    range:'854.8–855.5 ft', dot:'#c8a200' },
-    { key:'watch',    lbl:'Watch',       range:'854.0–854.8 ft', dot:'#c8a200' },
+    { key:'watch',    lbl:'Watch',       range:'854.0–854.8 ft', dot:'#8a6500' },
     { key:'normal',   lbl:'Normal',      range:'Below 854.0 ft', dot:'#1a6b3a' },
 ];
 
 const THERM_NOTES = {
-    flood:    'At or above flood stage. Follow Manitoba provincial emergency guidance.',
-    critical: 'Approaching flood stage. Full sandbagging underway. Coordinate with RM.',
-    high:     'Road impacts possible. Move vehicles to high ground.',
-    elevated: 'Low-lying flooding possible. Sandbag vulnerable low points now.',
+    flood:    'At or above flood stage. Follow Manitoba emergency guidance.',
+    critical: 'Approaching flood stage. Full sandbagging underway.',
+    high:     'Road impacts possible. Active property protection underway.',
+    elevated: 'Low-lying flooding possible. Sandbag low points now.',
     advisory: 'Above operating range. Confirm sandbag supply is ready.',
-    watch:    'Approaching operating range. Check sump pumps and drainage paths. Spring melt is coming.',
+    watch:    'Approaching operating range. Check sump pumps. Spring melt is coming.',
     normal:   'No action needed. Monitoring continues.',
 };
 
@@ -1577,34 +1589,52 @@ function closeShareCard() {
 }
 
 function renderShareCard() {
-    const ft   = _shareData.ft   || 854.17;
-    const st   = _shareData.st   || lakeStatus(ft);
-    const tr   = _shareData.tr   || { t:'→ Steady', c:'flat' };
-    const tsStr= _shareData.tsStr|| '';
+    const ft    = _shareData.ft    || 854.17;
+    const st    = _shareData.st    || lakeStatus(ft);
+    const tr    = _shareData.tr    || { t:'→ Steady' };
+    const tsStr = _shareData.tsStr || '';
+    const colorMap = { g:'#1a6b3a', y:'#8a6500', a:'#b84c00', r:'#8b0000' };
+    const bgMap    = { g:'#ebf7f0', y:'#fdf8e0', a:'#fff1e8', r:'#ffe8e8' };
 
-    document.getElementById('scLevel').textContent = ft.toFixed(2);
-    document.getElementById('scTrend').textContent = tr.t;
-    document.getElementById('scTs').textContent    = tsStr ? `Updated ${tsStr}` : '';
+    document.getElementById('scLevel').textContent   = ft.toFixed(2);
+    document.getElementById('scLevel').style.color   = colorMap[st.cls];
+    document.getElementById('scTrend').textContent   = tr.t;
+    document.getElementById('scTs').textContent      = tsStr ? `Updated ${tsStr}` : '';
 
-    // Thermometer — flood at top, normal at bottom
-    document.getElementById('scTherm').innerHTML = THERM_RUNGS.map(r => `
-        <div class="sc-rung ${r.key === st.key ? 'active' : ''}">
+    document.getElementById('scTherm').innerHTML = THERM_RUNGS.map(r => {
+        const isActive = r.key === st.key;
+        const bg  = isActive ? bgMap[st.cls]    : '';
+        const col = isActive ? colorMap[st.cls] : '';
+        return `<div class="sc-rung ${isActive ? 'active' : ''}" style="${isActive ? 'background:'+bg+';border-left:3px solid '+col : ''}">
             <div class="sc-rung-dot" style="background:${r.dot}"></div>
-            <div class="sc-rung-name">${r.lbl}</div>
+            <div class="sc-rung-name" style="${isActive ? 'color:'+col : ''}">${r.lbl}</div>
             <div class="sc-rung-range">${r.range}</div>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 
     document.getElementById('scNote').textContent = THERM_NOTES[st.key] || '';
 }
 
-function copyShareLink() {
-    const url = 'https://dauphinlakewatch.ca';
-    navigator.clipboard.writeText(url).then(() => {
+async function shareCard() {
+    const ft    = (_shareData.ft || 854.17).toFixed(2);
+    const st    = _shareData.st  || lakeStatus(parseFloat(ft));
+    const tsStr = _shareData.tsStr || '';
+    const text  = `Dauphin Lake Watch\n${ft} ft · ${st.lbl}\n${tsStr ? 'Updated '+tsStr+'\n' : ''}dauphinlakewatch.ca`;
+    const url   = 'https://dauphinlakewatch.ca';
+
+    if (navigator.share) {
+        try {
+            await navigator.share({ title:'Dauphin Lake Watch', text, url });
+            return;
+        } catch(e) { /* cancelled */ }
+    }
+    // Fallback — copy link
+    try {
+        await navigator.clipboard.writeText(url);
         const el = document.getElementById('scCopied');
-        el.textContent = '✓ Link copied — paste anywhere to share';
+        el.textContent = '✓ Link copied — paste to share';
         setTimeout(() => el.textContent = '', 3000);
-    });
+    } catch(e) {}
 }
 
 init();
