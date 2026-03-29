@@ -632,6 +632,11 @@
             color: white;
             border-color: var(--navy);
         }
+        .hydro-btn:disabled {
+            opacity: .35;
+            cursor: not-allowed;
+        }
+        .hydro-btn:disabled:hover { background: var(--paper); }
 
         /* ─────────── SHARE CARD ─────────── */
         .share-btn {
@@ -892,10 +897,11 @@
             <div id="hydroSummary" style="font-size:13px;color:var(--muted);line-height:1.5;"></div>
             <div style="display:flex;gap:6px;">
                 <button class="hydro-btn active" onclick="setHydroRange(7,this)">7 days</button>
-                <button class="hydro-btn" onclick="setHydroRange(14,this)">14 days</button>
-                <button class="hydro-btn" onclick="setHydroRange(30,this)">30 days</button>
+                <button class="hydro-btn" disabled title="Available as data accumulates">14 days</button>
+                <button class="hydro-btn" disabled title="Available as data accumulates">30 days</button>
             </div>
         </div>
+        <p style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;">Live data collection began March 28, 2026. Additional ranges will unlock as the record builds.</p>
         <div class="chart-wrap" style="height:220px;">
             <canvas id="hydroChart"></canvas>
         </div>
