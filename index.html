@@ -677,6 +677,18 @@
             margin-bottom: 14px;
         }
         .sc-divider { border:none; border-top:1px solid rgba(255,255,255,.12); margin:12px 0; }
+        .sc-context {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: rgba(255,255,255,.5);
+            text-align: center;
+            margin-bottom: 14px;
+            padding: 6px 10px;
+            background: rgba(255,255,255,.06);
+            border-radius: 4px;
+            line-height: 1.6;
+        }
+        .sc-context strong { color: rgba(255,255,255,.85); }
         .sc-therm { display:flex; flex-direction:column; gap:2px; margin-bottom:12px; }
         .sc-rung {
             display: flex;
@@ -684,10 +696,8 @@
             gap: 10px;
             padding: 7px 10px;
             border-radius: 4px;
-            opacity: .55;
             border-left: 3px solid transparent;
         }
-        .sc-rung.active { opacity:1; border-left-color:white; background:rgba(255,255,255,.09); }
         .sc-rung-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
         .sc-rung-name {
             font-family: var(--cond);
@@ -696,10 +706,9 @@
             letter-spacing: .04em;
             text-transform: uppercase;
             flex: 1;
-            color: white;
         }
         .sc-rung.active .sc-rung-name { font-size:15px; }
-        .sc-rung-range { font-family:var(--mono); font-size:10px; color:rgba(255,255,255,.65); }
+        .sc-rung-range { font-family:var(--mono); font-size:10px; }
         .sc-active-note {
             font-size: 12.5px;
             line-height: 1.45;
@@ -949,7 +958,7 @@
             <div class="sc-level" id="scLevel">—</div>
             <div class="sc-unit">FEET ABOVE SEA LEVEL · WSC PROVISIONAL</div>
             <div class="sc-trend" id="scTrend">—</div>
-            <hr class="sc-divider">
+            <div class="sc-context">Normal operating range: <strong>853.0 – 854.8 ft</strong><br>Flood stage: <strong>858.0 ft</strong></div>
             <div class="sc-therm" id="scTherm"></div>
             <div class="sc-active-note" id="scNote">—</div>
             <div class="sc-url">dauphinlakewatch.ca</div>
@@ -1563,7 +1572,7 @@ const THERM_NOTES = {
     high:     'Road impacts possible. Active property protection underway.',
     elevated: 'Low-lying flooding possible. Sandbag low points now.',
     advisory: 'Above operating range. Confirm sandbag supply is ready.',
-    watch:    'Approaching operating range. Check sump pumps. Spring melt is coming.',
+    watch:    'Approaching upper operating range. Spring melt is commencing — good time to prepare.',
     normal:   'No action needed. Monitoring continues.',
 };
 
@@ -1590,21 +1599,43 @@ function renderShareCard() {
     const tr    = _shareData.tr    || { t:'→ Steady' };
     const tsStr = _shareData.tsStr || '';
     const colorMap = { g:'#1a6b3a', y:'#8a6500', a:'#b84c00', r:'#8b0000' };
-    const bgMap    = { g:'#ebf7f0', y:'#fdf8e0', a:'#fff1e8', r:'#ffe8e8' };
 
     document.getElementById('scLevel').textContent   = ft.toFixed(2);
-    document.getElementById('scLevel').style.color   = colorMap[st.cls];
+    document.getElementById('scLevel').style.color   = colorMap[st.cls] === '#8a6500' ? '#f0c040' : colorMap[st.cls] === '#1a6b3a' ? '#4ade80' : '#ff9966';
     document.getElementById('scTrend').textContent   = tr.t;
     document.getElementById('scTs').textContent      = tsStr ? `Updated ${tsStr}` : '';
 
+    // Each rung gets a subtle tinted background — green at bottom, red at top
+    const rungBg = {
+        flood:    'rgba(139,0,0,.35)',
+        critical: 'rgba(184,76,0,.28)',
+        high:     'rgba(196,112,0,.22)',
+        elevated: 'rgba(184,76,0,.18)',
+        advisory: 'rgba(200,162,0,.16)',
+        watch:    'rgba(200,162,0,.12)',
+        normal:   'rgba(26,107,58,.18)',
+    };
+    const rungDotColor = {
+        flood:'#ff6b6b', critical:'#ff9944', high:'#ffb347',
+        elevated:'#ffcc44', advisory:'#ffe066', watch:'#ffd700', normal:'#4ade80'
+    };
+    // Active rung text/border colours that contrast on dark
+    const activeText = {
+        flood:'#ff9999', critical:'#ffbb88', high:'#ffd088',
+        elevated:'#ffdd88', advisory:'#ffe888', watch:'#ffe066', normal:'#6ee7a0'
+    };
+    const activeBorder = activeText;
+
     document.getElementById('scTherm').innerHTML = THERM_RUNGS.map(r => {
         const isActive = r.key === st.key;
-        const bg  = isActive ? bgMap[st.cls]    : '';
-        const col = isActive ? colorMap[st.cls] : '';
-        return `<div class="sc-rung ${isActive ? 'active' : ''}" style="${isActive ? 'background:'+bg+';border-left:3px solid '+col : ''}">
-            <div class="sc-rung-dot" style="background:${r.dot}"></div>
-            <div class="sc-rung-name" style="${isActive ? 'color:'+col : ''}">${r.lbl}</div>
-            <div class="sc-rung-range">${r.range}</div>
+        const bg     = isActive ? (rungBg[r.key] || 'rgba(255,255,255,.1)') : 'rgba(255,255,255,.03)';
+        const border = isActive ? (activeBorder[r.key] || 'white') : 'transparent';
+        const nameColor = isActive ? (activeText[r.key] || 'white') : 'rgba(255,255,255,.65)';
+        const rangeColor = isActive ? 'rgba(255,255,255,.75)' : 'rgba(255,255,255,.35)';
+        return `<div class="sc-rung ${isActive ? 'active' : ''}" style="background:${bg};border-left:3px solid ${border}">
+            <div class="sc-rung-dot" style="background:${rungDotColor[r.key] || '#fff'}"></div>
+            <div class="sc-rung-name" style="color:${nameColor}">${r.lbl}</div>
+            <div class="sc-rung-range" style="color:${rangeColor}">${r.range}</div>
         </div>`;
     }).join('');
 
