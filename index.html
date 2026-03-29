@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;800&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -613,6 +614,25 @@
             .header-title h1 { font-size: 18px; }
         }
 
+        /* ─────────── HYDROGRAPH BUTTONS ─────────── */
+        .hydro-btn {
+            background: var(--paper);
+            border: 1px solid var(--paper-dark);
+            border-radius: 4px;
+            padding: 5px 12px;
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all .15s;
+        }
+        .hydro-btn:hover { background: var(--paper-dark); }
+        .hydro-btn.active {
+            background: var(--navy);
+            color: white;
+            border-color: var(--navy);
+        }
+
         /* ─────────── SHARE CARD ─────────── */
         .share-btn {
             background: var(--navy);
@@ -865,7 +885,23 @@
         </div>
     </div>
 
-    <!-- ── 4. TRIBUTARY EARLY WARNING ── -->
+    <!-- ── 4. HYDROGRAPH — 30-day rolling lake level ── -->
+    <div class="card">
+        <div class="card-label">Lake Level — Last 30 Days &nbsp;·&nbsp; Rate of Rise</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+            <div id="hydroSummary" style="font-size:13px;color:var(--muted);line-height:1.5;"></div>
+            <div style="display:flex;gap:6px;">
+                <button class="hydro-btn active" onclick="setHydroRange(7,this)">7 days</button>
+                <button class="hydro-btn" onclick="setHydroRange(14,this)">14 days</button>
+                <button class="hydro-btn" onclick="setHydroRange(30,this)">30 days</button>
+            </div>
+        </div>
+        <div class="chart-wrap" style="height:220px;">
+            <canvas id="hydroChart"></canvas>
+        </div>
+    </div>
+
+    <!-- ── 5. TRIBUTARY EARLY WARNING ── -->
     <div class="card">
         <div class="card-label">Tributary Early Warning &nbsp;·&nbsp; Basin Feeder Rivers — Water Survey of Canada (Provisional)</div>
         <div class="trib-insight" id="tribInsight">Loading tributary data…</div>
@@ -1528,6 +1564,9 @@ async function init() {
     // Fill gaps from seed
     TRIBS.forEach(d => { if (!tribData[d.key]) tribData[d.key] = SEED.tribs[d.key]; });
 
+    // ── Hydrograph (runs independently — needs full 30-day fetch)
+    fetchHydroData();
+
     // ── Weather
     try {
         const wx = await fetchWeather();
@@ -1570,8 +1609,142 @@ async function init() {
 }
 
 // ─────────────────────────────────────────────────────────
-// SHARE CARD
+// HYDROGRAPH — 30-day rolling lake level
 // ─────────────────────────────────────────────────────────
+let hydroInst   = null;
+let hydroAllData = [];
+let hydroDays   = 7;
+
+function setHydroRange(days, btn) {
+    hydroDays = days;
+    document.querySelectorAll('.hydro-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderHydro();
+}
+
+async function fetchHydroData() {
+    try {
+        const rows = await fetchStn(CFG.st.lake, 288); // ~30 days at 15-min intervals
+        hydroAllData = [...rows].reverse()
+            .filter(r => r.level != null)
+            .map(r => ({ x: r.dt, y: parseFloat(mToFt(r.level).toFixed(3)) }));
+        renderHydro();
+    } catch(e) {
+        console.warn('[hydro]', e.message);
+    }
+}
+
+function renderHydro() {
+    if (!hydroAllData.length) return;
+
+    // Filter to selected range
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - hydroDays);
+    const data = hydroAllData.filter(p => p.x >= cutoff);
+
+    if (!data.length) return;
+
+    // Stats
+    const levels = data.map(p => p.y);
+    const latest = levels[levels.length - 1];
+    const oldest = levels[0];
+    const change = latest - oldest;
+    const maxL   = Math.max(...levels);
+    const minL   = Math.min(...levels);
+    const rate   = change / hydroDays;
+
+    const summary = document.getElementById('hydroSummary');
+    const dir = change > 0.01 ? '↑ Rising' : change < -0.01 ? '↓ Falling' : '→ Steady';
+    const col = change > 0.01 ? 'var(--amber)' : change < -0.01 ? 'var(--green)' : 'var(--muted)';
+    summary.innerHTML = `<span style="font-weight:600;color:${col}">${dir}</span> &nbsp;${Math.abs(change).toFixed(3)} ft over ${hydroDays} days &nbsp;·&nbsp; Range: ${minL.toFixed(2)}–${maxL.toFixed(2)} ft`;
+
+    const ctx = document.getElementById('hydroChart').getContext('2d');
+    if (hydroInst) hydroInst.destroy();
+
+    // Operating range fill plugin
+    const rangePlugin = {
+        id: 'hydroRange',
+        beforeDraw(chart) {
+            const { ctx: c, chartArea: ca, scales } = chart;
+            if (!ca) return;
+            c.save();
+            // Upper operating range line
+            const uy = scales.y.getPixelForValue(CFG.upperRange);
+            c.setLineDash([4,3]);
+            c.strokeStyle = 'rgba(180,120,0,.6)';
+            c.lineWidth = 1.2;
+            c.beginPath(); c.moveTo(ca.left, uy); c.lineTo(ca.right, uy); c.stroke();
+            c.setLineDash([]);
+            c.font = 'bold 9px IBM Plex Mono, monospace';
+            c.fillStyle = 'rgba(180,120,0,.7)';
+            c.fillText('854.8 ft operating range', ca.left + 5, uy - 4);
+            c.restore();
+        }
+    };
+
+    hydroInst = new Chart(ctx, {
+        type: 'line',
+        data: {
+            datasets: [{
+                label: 'Lake Level (ft)',
+                data: data.map(p => ({ x: p.x, y: p.y })),
+                borderColor: '#2c5f7c',
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                tension: 0.3,
+                fill: {
+                    target: 'origin',
+                    above: 'rgba(44,95,124,.08)',
+                }
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode:'index', intersect:false },
+            plugins: {
+                legend: { display: false },
+                hydroRange: true,
+                tooltip: {
+                    enabled: !('ontouchstart' in window),
+                    callbacks: {
+                        title: items => {
+                            const d = new Date(items[0].parsed.x);
+                            const tz = 'America/Winnipeg';
+                            return d.toLocaleDateString('en-CA',{month:'short',day:'numeric',timeZone:tz}) + ' ' +
+                                   d.toLocaleTimeString('en-CA',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:tz});
+                        },
+                        label: item => `${item.parsed.y.toFixed(3)} ft`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: 'time',
+                    time: { unit: hydroDays <= 7 ? 'day' : hydroDays <= 14 ? 'day' : 'week' },
+                    ticks: {
+                        font: { family:'IBM Plex Mono, monospace', size:9 },
+                        color: '#777',
+                        maxTicksLimit: 8
+                    },
+                    grid: { color:'rgba(0,0,0,.04)' }
+                },
+                y: {
+                    ticks: {
+                        font: { family:'IBM Plex Mono, monospace', size:10 },
+                        color: '#777',
+                        callback: v => v.toFixed(2) + ' ft'
+                    },
+                    grid: { color:'rgba(0,0,0,.05)' }
+                }
+            }
+        },
+        plugins: [rangePlugin]
+    });
+}
+
+
 const THERM_RUNGS = [
     { key:'flood',    lbl:'Flood Stage', range:'858.0+ ft',      dot:'#8b0000' },
     { key:'critical', lbl:'Critical',    range:'857.0–858.0 ft', dot:'#b84c00' },
