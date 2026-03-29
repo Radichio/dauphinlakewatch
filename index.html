@@ -949,7 +949,7 @@
         </div>
     </div>
     <!-- ── SHARE CARD ── -->
-    <div class="card" style="margin-top:16px;">
+    <div class="card" id="status" style="margin-top:16px;">
         <div class="card-label">Share Current Status</div>
         <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5;">One tap to share current lake status with neighbours, Facebook groups, or family at the lake.</p>
         <button class="share-btn" onclick="toggleShareCard()">📊 &nbsp;Generate Status Card</button>
@@ -978,7 +978,10 @@
 ════════════════════════════════════════════════════════ -->
 <footer class="site-footer">
     <div class="footer-in">
-        <div class="footer-brand">iConnect Studio — Independent Community Hydrological Research &amp; Advisory</div>
+        <div class="footer-brand" style="display:flex;align-items:center;gap:12px;">
+            <img src="iconnect-logo.png" alt="iConnect Studio" style="width:32px;height:32px;opacity:.6;filter:invert(1);">
+            <span>iConnect Studio — Independent Community Hydrological Research &amp; Advisory</span>
+        </div>
         <div>Water level data: Water Survey of Canada, Environment and Climate Change Canada. Provisional real-time data subject to revision. Source: wateroffice.ec.gc.ca</div>
         <div style="margin-top:4px;">This is an independent community monitoring tool, not an official government forecast. For official provincial flood guidance: <span style="color:rgba(255,255,255,.85)">www.manitoba.ca/floodinfo/</span></div>
         <div style="margin-top:4px;opacity:.45;">Compiled from federal and provincial open data sources. Dashboard refreshes every 15 minutes.</div>
@@ -1549,7 +1552,17 @@ async function init() {
         document.getElementById('lastUpdate').textContent = 'Last verified: March 27, 2026 · 17:20 CST';
     }
 
-    // ── Schedule refresh
+    // Auto-open share card if URL contains #status
+    if (window.location.hash === '#status') {
+        setTimeout(() => {
+            renderShareCard();
+            const card = document.getElementById('shareCard');
+            card.classList.add('visible');
+            document.getElementById('status').scrollIntoView({ behavior:'smooth', block:'start' });
+        }, 1200); // slight delay so data loads first
+    }
+
+    // Schedule refresh
     setTimeout(init, CFG.refresh);
 }
 
