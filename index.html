@@ -1012,6 +1012,27 @@
             Watch for: Rain during melt accelerates lake rise significantly. Cold snaps are temporary pauses, not resets. Above-normal temperatures are forecast for April–June 2026 (IRI / all models agree on the temperature signal).
         </div>
     </div>
+    <!-- ── ALERTS SIGNUP ── -->
+    <div class="card" style="margin-top:16px;">
+        <div class="card-label">Get Flood Alerts &nbsp;·&nbsp; Email &amp; SMS Notifications</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px;">
+            Receive an alert the moment the lake crosses a key threshold. One notification per level change — no spam.
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;" class="alert-grid">
+            <input type="email" id="alertEmail" placeholder="Email address" style="padding:10px 12px;border:1.5px solid var(--paper-dark);border-radius:4px;font-family:var(--sans);font-size:14px;color:var(--text);background:white;">
+            <input type="tel" id="alertPhone" placeholder="Phone (SMS)" style="padding:10px 12px;border:1.5px solid var(--paper-dark);border-radius:4px;font-family:var(--sans);font-size:14px;color:var(--text);background:white;">
+        </div>
+        <button onclick="dashSubscribe()" style="width:100%;background:var(--navy);color:white;border:none;border-radius:4px;padding:11px;font-family:var(--cond);font-weight:700;font-size:14px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;" id="alertBtn">
+            Subscribe to Alerts
+        </button>
+        <div id="alertMsg" style="margin-top:10px;font-size:13px;min-height:18px;font-family:var(--mono);"></div>
+        <a href="/alerts" style="display:block;text-align:center;margin-top:10px;font-family:var(--mono);font-size:11px;color:var(--blue);text-decoration:none;">
+            Learn more about alert thresholds →
+        </a>
+        <style>
+            @media(max-width:480px){ .alert-grid{ grid-template-columns:1fr !important; } }
+        </style>
+    </div>
 
 </main>
 
@@ -1878,6 +1899,47 @@ async function shareCard() {
         el.textContent = '✓ Link copied — paste to share';
         setTimeout(() => el.textContent = '', 3000);
     } catch(e) {}
+}
+
+async function dashSubscribe() {
+    const email = document.getElementById('alertEmail').value.trim();
+    const phone = document.getElementById('alertPhone').value.trim();
+    const btn   = document.getElementById('alertBtn');
+    const msg   = document.getElementById('alertMsg');
+
+    if (!email && !phone) {
+        msg.style.color = 'var(--amber)';
+        msg.textContent = 'Enter an email or phone number.';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Subscribing…';
+
+    try {
+        const res = await fetch('/api/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, phone })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            msg.style.color = 'var(--green)';
+            msg.textContent = '✓ ' + data.message;
+            btn.textContent = 'Subscribed ✓';
+        } else {
+            msg.style.color = 'var(--amber)';
+            msg.textContent = data.error || 'Something went wrong.';
+            btn.disabled = false;
+            btn.textContent = 'Subscribe to Alerts';
+        }
+    } catch {
+        msg.style.color = 'var(--amber)';
+        msg.textContent = 'Connection error — please try again.';
+        btn.disabled = false;
+        btn.textContent = 'Subscribe to Alerts';
+    }
 }
 
 init();
