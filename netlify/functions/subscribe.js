@@ -70,7 +70,57 @@ export default async (req, context) => {
             from: 'Dauphin Lake Watch <alerts@dauphinlakewatch.ca>',
             to: email,
             subject: "You're subscribed to Dauphin Lake Watch alerts",
-            html: '<div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:24px;"><div style="background:#0d2137;padding:20px;border-radius:6px 6px 0 0;"><h1 style="color:white;font-size:18px;margin:0;">DAUPHIN LAKE WATCH</h1></div><div style="border:1px solid #e5e7eb;border-top:none;padding:24px;border-radius:0 0 6px 6px;"><p>You\'re now subscribed to flood alerts. You\'ll be notified when the lake crosses a key threshold.</p><p style="margin-top:16px;">Check current conditions: <a href="https://dauphinlakewatch.ca">dauphinlakewatch.ca</a></p><p style="color:#9ca3af;font-size:12px;margin-top:24px;border-top:1px solid #e5e7eb;padding-top:16px;">iConnect Studio — Independent Community Hydrological Research & Advisory. Reply "unsubscribe" to opt out.</p></div></div>'
+            html: `
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#f0ebe1;font-family:system-ui,-apple-system,sans-serif;">
+<div style="max-width:520px;margin:32px auto;padding:0 16px 32px;">
+
+  <div style="background:#0d2137;padding:22px 26px;border-radius:6px 6px 0 0;">
+    <div style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,.45);text-transform:uppercase;margin-bottom:6px;font-family:monospace;">Dauphin Lake Watch</div>
+    <div style="color:white;font-size:22px;font-weight:700;line-height:1.2;">You're subscribed to<br>flood alerts.</div>
+  </div>
+
+  <div style="background:white;border:1px solid #e5e7eb;border-top:none;padding:28px 26px;border-radius:0 0 6px 6px;">
+
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 18px;">
+      Thanks for signing up. Spring melt is coming and having eyes on the lake early makes a real difference — that's exactly why this tool exists.
+    </p>
+
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 18px;">
+      You'll hear from us when the lake crosses a meaningful threshold. Not noise — just the moments that matter.
+    </p>
+
+    <p style="color:#374151;font-size:15px;line-height:1.7;margin:0 0 24px;">
+      In the meantime, check current conditions anytime at <a href="https://dauphinlakewatch.ca" style="color:#2c5f7c;font-weight:500;">dauphinlakewatch.ca</a>. The tributary panel is worth watching — when the Turtle River starts moving fast, the lake follows a few days later.
+    </p>
+
+    <div style="background:#f8f6f2;border-left:3px solid #2c5f7c;padding:14px 18px;border-radius:0 4px 4px 0;margin-bottom:24px;">
+      <div style="font-size:11px;letter-spacing:2px;color:#6b7280;text-transform:uppercase;font-family:monospace;margin-bottom:10px;">Alert thresholds</div>
+      <div style="font-size:13px;color:#374151;line-height:2;font-family:monospace;">
+        <span style="color:#1a6b3a;">●</span> Watch &nbsp;&nbsp;&nbsp;&nbsp; 854.0 ft — Approaching operating range<br>
+        <span style="color:#c8a200;">●</span> Advisory &nbsp; 854.8 ft — Above operating range<br>
+        <span style="color:#b84c00;">●</span> Elevated &nbsp; 855.5 ft — Low-lying flooding possible<br>
+        <span style="color:#b84c00;">●</span> High &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 856.5 ft — Road impacts possible<br>
+        <span style="color:#8b0000;">●</span> Critical &nbsp; 857.0 ft — Approaching flood stage<br>
+        <span style="color:#8b0000;">●</span> Flood Stage 858.0 ft — Active flooding
+      </div>
+    </div>
+
+    <a href="https://dauphinlakewatch.ca" style="display:block;background:#0d2137;color:white;text-align:center;padding:14px;border-radius:5px;text-decoration:none;font-weight:600;font-size:15px;margin-bottom:24px;">
+      View Live Dashboard →
+    </a>
+
+    <p style="color:#9ca3af;font-size:12px;line-height:1.7;margin:0;padding-top:18px;border-top:1px solid #f3f4f6;">
+      — iConnect Studio, care &amp; monitoring on behalf of the Dauphin Lake community<br><br>
+      This is not an official government alert. For provincial flood guidance: <a href="https://manitoba.ca/floodinfo/" style="color:#6b7280;">manitoba.ca/floodinfo/</a><br>
+      To unsubscribe, reply to this email with "unsubscribe".
+    </p>
+
+  </div>
+</div>
+</body>
+</html>`
           })
         });
         const resendData = await resendRes.json();
