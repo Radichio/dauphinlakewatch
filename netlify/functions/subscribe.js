@@ -67,7 +67,7 @@ export default async (req, context) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: 'Dauphin Lake Watch <alerts@send.dauphinlakewatch.ca>',
+            from: 'Dauphin Lake Watch <alerts@dauphinlakewatch.ca>',
             to: email,
             subject: "You're subscribed to Dauphin Lake Watch alerts",
             html: '<div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:24px;"><div style="background:#0d2137;padding:20px;border-radius:6px 6px 0 0;"><h1 style="color:white;font-size:18px;margin:0;">DAUPHIN LAKE WATCH</h1></div><div style="border:1px solid #e5e7eb;border-top:none;padding:24px;border-radius:0 0 6px 6px;"><p>You\'re now subscribed to flood alerts. You\'ll be notified when the lake crosses a key threshold.</p><p style="margin-top:16px;">Check current conditions: <a href="https://dauphinlakewatch.ca">dauphinlakewatch.ca</a></p><p style="color:#9ca3af;font-size:12px;margin-top:24px;border-top:1px solid #e5e7eb;padding-top:16px;">iConnect Studio — Independent Community Hydrological Research & Advisory. Reply "unsubscribe" to opt out.</p></div></div>'

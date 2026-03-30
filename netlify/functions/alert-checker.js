@@ -96,7 +96,7 @@ export default async () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: 'Dauphin Lake Watch <alerts@send.dauphinlakewatch.ca>',
+            from: 'Dauphin Lake Watch <alerts@dauphinlakewatch.ca>',
             to: sub.email,
             subject,
             html: `
