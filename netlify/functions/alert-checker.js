@@ -132,24 +132,36 @@ export default async () => {
         emailsSent++;
       }
 
-      // Send SMS via Twilio
-      if (sub.phone && process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+      // Send SMS via ClickSend
+      if (sub.phone && process.env.CLICKSEND_USERNAME && process.env.CLICKSEND_API_KEY) {
         const smsBody = `Dauphin Lake Watch\n${levelStr} ft · ${currentStatus.label}\n${currentStatus.note}\ndauphinlakewatch.ca`;
-        const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${process.env.TWILIO_ACCOUNT_SID}/Messages.json`;
 
-        await fetch(twilioUrl, {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Basic ' + btoa(`${process.env.TWILIO_ACCOUNT_SID}:${process.env.TWILIO_AUTH_TOKEN}`),
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: new URLSearchParams({
-            From: process.env.TWILIO_FROM_NUMBER,
-            To:   sub.phone,
-            Body: smsBody,
-          })
-        });
-        smsSent++;
+        try {
+          const csRes = await fetch('https://rest.clicksend.com/v3/sms/send', {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Basic ' + btoa(`${process.env.CLICKSEND_USERNAME}:${process.env.CLICKSEND_API_KEY}`),
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              messages: [{
+                source: 'dauphinlakewatch',
+                body: smsBody,
+                to: sub.phone,
+                from: 'DLWatch',
+              }]
+            })
+          });
+          const csData = await csRes.json();
+          if (csRes.ok) {
+            console.log(`SMS sent to ${sub.phone}:`, csData?.data?.messages?.[0]?.status);
+            smsSent++;
+          } else {
+            console.error('ClickSend SMS error:', JSON.stringify(csData));
+          }
+        } catch (e) {
+          console.error('ClickSend fetch failed:', e.message);
+        }
       }
 
       // Update subscriber's last alert state
