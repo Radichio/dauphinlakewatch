@@ -1219,12 +1219,12 @@ function renderLadder(ft) {
     const bgMap    = { g:'#ebf7f0', y:'#fdf8e0', a:'#fff1e8', r:'#ffe8e8' };
     const rungs = [
         { range:'858.0+ ft',      key:'flood',    lbl:'Flood Stage', cls:'r', note:'At or above flood stage. Follow Manitoba provincial emergency guidance. See <strong>manitoba.ca/floodinfo/</strong>' },
-        { range:'857.0–858.0 ft', key:'critical', lbl:'Critical',    cls:'r', note:'Approaching flood stage. Full sandbagging underway. Coordinate with RM of Ochre River for equipment and staging.' },
-        { range:'856.5–857.0 ft', key:'high',     lbl:'High',        cls:'a', note:'Road impacts possible. Active property protection underway. Move vehicles to high ground. Monitor RM communications.' },
-        { range:'855.5–856.5 ft', key:'elevated', lbl:'Elevated',    cls:'a', note:'Low-lying flooding possible. Sandbag vulnerable low points. Move basement valuables and appliances above water line.' },
-        { range:'854.8–855.5 ft', key:'advisory', lbl:'Advisory',    cls:'a', note:'Above operating range. Confirm sandbag supply is ready and accessible. Clear low-lying storage areas now.' },
-        { range:'854.0–854.8 ft', key:'watch',    lbl:'Watch',       cls:'y', note:'Approaching operating range. Check sump pumps and drainage paths. Good time to prepare while conditions allow. Spring melt is coming.' },
-        { range:'Below 854.0 ft', key:'normal',   lbl:'Normal',      cls:'g', note:'No action needed at this time. Monitoring continues. Review preparation checklist before spring melt begins in early April.' },
+        { range:'857.0–858.0 ft', key:'critical', lbl:'Critical',    cls:'r', note:'Approaching flood stage. Full sandbagging underway. Coordinate with RM of Ochre River.' },
+        { range:'856.5–857.0 ft', key:'high',     lbl:'High',        cls:'a', note:'Road impacts possible. Move vehicles to high ground. Monitor RM communications.' },
+        { range:'855.5–856.5 ft', key:'elevated', lbl:'Elevated',    cls:'a', note:'Low-lying flooding possible. Sandbag vulnerable low points now.' },
+        { range:'854.8–855.5 ft', key:'advisory', lbl:'Advisory',    cls:'a', note:'Above operating range. Confirm sandbag supply is ready.' },
+        { range:'854.0–854.8 ft', key:'watch',    lbl:'Watch',       cls:'y', note:'Approaching operating range. Check sump pumps and drainage paths.' },
+        { range:'Below 854.0 ft', key:'normal',   lbl:'Normal',      cls:'g', note:'No action needed. Monitoring continues.' },
     ];
 
     document.getElementById('thresholdLadder').innerHTML = rungs.map(r => `
@@ -1794,22 +1794,22 @@ function renderHydro() {
 
 
 const THERM_RUNGS = [
-    { key:'flood',    lbl:'Flood Stage', range:'858.0+ ft',      dot:'#8b0000' },
-    { key:'critical', lbl:'Critical',    range:'857.0–858.0 ft', dot:'#8b0000' },
-    { key:'high',     lbl:'High',        range:'856.5–857.0 ft', dot:'#c47000' },
-    { key:'elevated', lbl:'Elevated',    range:'855.5–856.5 ft', dot:'#b84c00' },
+    { key:'flood',    lbl:'Flood Stage', range:'858.0+ ft',      dot:'#cc0000' },
+    { key:'critical', lbl:'Critical',    range:'857.0–858.0 ft', dot:'#8b1a00' },
+    { key:'high',     lbl:'High',        range:'856.5–857.0 ft', dot:'#c44400' },
+    { key:'elevated', lbl:'Elevated',    range:'855.5–856.5 ft', dot:'#c47000' },
     { key:'advisory', lbl:'Advisory',    range:'854.8–855.5 ft', dot:'#c8a200' },
     { key:'watch',    lbl:'Watch',       range:'854.0–854.8 ft', dot:'#8a6500' },
     { key:'normal',   lbl:'Normal',      range:'Below 854.0 ft', dot:'#1a6b3a' },
 ];
 
 const THERM_NOTES = {
-    flood:    'At or above flood stage. Follow Manitoba emergency guidance.',
-    critical: 'Approaching flood stage. Full sandbagging underway.',
-    high:     'Road impacts possible. Active property protection underway.',
-    elevated: 'Low-lying flooding possible. Sandbag low points now.',
+    flood:    'At or above flood stage. Follow Manitoba provincial emergency guidance.',
+    critical: 'Approaching flood stage. Full sandbagging underway. Coordinate with RM of Ochre River.',
+    high:     'Road impacts possible. Move vehicles to high ground. Monitor RM communications.',
+    elevated: 'Low-lying flooding possible. Sandbag vulnerable low points now.',
     advisory: 'Above operating range. Confirm sandbag supply is ready.',
-    watch:    'Approaching upper operating range. Spring melt is commencing — good time to prepare.',
+    watch:    'Approaching operating range. Check sump pumps and drainage paths.',
     normal:   'No action needed. Monitoring continues.',
 };
 
@@ -1853,13 +1853,13 @@ function renderShareCard() {
         normal:   'rgba(26,107,58,.18)',
     };
     const rungDotColor = {
-        flood:'#ff6b6b', critical:'#ff6b6b', high:'#ffb347',
-        elevated:'#ffcc44', advisory:'#ffe066', watch:'#ffd700', normal:'#4ade80'
+        flood:'#cc0000', critical:'#8b1a00', high:'#c44400',
+        elevated:'#c47000', advisory:'#c8a200', watch:'#8a6500', normal:'#1a6b3a'
     };
-    // Active rung text/border colours that contrast on dark
+    // Active rung text/border colours that contrast on dark bg
     const activeText = {
-        flood:'#ff9999', critical:'#ffbb88', high:'#ffd088',
-        elevated:'#ffdd88', advisory:'#ffe888', watch:'#ffe066', normal:'#6ee7a0'
+        flood:'#ff6666', critical:'#ff8855', high:'#ffaa55',
+        elevated:'#ffcc55', advisory:'#ffdd66', watch:'#ffcc44', normal:'#55dd88'
     };
     const activeBorder = activeText;
 
