@@ -102,12 +102,13 @@ export default async (req, context) => {
     <div style="background:#f8f6f2;border-left:3px solid #2c5f7c;padding:14px 18px;border-radius:0 4px 4px 0;margin-bottom:24px;">
       <div style="font-size:11px;letter-spacing:2px;color:#6b7280;text-transform:uppercase;font-family:monospace;margin-bottom:10px;">Alert thresholds</div>
       <div style="font-size:13px;color:#374151;line-height:2;font-family:monospace;">
-        <span style="color:#1a6b3a;">●</span> Watch &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 854.0–854.8 ft — Approaching operating range<br>
-        <span style="color:#c8a200;">●</span> Advisory &nbsp;&nbsp; 854.8–855.5 ft — Above operating range<br>
-        <span style="color:#b84c00;">●</span> Elevated &nbsp;&nbsp; 855.5–856.5 ft — Low-lying flooding possible<br>
-        <span style="color:#c47000;">●</span> High &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 856.5–857.0 ft — Road impacts possible<br>
+        <span style="color:#8b0000;">●</span> Flood Stage &nbsp;858.0+ ft — Active flooding<br>
         <span style="color:#8b0000;">●</span> Critical &nbsp;&nbsp; 857.0–858.0 ft — Approaching flood stage<br>
-        <span style="color:#8b0000;">●</span> Flood Stage &nbsp;858.0+ ft — Active flooding
+        <span style="color:#c47000;">●</span> High &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 856.5–857.0 ft — Road impacts possible<br>
+        <span style="color:#b84c00;">●</span> Elevated &nbsp;&nbsp; 855.5–856.5 ft — Low-lying flooding possible<br>
+        <span style="color:#c8a200;">●</span> Advisory &nbsp;&nbsp; 854.8–855.5 ft — Above operating range<br>
+        <span style="color:#8a6500;">●</span> Watch &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 854.0–854.8 ft — Approaching operating range<br>
+        <span style="color:#1a6b3a;">●</span> Normal &nbsp;&nbsp;&nbsp;&nbsp; Below 854.0 ft — Within normal range
       </div>
     </div>
 

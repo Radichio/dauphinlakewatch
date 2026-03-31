@@ -1795,7 +1795,7 @@ function renderHydro() {
 
 const THERM_RUNGS = [
     { key:'flood',    lbl:'Flood Stage', range:'858.0+ ft',      dot:'#8b0000' },
-    { key:'critical', lbl:'Critical',    range:'857.0–858.0 ft', dot:'#b84c00' },
+    { key:'critical', lbl:'Critical',    range:'857.0–858.0 ft', dot:'#8b0000' },
     { key:'high',     lbl:'High',        range:'856.5–857.0 ft', dot:'#c47000' },
     { key:'elevated', lbl:'Elevated',    range:'855.5–856.5 ft', dot:'#b84c00' },
     { key:'advisory', lbl:'Advisory',    range:'854.8–855.5 ft', dot:'#c8a200' },
@@ -1853,7 +1853,7 @@ function renderShareCard() {
         normal:   'rgba(26,107,58,.18)',
     };
     const rungDotColor = {
-        flood:'#ff6b6b', critical:'#ff9944', high:'#ffb347',
+        flood:'#ff6b6b', critical:'#ff6b6b', high:'#ffb347',
         elevated:'#ffcc44', advisory:'#ffe066', watch:'#ffd700', normal:'#4ade80'
     };
     // Active rung text/border colours that contrast on dark
