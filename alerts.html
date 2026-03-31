@@ -29,7 +29,7 @@
         .hero h1 { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 42px; color: white; letter-spacing: -.01em; margin-bottom: 12px; }
         .hero p { color: rgba(255,255,255,.65); font-size: 16px; line-height: 1.6; max-width: 420px; margin: 0 auto; }
 
-        .card { background: white; border-radius: 8px; padding: 28px; max-width: 480px; margin: -28px auto 0; box-shadow: 0 4px 24px rgba(0,0,0,.12); position: relative; }
+        .card { background: white; border-radius: 8px; padding: 28px; max-width: 480px; margin: -28px auto 0; box-shadow: 0 4px 24px rgba(0,0,0,.12); position: relative; overflow: hidden; }
 
         .form-group { margin-bottom: 18px; }
         label { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
@@ -100,9 +100,9 @@
     </div>
     <button class="submit-btn" onclick="subscribe()">Subscribe to Alerts</button>
     <div style="margin:14px 0 10px;">
-        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:12px;color:#6a7182;line-height:1.5;">
-            <input type="checkbox" id="smsConsent" style="margin-top:3px;flex-shrink:0;">
-            <span>By providing my phone number I agree to receive flood alert SMS notifications from Dauphin Lake Watch. Message frequency varies. Message and data rates may apply. Reply STOP to unsubscribe, HELP for help.</span>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:12px;color:#6a7182;line-height:1.5;width:100%;">
+            <input type="checkbox" id="smsConsent" style="margin-top:3px;flex-shrink:0;width:14px;height:14px;">
+            <span style="display:block;">By providing my phone number I agree to receive flood alert SMS notifications from Dauphin Lake Watch. Message frequency varies. Message and data rates may apply. Reply STOP to unsubscribe, HELP for help.</span>
         </label>
     </div>
     <div class="msg" id="msg"></div>
