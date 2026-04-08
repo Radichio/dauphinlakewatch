@@ -1019,6 +1019,7 @@
         <div class="card-label">Current Status Bulletin &nbsp;·&nbsp; Tap to share with neighbours</div>
         <button class="share-btn" onclick="toggleShareCard()">📊 &nbsp;View &amp; Share Status Card</button>
         <div id="shareCard">
+            <div class="sc-advisory" id="scAdvisory" style="display:none;background:rgba(200,162,0,.18);border:1px solid rgba(200,162,0,.4);border-radius:4px;padding:6px 10px;margin-bottom:10px;font-family:var(--mono);font-size:10px;color:#f0c040;letter-spacing:.04em;line-height:1.4;"></div>
             <div class="sc-header">Dauphin Lake Watch</div>
             <div class="sc-level" id="scLevel">—</div>
             <div class="sc-unit">FEET ABOVE SEA LEVEL · WSC PROVISIONAL</div>
@@ -1321,9 +1322,9 @@ const SWE_CONFIG = {
 const HFC_REF = {
     active: true,
     date:   'April 7, 2026',
-    body:   '<strong>Provincial HFC Update (April 7):</strong> Flood risk increased for Interlake/Fisher River basin — SWE nearly double long-term average. Dauphin Lake outlook unchanged from March — lake expected to exceed operating range. Temperatures near zero through mid-April, delaying melt and concentrating runoff risk.',
+    body:   '<strong>Provincial HFC (April 7):</strong> Dauphin Lake and Lake St. Martin are the only two Manitoba lakes expected to exceed operating range this spring. Melt delayed — temperatures near zero through mid-April. Rapid, concentrated runoff expected when it begins.',
     link:   'https://news.gov.mb.ca/news/index.html?item=73277',
-    label:  'Full provincial release →',
+    label:  'Full release →',
 };
 
 // ─────────────────────────────────────────────────────────
@@ -1865,7 +1866,8 @@ async function init() {
     renderTribs(tribData);
     renderOutlet(outCfs);
     renderBulletin();
-    renderSWE();
+    const snowDepth = await fetchSnowDepth();
+    renderSWE(snowDepth);
     renderScenarios();
     renderHFC();
 
@@ -2135,13 +2137,25 @@ function renderShareCard() {
     }).join('');
 
     document.getElementById('scNote').textContent = THERM_NOTES[st.key] || '';
+
+    // Advisory strip — show if any bulletin is active
+    const activeBulletin = BULLETINS.find(x => x.active);
+    const advEl = document.getElementById('scAdvisory');
+    if (activeBulletin) {
+        advEl.textContent = `⚠ ${activeBulletin.title} — ${activeBulletin.date}`;
+        advEl.style.display = 'block';
+    } else {
+        advEl.style.display = 'none';
+    }
 }
 
 async function shareCard() {
     const ft    = (_shareData.ft || 854.17).toFixed(2);
     const st    = _shareData.st  || lakeStatus(parseFloat(ft));
     const tsStr = _shareData.tsStr || '';
-    const text  = `Dauphin Lake Watch\n${ft} ft · ${st.lbl}\n${tsStr ? 'Updated '+tsStr+'\n' : ''}dauphinlakewatch.ca`;
+    const activeBulletin = BULLETINS.find(x => x.active);
+    const advisoryLine = activeBulletin ? `⚠ ${activeBulletin.title}\n` : '';
+    const text  = `Dauphin Lake Watch\n${ft} ft · ${st.lbl}\n${tsStr ? 'Updated '+tsStr+'\n' : ''}${advisoryLine}dauphinlakewatch.ca`;
     const url   = 'https://dauphinlakewatch.ca';
 
     if (navigator.share) {
@@ -2179,13 +2193,37 @@ function dismissBulletin() {
 }
 
 // ─────────────────────────────────────────────────────────
-// RENDER: SWE PANEL
+// RENDER: SWE PANEL (with live MSC snow depth)
 // ─────────────────────────────────────────────────────────
-function renderSWE() {
+async function fetchSnowDepth() {
+    // MSC SWOB real-time — Dauphin A station (ID 5050920)
+    // Returns snow_depth in cm
+    try {
+        const url = 'https://api.weather.gc.ca/collections/swob-realtime/items?station_id=5050920&sortby=-date_tm&limit=1&f=json';
+        const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
+        if (!r.ok) return null;
+        const j = await r.json();
+        const props = j?.features?.[0]?.properties;
+        // snow_depth is in cm
+        const sd = props?.snow_depth ?? props?.['snow depth'] ?? null;
+        if (sd != null && sd > 0) return parseFloat(sd);
+    } catch(e) {
+        console.warn('[snow_depth]', e.message);
+    }
+    return null;
+}
+
+function renderSWE(snowDepthCm) {
     document.getElementById('sweNumber').textContent  = SWE_CONFIG.swe_mm;
     document.getElementById('sweBadge').textContent   = SWE_CONFIG.status;
     document.getElementById('sweContext').textContent = SWE_CONFIG.context;
-    document.getElementById('sweUpdated').textContent = `Updated: ${SWE_CONFIG.updated}`;
+
+    // Append live snow depth if available
+    let updatedText = `Estimated · ${SWE_CONFIG.updated}`;
+    if (snowDepthCm != null) {
+        updatedText += ` · Dauphin snow depth now: ${snowDepthCm} cm (MSC live)`;
+    }
+    document.getElementById('sweUpdated').textContent = updatedText;
 }
 
 // ─────────────────────────────────────────────────────────
