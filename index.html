@@ -442,7 +442,7 @@
             text-transform: uppercase;
             margin-bottom: 5px;
         }
-        .wx-icon { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+        .wx-icon { margin: 4px auto 6px; display: flex; justify-content: center; }
         .wx-hi   { font-family: var(--mono); font-weight: 600; font-size: 13px; }
         .wx-lo   { font-family: var(--mono); font-size: 12px; color: var(--muted); }
         .rain-tag {
@@ -1758,13 +1758,66 @@ const WMO = {
     80:'Showers',81:'Heavy showers',85:'Snow showers',95:'Thunderstorm'
 };
 const WMO_ICON = c => {
-    if (c <= 1) return 'Clear';
-    if (c <= 3) return 'Cloudy';
-    if (c <= 48) return 'Fog';
-    if (c <= 67) return 'Rain';
-    if (c <= 77) return 'Snow';
-    if (c <= 82) return 'Showers';
-    return 'Storm';
+    // Clean minimal SVG icons — stroke-based, scales to any size
+    const s = (path, extra='') =>
+        `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;display:block;margin:0 auto 2px;" ${extra}>${path}</svg>`;
+
+    // Clear — sun with rays
+    if (c <= 1) return s(
+        `<circle cx="16" cy="16" r="5"/>
+         <line x1="16" y1="4" x2="16" y2="7"/>
+         <line x1="16" y1="25" x2="16" y2="28"/>
+         <line x1="4" y1="16" x2="7" y2="16"/>
+         <line x1="25" y1="16" x2="28" y2="16"/>
+         <line x1="7.8" y1="7.8" x2="9.9" y2="9.9"/>
+         <line x1="22.1" y1="22.1" x2="24.2" y2="24.2"/>
+         <line x1="24.2" y1="7.8" x2="22.1" y2="9.9"/>
+         <line x1="9.9" y1="22.1" x2="7.8" y2="24.2"/>`,
+        'stroke="#c8a200"'
+    );
+
+    // Partly cloudy / Cloudy — cloud
+    if (c <= 3) return s(
+        `<path d="M9 20a5 5 0 0 1 0-10 5 5 0 0 1 9.9-1A4 4 0 0 1 23 17a4 4 0 0 1-4 4z"/>`
+    );
+
+    // Fog — three horizontal lines
+    if (c <= 48) return s(
+        `<line x1="6" y1="12" x2="26" y2="12"/>
+         <line x1="8" y1="16" x2="24" y2="16"/>
+         <line x1="6" y1="20" x2="26" y2="20"/>`
+    );
+
+    // Rain
+    if (c <= 67) return s(
+        `<path d="M9 18a5 5 0 0 1 0-10 5 5 0 0 1 9.9-1A4 4 0 0 1 23 15a4 4 0 0 1-4 4z"/>
+         <line x1="11" y1="23" x2="10" y2="26"/>
+         <line x1="16" y1="23" x2="15" y2="26"/>
+         <line x1="21" y1="23" x2="20" y2="26"/>`
+    );
+
+    // Snow
+    if (c <= 77) return s(
+        `<line x1="16" y1="6" x2="16" y2="26"/>
+         <line x1="6" y1="16" x2="26" y2="16"/>
+         <line x1="9" y1="9" x2="23" y2="23"/>
+         <line x1="23" y1="9" x2="9" y2="23"/>
+         <circle cx="16" cy="16" r="2.5" fill="currentColor" stroke="none"/>`
+    );
+
+    // Showers
+    if (c <= 82) return s(
+        `<path d="M9 17a5 5 0 0 1 0-10 5 5 0 0 1 9.9-1A4 4 0 0 1 23 14a4 4 0 0 1-4 3z"/>
+         <line x1="11" y1="22" x2="9" y2="26"/>
+         <line x1="16" y1="22" x2="14" y2="26"/>
+         <line x1="21" y1="22" x2="19" y2="26"/>`
+    );
+
+    // Storm — cloud + lightning
+    return s(
+        `<path d="M9 17a5 5 0 0 1 0-10 5 5 0 0 1 9.9-1A4 4 0 0 1 23 14a4 4 0 0 1-4 3z"/>
+         <polyline points="17,22 14,27 17,27 14,32"/>`
+    );
 };
 
 async function fetchWeather() {
