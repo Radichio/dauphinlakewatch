@@ -1270,7 +1270,7 @@ const BULLETINS = [
 // ─────────────────────────────────────────────────────────
 const SCENARIOS = {
     revised:  'April 8, 2026',
-    note:     'iConnect Studio analysis — revised April 8 following storm accumulation and continued melt delay. Conditions are evolving rapidly. This tracker is updated as new data arrives — check back for revisions.',
+    note:     'iConnect Studio analysis — revised April 8 following storm accumulation and continued melt delay. Conditions are evolving rapidly. We\'ll update this as the picture clarifies.',
     bands: [
         {
             key:   'fav',
@@ -1723,7 +1723,7 @@ function renderTribs(data) {
     } else if (stalledCount >= 2) {
         ins.innerHTML = `<strong>Early melt activity has stalled.</strong> ${stalledCount} tributaries that showed movement in late March have slowed or refrozen under persistent cold and fresh snowfall. The high-elevation headwaters on Riding Mountain remain frozen. When temperatures rebound, all of this water releases at once.`;
     } else if (t.cfs > 8 && w.cfs < 3) {
-        ins.innerHTML = `<strong>Lower Riding Mountain tributaries are moving — Turtle River is up ${(t.cfs / (SEED.tribs.turtle.prev||1)).toFixed(1)}× over the past week.</strong> The high-elevation headwaters (Wilson River at 1,131 ft, Mink Creek at 1,107 ft) remain frozen. That is where the heaviest snowpack sits. When those break, the major inflows begin.`;
+        ins.innerHTML = `<strong>Lower Riding Mountain tributaries are moving — Turtle River is up ${(t.cfs / (SEED.tribs.turtle.prev||1)).toFixed(1)}× over the past week.</strong> The high-elevation headwaters (Wilson River at 1,131 ft, Mink Creek at 1,107 ft) remain frozen. That is where the heaviest snowpack sits. When those break, the major inflows begin. We're watching.`;
     } else {
         ins.textContent = 'Monitoring all 7 basin tributaries. Lower-elevation rivers showing early movement; high-elevation stations remain dormant.';
     }
