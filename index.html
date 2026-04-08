@@ -1149,6 +1149,7 @@
         <div class="wx-note">
             Watch for: Rain during melt accelerates lake rise significantly. Cold snaps are temporary pauses, not resets. Above-normal temperatures are forecast for April–June 2026 (IRI / all models agree on the temperature signal).
         </div>
+        <div id="cydnObs" style="display:none;margin-top:10px;padding:8px 12px;background:var(--paper);border-radius:4px;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.5;border-left:3px solid var(--blue);"></div>
     </div>
     <!-- ── HFC PROVINCIAL FORECAST REFERENCE ── -->
     <div class="hfc-ref" id="hfcRef"></div>
@@ -1866,10 +1867,12 @@ async function init() {
     renderTribs(tribData);
     renderOutlet(outCfs);
     renderBulletin();
-    const snowDepth = await fetchSnowDepth();
-    renderSWE(snowDepth);
+    renderSWE();
     renderScenarios();
     renderHFC();
+
+    // ── CYDN ground obs — fetch and render into weather card
+    fetchCYDN().then(obs => { if (obs) renderCYDN(obs); });
 
     if (demo) {
         document.getElementById('demoBanner').classList.add('show');
@@ -2193,40 +2196,77 @@ function dismissBulletin() {
 }
 
 // ─────────────────────────────────────────────────────────
-// RENDER: SWE PANEL (with live MSC snow depth)
+// FETCH: CYDN GROUND OBSERVATIONS (Dauphin Airport)
 // ─────────────────────────────────────────────────────────
-async function fetchSnowDepth() {
-    // MSC SWOB real-time — Dauphin A station (CYDN)
-    // snow_depth reported in cm
+async function fetchCYDN() {
     try {
         const url = 'https://api.weather.gc.ca/collections/swob-realtime/items?url=CYDN&sortby=-date_tm-value&limit=1&f=json';
         const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
         if (!r.ok) return null;
         const j = await r.json();
-        const props = j?.features?.[0]?.properties;
-        // Try common field names for snow depth
-        const sd = props?.['snow_depth-value']
-                ?? props?.['sno_dpth-value']
-                ?? props?.['snow depth-value']
-                ?? null;
-        if (sd != null && parseFloat(sd) >= 0) return parseFloat(sd);
+        const p = j?.features?.[0]?.properties;
+        if (!p) return null;
+        return {
+            temp:    p['air_temp']    ?? null,
+            wspd:    p['avg_wnd_spd_10m_pst2mts'] ?? null,
+            wgust:   p['max_wnd_gst_spd_10m_pst10mts'] ?? null,
+            wdir:    p['avg_wnd_dir_10m_pst2mts'] ?? null,
+            vis:     p['avg_vis_pst10mts'] ?? null,
+            wx_code: p['prsnt_wx_1'] ?? null,
+            time:    p['date_tm-value'] ?? null,
+        };
     } catch(e) {
-        console.warn('[snow_depth]', e.message);
+        console.warn('[CYDN]', e.message);
+        return null;
     }
-    return null;
 }
 
-function renderSWE(snowDepthCm) {
+// ─────────────────────────────────────────────────────────
+// RENDER: CYDN GROUND OBS into weather card
+// ─────────────────────────────────────────────────────────
+function renderCYDN(obs) {
+    const el = document.getElementById('cydnObs');
+    if (!el || !obs) return;
+
+    // Present weather code 376 = heavy blowing snow, etc — map key codes
+    const wxLabel = obs.wx_code ? wxCodeLabel(obs.wx_code) : null;
+
+    const parts = [];
+    if (obs.temp  != null) parts.push(`${obs.temp.toFixed(1)}°C`);
+    if (obs.wspd  != null) parts.push(`Wind ${Math.round(obs.wspd)} km/h`);
+    if (obs.wgust != null && obs.wgust > (obs.wspd || 0) + 5)
+        parts.push(`gusting ${Math.round(obs.wgust)}`);
+    if (obs.vis   != null) parts.push(`Vis ${obs.vis.toFixed(1)} km`);
+    if (wxLabel)           parts.push(wxLabel);
+
+    // Time in CDT
+    let timeStr = '';
+    if (obs.time) {
+        const d = new Date(obs.time);
+        timeStr = d.toLocaleTimeString('en-CA', {
+            hour:'numeric', minute:'2-digit', hour12:true, timeZone:'America/Winnipeg'
+        });
+    }
+
+    el.innerHTML = `<span style="font-weight:600;color:var(--text);">Dauphin Airport (CYDN)</span> &nbsp;·&nbsp; ${parts.join(' &nbsp;·&nbsp; ')}${timeStr ? ` &nbsp;·&nbsp; <span style="color:var(--muted)">${timeStr} CDT</span>` : ''}`;
+    el.style.display = 'block';
+}
+
+function wxCodeLabel(code) {
+    // METAR present weather codes relevant to us
+    const c = parseInt(code);
+    if (c >= 370 && c <= 379) return 'Blowing snow';
+    if (c >= 380 && c <= 389) return 'Snow';
+    if (c >= 200 && c <= 299) return 'Thunderstorm';
+    if (c >= 500 && c <= 599) return 'Rain';
+    if (c >= 100 && c <= 199) return 'Fog';
+    return null;
+}
+function renderSWE() {
     document.getElementById('sweNumber').textContent  = SWE_CONFIG.swe_mm;
     document.getElementById('sweBadge').textContent   = SWE_CONFIG.status;
     document.getElementById('sweContext').textContent = SWE_CONFIG.context;
-
-    // Append live snow depth if available
-    let updatedText = `Estimated · ${SWE_CONFIG.updated}`;
-    if (snowDepthCm != null) {
-        updatedText += ` · Dauphin snow depth now: ${snowDepthCm} cm (MSC live)`;
-    }
-    document.getElementById('sweUpdated').textContent = updatedText;
+    document.getElementById('sweUpdated').textContent = `Estimated · ${SWE_CONFIG.updated}`;
 }
 
 // ─────────────────────────────────────────────────────────
