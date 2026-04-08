@@ -464,6 +464,147 @@
             line-height: 1.5;
         }
 
+        /* ─────────── BULLETIN BANNER ─────────── */
+        .bulletin-banner {
+            background: #3a2400;
+            border-bottom: 2px solid #c8a200;
+            padding: 0;
+            display: none;
+        }
+        .bulletin-banner.active { display: block; }
+        .bulletin-inner {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 12px 20px 12px 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+        .bulletin-icon {
+            font-size: 18px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .bulletin-body { flex: 1; }
+        .bulletin-date {
+            font-family: var(--mono);
+            font-size: 9.5px;
+            color: #c8a200;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+        .bulletin-title {
+            font-family: var(--cond);
+            font-weight: 800;
+            font-size: 16px;
+            color: #f0c040;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .bulletin-text {
+            font-size: 13px;
+            color: rgba(255,255,255,.8);
+            line-height: 1.55;
+        }
+        .bulletin-dismiss {
+            background: none;
+            border: 1px solid rgba(200,162,0,.4);
+            color: #c8a200;
+            border-radius: 3px;
+            padding: 4px 10px;
+            font-family: var(--mono);
+            font-size: 10px;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-top: 2px;
+            transition: background .15s;
+        }
+        .bulletin-dismiss:hover { background: rgba(200,162,0,.1); }
+
+        /* ─────────── SWE PANEL ─────────── */
+        .swe-panel {
+            background: linear-gradient(135deg, #0d2137 0%, #0f2a45 100%);
+            border: 1px solid rgba(74,159,212,.25);
+            border-radius: 6px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
+            color: white;
+            animation: fadeUp .35s ease both;
+        }
+        .swe-inner {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .swe-num-block { flex-shrink: 0; }
+        .swe-number {
+            font-family: var(--cond);
+            font-weight: 800;
+            font-size: 52px;
+            line-height: 1;
+            color: #7dd3fc;
+            letter-spacing: -.01em;
+        }
+        .swe-unit {
+            font-family: var(--mono);
+            font-size: 9px;
+            color: rgba(255,255,255,.4);
+            letter-spacing: .08em;
+            margin-top: 3px;
+        }
+        .swe-badge {
+            display: inline-block;
+            background: rgba(74,159,212,.2);
+            border: 1px solid rgba(74,159,212,.4);
+            color: #7dd3fc;
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: .1em;
+            padding: 3px 10px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            margin-top: 8px;
+        }
+        .swe-info { flex: 1; min-width: 200px; }
+        .swe-label {
+            font-family: var(--mono);
+            font-size: 9.5px;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.4);
+            margin-bottom: 8px;
+        }
+        .swe-context {
+            font-size: 13.5px;
+            color: rgba(255,255,255,.8);
+            line-height: 1.6;
+        }
+        .swe-updated {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: rgba(255,255,255,.3);
+            margin-top: 8px;
+        }
+
+        /* ─────────── HFC REFERENCE ─────────── */
+        .hfc-ref {
+            background: var(--white);
+            border: 1px solid var(--paper-dark);
+            border-left: 3px solid var(--blue);
+            border-radius: 5px;
+            padding: 13px 16px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--muted);
+        }
+        .hfc-ref strong { color: var(--text); }
+        .hfc-ref a { color: var(--blue); }
+
         /* ─────────── FOOTER ─────────── */
         .site-footer {
             background: var(--navy);
@@ -770,6 +911,21 @@
 <body>
 
 <!-- ══════════════════════════════════════════════════════
+     BULLETIN BANNER (config-driven — edit BULLETINS array in JS)
+════════════════════════════════════════════════════════ -->
+<div class="bulletin-banner" id="bulletinBanner">
+    <div class="bulletin-inner">
+        <div class="bulletin-icon">⚠</div>
+        <div class="bulletin-body">
+            <div class="bulletin-date" id="bulletinDate"></div>
+            <div class="bulletin-title" id="bulletinTitle"></div>
+            <div class="bulletin-text" id="bulletinText"></div>
+        </div>
+        <button class="bulletin-dismiss" onclick="dismissBulletin()">Dismiss</button>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
      HEADER
 ════════════════════════════════════════════════════════ -->
 <header class="site-header">
@@ -842,6 +998,22 @@
         </div>
     </div>
 
+    <!-- ── SWE BASIN SNOW LOAD (config-driven) ── -->
+    <div class="swe-panel" id="swePanel">
+        <div class="swe-label">Basin Snow Water Equivalent — Estimated</div>
+        <div class="swe-inner">
+            <div class="swe-num-block">
+                <div class="swe-number" id="sweNumber">—</div>
+                <div class="swe-unit">MM SWE</div>
+                <div class="swe-badge" id="sweBadge">—</div>
+            </div>
+            <div class="swe-info">
+                <div class="swe-context" id="sweContext">Loading…</div>
+                <div class="swe-updated" id="sweUpdated"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- ── 2. BULLETIN / SHARE CARD ── -->
     <div class="card" id="status">
         <div class="card-label">Current Status Bulletin &nbsp;·&nbsp; Tap to share with neighbours</div>
@@ -884,9 +1056,7 @@
             <canvas id="histChart"></canvas>
         </div>
         <div class="chart-note">
-            Spring melt has not yet begun. The lake is currently tracking below 2011, 2013, and 2014 at this point in the season.
-            The Riding Mountain snowpack (157 mm SWE) is the highest in Manitoba and larger than what preceded the 2011 record flood.
-            Drier soils at freeze-up are the key mitigating factor. April will determine which scenario unfolds.
+            Melt delayed — the lake is holding steady while the snowpack continues to grow. An Alberta clipper deposited 10–25 cm of additional snow across the watershed on April 8. No significant runoff has occurred — all accumulated snow remains in the basin. Projected melt window: mid-April to mid-May. When it comes, it will be rapid and concentrated.
         </div>
     </div>
 
@@ -954,43 +1124,10 @@
         <!-- SCENARIO TRACKER -->
         <div class="card" style="margin-bottom:0">
             <div class="card-label">Spring Scenario Tracker &nbsp;·&nbsp; Projected Peak Range</div>
-            <div class="scenario-stack">
-                <div class="s-band s-fav">
-                    <div class="s-prob" style="color:var(--green)">~15%</div>
-                    <div class="s-info">
-                        <div class="s-name">Favourable</div>
-                        <div class="s-range">855.0 – 855.5 ft</div>
-                        <div class="s-desc">Slow gradual melt, dry April–May. Near or slightly above operating range. Minor nuisance at most.</div>
-                    </div>
-                </div>
-                <div class="s-band s-likely">
-                    <div class="s-prob" style="color:var(--yellow)">~55%</div>
-                    <div class="s-info">
-                        <div class="s-name">Most Likely <span class="now-tag">Tracking ▸</span></div>
-                        <div class="s-range">855.5 – 856.5 ft</div>
-                        <div class="s-desc">Normal melt pace, near-average precipitation. Above operating range. Low-lying areas see water. Road impacts likely.</div>
-                    </div>
-                </div>
-                <div class="s-band s-unfav">
-                    <div class="s-prob" style="color:var(--amber)">~25%</div>
-                    <div class="s-info">
-                        <div class="s-name">Unfavourable</div>
-                        <div class="s-range">857.0 – 858.0 ft</div>
-                        <div class="s-desc">Fast melt with wet April (CFS model correct). Approaching or reaching flood stage. Sandbagging required.</div>
-                    </div>
-                </div>
-                <div class="s-band s-severe">
-                    <div class="s-prob" style="color:var(--red)">~5%</div>
-                    <div class="s-info">
-                        <div class="s-name">Severe</div>
-                        <div class="s-range">858.0 ft+</div>
-                        <div class="s-desc">Rapid melt with rain-on-snow events. At or above flood stage. Significant flooding.</div>
-                    </div>
-                </div>
+            <div class="scenario-stack" id="scenarioStack">
+                <!-- Rendered from SCENARIOS config in JS -->
             </div>
-            <p style="margin-top:11px;font-size:11.5px;color:var(--muted);line-height:1.5;padding-top:10px;border-top:1px solid var(--paper-mid);">
-                Based on 157 mm snowpack, current soil conditions, and provincial flood model guidance (March 20, 2026). Updated manually as conditions evolve.
-            </p>
+            <p style="margin-top:11px;font-size:11.5px;color:var(--muted);line-height:1.5;padding-top:10px;border-top:1px solid var(--paper-mid);" id="scenarioNote"></p>
         </div>
 
     </div>
@@ -1012,6 +1149,9 @@
             Watch for: Rain during melt accelerates lake rise significantly. Cold snaps are temporary pauses, not resets. Above-normal temperatures are forecast for April–June 2026 (IRI / all models agree on the temperature signal).
         </div>
     </div>
+    <!-- ── HFC PROVINCIAL FORECAST REFERENCE ── -->
+    <div class="hfc-ref" id="hfcRef"></div>
+
     <!-- ── ALERTS SIGNUP ── -->
     <div class="card" style="margin-top:16px;">
         <div class="card-label">Get Flood Alerts &nbsp;·&nbsp; Email &amp; SMS Notifications</div>
@@ -1101,6 +1241,92 @@ const SEED = {
 };
 
 // ─────────────────────────────────────────────────────────
+// BULLETINS CONFIG
+// Edit this array to add/update/dismiss banners.
+// Set active: false when a bulletin is no longer current.
+// ─────────────────────────────────────────────────────────
+const BULLETINS = [
+    {
+        id:       'storm-apr8',
+        active:   true,
+        date:     'April 8, 2026',
+        severity: 'warning',
+        title:    'Storm Advisory — Alberta Clipper In Progress',
+        text:     'An Alberta clipper is moving through the Dauphin Lake watershed today, depositing 10–25 cm of new snow across the Parkland region. Highways near Dauphin are affected. Strong winds are being monitored for potential shoreline ice effects. This snow adds to an already above-normal snowpack. No significant melt has occurred yet. Conditions are being tracked closely — updates will follow as the situation develops.',
+    },
+];
+
+// ─────────────────────────────────────────────────────────
+// SCENARIOS CONFIG
+// Update ranges and probabilities as conditions evolve.
+// Rebuild will pick these up automatically.
+// ─────────────────────────────────────────────────────────
+const SCENARIOS = {
+    revised:  'April 8, 2026',
+    note:     'iConnect Studio analysis — revised April 8 following storm accumulation and continued melt delay. Conditions are evolving rapidly. This tracker is updated as new data arrives — check back for revisions.',
+    bands: [
+        {
+            key:   'fav',
+            cls:   's-fav',
+            prob:  '~20%',
+            color: 'var(--green)',
+            name:  'Favourable',
+            range: '855.0 – 855.8 ft',
+            desc:  'Slow gradual melt, dry April–May. Near or slightly above operating range. Minor impacts.',
+        },
+        {
+            key:   'likely',
+            cls:   's-likely',
+            prob:  '~45%',
+            color: 'var(--yellow)',
+            name:  'Most Likely',
+            range: '856.0 – 857.0 ft',
+            desc:  'Normal melt pace with near-average April precipitation. Above operating range. Low-lying flooding and road impacts expected.',
+        },
+        {
+            key:   'unfav',
+            cls:   's-unfav',
+            prob:  '~25%',
+            color: 'var(--amber)',
+            name:  'Unfavourable',
+            range: '857.5 – 858.5 ft',
+            desc:  'Fast melt with wet April. Approaching or exceeding flood stage. Active sandbagging required.',
+        },
+        {
+            key:   'severe',
+            cls:   's-severe',
+            prob:  '~10%',
+            color: 'var(--red)',
+            name:  'Severe',
+            range: '858.5 ft+',
+            desc:  'Rapid melt combined with rain-on-snow events. Significant flooding above historical operating range.',
+        },
+    ],
+};
+
+// ─────────────────────────────────────────────────────────
+// BASIN SNOW WATER EQUIVALENT CONFIG
+// Update swe_mm after new HFC surveys or major precipitation.
+// ─────────────────────────────────────────────────────────
+const SWE_CONFIG = {
+    swe_mm:  '160–185',
+    status:  'ACCUMULATING',
+    context: 'Highest recorded snowpack in Manitoba near Riding Mountain. Based on HFC field measurements (March 9–12) plus estimated accumulation since, including today\'s Alberta clipper (10–25 cm additional). No significant melt has occurred — all snow remains in the basin and is still growing.',
+    updated: 'April 8, 2026',
+};
+
+// ─────────────────────────────────────────────────────────
+// HFC PROVINCIAL FORECAST REFERENCE CONFIG
+// ─────────────────────────────────────────────────────────
+const HFC_REF = {
+    active: true,
+    date:   'April 7, 2026',
+    body:   '<strong>Provincial HFC Update (April 7):</strong> Flood risk increased for Interlake/Fisher River basin — SWE nearly double long-term average. Dauphin Lake outlook unchanged from March — lake expected to exceed operating range. Temperatures near zero through mid-April, delaying melt and concentrating runoff risk.',
+    link:   'https://news.gov.mb.ca/news/index.html?item=73277',
+    label:  'Full provincial release →',
+};
+
+// ─────────────────────────────────────────────────────────
 // UNIT HELPERS
 // ─────────────────────────────────────────────────────────
 const mToFt  = m  => m  * 3.28084;
@@ -1138,12 +1364,19 @@ function lakeStatus(ft) {
     return                  { key:'normal',   lbl:'Normal',      cls:'g', bg:'badge-green'  };
 }
 
-function tribStatus(cfs, elev) {
-    if (elev > 1000 && cfs < 2)  return { lbl:'Frozen',      cls:'s-frozen'  };
-    if (cfs < 3)                  return { lbl:'Dormant',     cls:'s-dormant' };
-    if (cfs < 15)                 return { lbl:'Waking Up',   cls:'s-waking'  };
-    if (cfs < 80)                 return { lbl:'Running',     cls:'s-running' };
-    return                               { lbl:'Running Hard',cls:'s-hard'    };
+function tribStatus(cfs, elev, prev) {
+    const wasFlowing = prev && prev > 3;
+    if (cfs < 1.5) {
+        if (wasFlowing) return { lbl:'Refrozen',    cls:'s-frozen'  };
+        return               { lbl:'Frozen',        cls:'s-frozen'  };
+    }
+    if (cfs < 5) {
+        if (wasFlowing && cfs < prev * 0.6) return { lbl:'Stalled', cls:'s-dormant' };
+        return { lbl:'Dormant', cls:'s-dormant' };
+    }
+    if (cfs < 15)  return { lbl:'Waking Up',   cls:'s-waking'  };
+    if (cfs < 80)  return { lbl:'Running',     cls:'s-running' };
+    return               { lbl:'Running Hard', cls:'s-hard'    };
 }
 
 function trendOf(series) {
@@ -1294,8 +1527,8 @@ const refLinesPlugin = {
         hline(858.0, 'rgba(139,0,0,.8)',   'FLOOD STAGE  858.0 ft');
         hline(854.8, 'rgba(150,90,0,.7)',  'UPPER OPERATING RANGE  854.8 ft');
 
-        // WE ARE HERE — vertical line + label at today (day ~87)
-        const todayX = scales.x.getPixelForValue(87);
+        // WE ARE HERE — vertical line + label at today
+        const todayX = scales.x.getPixelForValue(doy(new Date()));
         ctx.save();
         ctx.strokeStyle = '#2c5f7c';
         ctx.lineWidth = 1.5;
@@ -1447,7 +1680,7 @@ function renderTribs(data) {
     const tbody = document.getElementById('tribBody');
     tbody.innerHTML = TRIBS.map(def => {
         const d = data[def.key] || SEED.tribs[def.key] || { cfs:0, prev:0, elev:def.elev };
-        const st = tribStatus(d.cfs, def.elev || 0);
+        const st = tribStatus(d.cfs, def.elev || 0, d.prev);
         const ratio = d.prev > 0 ? d.cfs / d.prev : 1;
         let tc, tt;
         if (ratio > 1.5) { tc='up';   tt=`↑ ${ratio.toFixed(1)}×`; }
@@ -1471,8 +1704,17 @@ function renderTribs(data) {
     const m = data.mink      || SEED.tribs.mink;
     const ins = document.getElementById('tribInsight');
 
+    // Count stalled/refrozen rivers
+    const stalledCount = TRIBS.filter(def => {
+        const d = data[def.key] || SEED.tribs[def.key] || {};
+        const st = tribStatus(d.cfs || 0, def.elev || 0, d.prev || 0);
+        return st.lbl === 'Stalled' || st.lbl === 'Refrozen';
+    }).length;
+
     if (w.cfs > 15 || m.cfs > 15) {
         ins.innerHTML = '<strong>⚠ High-elevation headwaters are breaking.</strong> Major inflows to the lake are beginning. Lake rise expected over coming days. Watch the outlet monitor closely.';
+    } else if (stalledCount >= 2) {
+        ins.innerHTML = `<strong>Early melt activity has stalled.</strong> ${stalledCount} tributaries that showed movement in late March have slowed or refrozen under persistent cold and fresh snowfall. The high-elevation headwaters on Riding Mountain remain frozen. When temperatures rebound, all of this water releases at once.`;
     } else if (t.cfs > 8 && w.cfs < 3) {
         ins.innerHTML = `<strong>Lower Riding Mountain tributaries are moving — Turtle River is up ${(t.cfs / (SEED.tribs.turtle.prev||1)).toFixed(1)}× over the past week.</strong> The high-elevation headwaters (Wilson River at 1,131 ft, Mink Creek at 1,107 ft) remain frozen. That is where the heaviest snowpack sits. When those break, the major inflows begin.`;
     } else {
@@ -1520,7 +1762,7 @@ const WMO_ICON = c => {
 
 async function fetchWeather() {
     const url = `${CFG.weather}?latitude=${CFG.lat}&longitude=${CFG.lon}`
-        + `&current=temperature_2m,weathercode,windspeed_10m`
+        + `&current=temperature_2m,weathercode,windspeed_10m,winddirection_10m,windgusts_10m`
         + `&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum`
         + `&timezone=America%2FWinnipeg&forecast_days=4`;
     const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
@@ -1529,9 +1771,18 @@ async function fetchWeather() {
 }
 
 function renderWeather(j) {
-    document.getElementById('wxTemp').textContent = `${Math.round(j.current.temperature_2m)}°C`;
+    const temp   = Math.round(j.current.temperature_2m);
+    const wspd   = Math.round(j.current.windspeed_10m);
+    const wgusts = Math.round(j.current.windgusts_10m || wspd);
+    const wdir   = j.current.winddirection_10m || 0;
+
+    document.getElementById('wxTemp').textContent = `${temp}°C`;
     document.getElementById('wxCond').textContent = WMO[j.current.weathercode] || 'Updating';
-    document.getElementById('wxWind').textContent = `Wind: ${Math.round(j.current.windspeed_10m)} km/h`;
+
+    // Show gusts if meaningfully higher than sustained speed
+    let windStr = `Wind: ${wspd} km/h`;
+    if (wgusts > wspd + 10) windStr += ` · Gusts ${wgusts} km/h`;
+    document.getElementById('wxWind').textContent = windStr;
 
     const days = document.getElementById('wxDays');
     const d = j.daily;
@@ -1613,6 +1864,10 @@ async function init() {
     renderChart(lakeData);
     renderTribs(tribData);
     renderOutlet(outCfs);
+    renderBulletin();
+    renderSWE();
+    renderScenarios();
+    renderHFC();
 
     if (demo) {
         document.getElementById('demoBanner').classList.add('show');
@@ -1902,6 +2157,63 @@ async function shareCard() {
         el.textContent = '✓ Link copied — paste to share';
         setTimeout(() => el.textContent = '', 3000);
     } catch(e) {}
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER: BULLETIN BANNER
+// ─────────────────────────────────────────────────────────
+function renderBulletin() {
+    const dismissed = sessionStorage.getItem('bulletin-dismissed');
+    const b = BULLETINS.find(x => x.active);
+    if (!b || dismissed === b.id) return;
+    document.getElementById('bulletinDate').textContent  = b.date;
+    document.getElementById('bulletinTitle').textContent = b.title;
+    document.getElementById('bulletinText').textContent  = b.text;
+    document.getElementById('bulletinBanner').classList.add('active');
+}
+
+function dismissBulletin() {
+    const b = BULLETINS.find(x => x.active);
+    if (b) sessionStorage.setItem('bulletin-dismissed', b.id);
+    document.getElementById('bulletinBanner').classList.remove('active');
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER: SWE PANEL
+// ─────────────────────────────────────────────────────────
+function renderSWE() {
+    document.getElementById('sweNumber').textContent  = SWE_CONFIG.swe_mm;
+    document.getElementById('sweBadge').textContent   = SWE_CONFIG.status;
+    document.getElementById('sweContext').textContent = SWE_CONFIG.context;
+    document.getElementById('sweUpdated').textContent = `Updated: ${SWE_CONFIG.updated}`;
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER: SCENARIOS
+// ─────────────────────────────────────────────────────────
+function renderScenarios() {
+    const stack = document.getElementById('scenarioStack');
+    stack.innerHTML = SCENARIOS.bands.map(b => `
+        <div class="s-band ${b.cls}">
+            <div class="s-prob" style="color:${b.color}">${b.prob}</div>
+            <div class="s-info">
+                <div class="s-name">${b.name}</div>
+                <div class="s-range">${b.range}</div>
+                <div class="s-desc">${b.desc}</div>
+            </div>
+        </div>
+    `).join('');
+    document.getElementById('scenarioNote').textContent = SCENARIOS.note;
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER: HFC REFERENCE
+// ─────────────────────────────────────────────────────────
+function renderHFC() {
+    if (!HFC_REF.active) return;
+    const el = document.getElementById('hfcRef');
+    el.innerHTML = `${HFC_REF.body} &nbsp;<a href="${HFC_REF.link}" target="_blank" rel="noopener">${HFC_REF.label}</a>`;
+    el.style.display = 'block';
 }
 
 async function dashSubscribe() {
