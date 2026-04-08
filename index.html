@@ -442,7 +442,7 @@
             text-transform: uppercase;
             margin-bottom: 5px;
         }
-        .wx-icon { font-size: 20px; margin-bottom: 4px; }
+        .wx-icon { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
         .wx-hi   { font-family: var(--mono); font-weight: 600; font-size: 13px; }
         .wx-lo   { font-family: var(--mono); font-size: 12px; color: var(--muted); }
         .rain-tag {
@@ -481,9 +481,14 @@
             gap: 14px;
         }
         .bulletin-icon {
+            font-family: var(--cond);
+            font-weight: 800;
             font-size: 18px;
+            color: #f0c040;
             flex-shrink: 0;
             margin-top: 2px;
+            width: 20px;
+            text-align: center;
         }
         .bulletin-body { flex: 1; }
         .bulletin-date {
@@ -915,7 +920,7 @@
 ════════════════════════════════════════════════════════ -->
 <div class="bulletin-banner" id="bulletinBanner">
     <div class="bulletin-inner">
-        <div class="bulletin-icon">⚠</div>
+        <div class="bulletin-icon">!</div>
         <div class="bulletin-body">
             <div class="bulletin-date" id="bulletinDate"></div>
             <div class="bulletin-title" id="bulletinTitle"></div>
@@ -964,7 +969,7 @@
 <main class="container" style="display:flex;flex-direction:column;">
 
     <div class="demo-banner" id="demoBanner">
-        ⚠&nbsp; Live API unreachable — displaying verified March 27 readings. For real-time data: <strong>wateroffice.ec.gc.ca</strong>
+        Live API unreachable — displaying verified March 27 readings. For real-time data: <strong>wateroffice.ec.gc.ca</strong>
     </div>
 
     <!-- ── 1. STATUS BEACON ── -->
@@ -1017,7 +1022,7 @@
     <!-- ── 2. BULLETIN / SHARE CARD ── -->
     <div class="card" id="status">
         <div class="card-label">Current Status Bulletin &nbsp;·&nbsp; Tap to share with neighbours</div>
-        <button class="share-btn" onclick="toggleShareCard()">📊 &nbsp;View &amp; Share Status Card</button>
+        <button class="share-btn" onclick="toggleShareCard()">View &amp; Share Status Card</button>
         <div id="shareCard">
             <div class="sc-advisory" id="scAdvisory" style="display:none;background:rgba(200,162,0,.18);border:1px solid rgba(200,162,0,.4);border-radius:4px;padding:6px 10px;margin-bottom:10px;font-family:var(--mono);font-size:10px;color:#f0c040;letter-spacing:.04em;line-height:1.4;"></div>
             <div class="sc-header">Dauphin Lake Watch</div>
@@ -1714,7 +1719,7 @@ function renderTribs(data) {
     }).length;
 
     if (w.cfs > 15 || m.cfs > 15) {
-        ins.innerHTML = '<strong>⚠ High-elevation headwaters are breaking.</strong> Major inflows to the lake are beginning. Lake rise expected over coming days. Watch the outlet monitor closely.';
+        ins.innerHTML = '<strong>High-elevation headwaters are breaking.</strong> Major inflows to the lake are beginning. Lake rise expected over coming days. Watch the outlet monitor closely.';
     } else if (stalledCount >= 2) {
         ins.innerHTML = `<strong>Early melt activity has stalled.</strong> ${stalledCount} tributaries that showed movement in late March have slowed or refrozen under persistent cold and fresh snowfall. The high-elevation headwaters on Riding Mountain remain frozen. When temperatures rebound, all of this water releases at once.`;
     } else if (t.cfs > 8 && w.cfs < 3) {
@@ -1753,19 +1758,19 @@ const WMO = {
     80:'Showers',81:'Heavy showers',85:'Snow showers',95:'Thunderstorm'
 };
 const WMO_ICON = c => {
-    if (c <= 1) return '☀️';
-    if (c <= 3) return '☁️';
-    if (c <= 48) return '🌫️';
-    if (c <= 67) return '🌧️';
-    if (c <= 77) return '🌨️';
-    if (c <= 82) return '🌦️';
-    return '⛈️';
+    if (c <= 1) return 'Clear';
+    if (c <= 3) return 'Cloudy';
+    if (c <= 48) return 'Fog';
+    if (c <= 67) return 'Rain';
+    if (c <= 77) return 'Snow';
+    if (c <= 82) return 'Showers';
+    return 'Storm';
 };
 
 async function fetchWeather() {
     const url = `${CFG.weather}?latitude=${CFG.lat}&longitude=${CFG.lon}`
         + `&current=temperature_2m,weathercode,windspeed_10m,winddirection_10m,windgusts_10m`
-        + `&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum`
+        + `&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,rain_sum,snowfall_sum,precipitation_probability_max`
         + `&timezone=America%2FWinnipeg&forecast_days=4`;
     const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (!r.ok) throw new Error('wx failed');
@@ -1791,13 +1796,31 @@ function renderWeather(j) {
     const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     days.innerHTML = [1,2,3].map(i => {
         const dt = new Date(); dt.setDate(dt.getDate() + i);
-        const p = d.precipitation_sum[i] || 0;
+        const p      = d.precipitation_sum[i] || 0;
+        const rain   = d.rain_sum?.[i] || 0;
+        const snow   = d.snowfall_sum?.[i] || 0;  // mm SWE
+        const prob   = d.precipitation_probability_max?.[i] || 0;
+
+        // Precipitation type tag
+        let precipTag = '';
+        if (p > 0.5) {
+            let typeStr = '';
+            if (snow > 0 && rain > 0)       typeStr = 'Mix';
+            else if (snow > 0)               typeStr = 'Snow';
+            else if (rain > 0)               typeStr = 'Rain';
+            // Rain-on-snow warning — critical for melt
+            const isRainOnSnow = rain > 2 && new Date().getMonth() < 5;
+            const tagClass = isRainOnSnow ? 'rain-tag warn' : 'rain-tag';
+            precipTag = `<div class="${tagClass}" title="${prob}% chance">${typeStr} ${p.toFixed(1)} mm</div>`;
+            if (isRainOnSnow) precipTag += `<div class="rain-tag warn" style="margin-top:2px;font-size:9px;letter-spacing:.03em;">Rain-on-snow</div>`;
+        }
+
         return `<div class="wx-day">
             <div class="wx-dayname">${dayNames[dt.getDay()]}</div>
             <div class="wx-icon">${WMO_ICON(d.weathercode[i])}</div>
             <div class="wx-hi">${Math.round(d.temperature_2m_max[i])}°</div>
             <div class="wx-lo">${Math.round(d.temperature_2m_min[i])}°</div>
-            ${p > 0.5 ? `<div class="rain-tag${p > 8 ? ' warn' : ''}">${p.toFixed(1)} mm</div>` : ''}
+            ${precipTag}
         </div>`;
     }).join('');
 }
@@ -2145,7 +2168,7 @@ function renderShareCard() {
     const activeBulletin = BULLETINS.find(x => x.active);
     const advEl = document.getElementById('scAdvisory');
     if (activeBulletin) {
-        advEl.textContent = `⚠ ${activeBulletin.title} — ${activeBulletin.date}`;
+        advEl.textContent = `ADVISORY — ${activeBulletin.title} · ${activeBulletin.date}`;
         advEl.style.display = 'block';
     } else {
         advEl.style.display = 'none';
@@ -2157,7 +2180,7 @@ async function shareCard() {
     const st    = _shareData.st  || lakeStatus(parseFloat(ft));
     const tsStr = _shareData.tsStr || '';
     const activeBulletin = BULLETINS.find(x => x.active);
-    const advisoryLine = activeBulletin ? `⚠ ${activeBulletin.title}\n` : '';
+    const advisoryLine = activeBulletin ? `Advisory: ${activeBulletin.title}\n` : '';
     const text  = `Dauphin Lake Watch\n${ft} ft · ${st.lbl}\n${tsStr ? 'Updated '+tsStr+'\n' : ''}${advisoryLine}dauphinlakewatch.ca`;
     const url   = 'https://dauphinlakewatch.ca';
 
