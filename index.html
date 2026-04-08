@@ -2196,17 +2196,20 @@ function dismissBulletin() {
 // RENDER: SWE PANEL (with live MSC snow depth)
 // ─────────────────────────────────────────────────────────
 async function fetchSnowDepth() {
-    // MSC SWOB real-time — Dauphin A station (ID 5050920)
-    // Returns snow_depth in cm
+    // MSC SWOB real-time — Dauphin A station (CYDN)
+    // snow_depth reported in cm
     try {
-        const url = 'https://api.weather.gc.ca/collections/swob-realtime/items?station_id=5050920&sortby=-date_tm&limit=1&f=json';
+        const url = 'https://api.weather.gc.ca/collections/swob-realtime/items?url=CYDN&sortby=-date_tm-value&limit=1&f=json';
         const r = await fetch(url, { signal: AbortSignal.timeout(6000) });
         if (!r.ok) return null;
         const j = await r.json();
         const props = j?.features?.[0]?.properties;
-        // snow_depth is in cm
-        const sd = props?.snow_depth ?? props?.['snow depth'] ?? null;
-        if (sd != null && sd > 0) return parseFloat(sd);
+        // Try common field names for snow depth
+        const sd = props?.['snow_depth-value']
+                ?? props?.['sno_dpth-value']
+                ?? props?.['snow depth-value']
+                ?? null;
+        if (sd != null && parseFloat(sd) >= 0) return parseFloat(sd);
     } catch(e) {
         console.warn('[snow_depth]', e.message);
     }
