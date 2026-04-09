@@ -464,6 +464,40 @@
             line-height: 1.5;
         }
 
+        /* ─────────── HISTORICAL CONTEXT ROW ─────────── */
+        .context-row {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        .context-item {
+            background: var(--paper);
+            border-radius: 4px;
+            padding: 6px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+            min-width: 80px;
+        }
+        .context-lbl {
+            font-family: var(--mono);
+            font-size: 8.5px;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+        .context-val {
+            font-family: var(--mono);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        .context-warn  { color: #8b0000; }
+        .context-flood { color: var(--amber); }
+        .context-low   { color: var(--blue); }
+
         /* ─────────── BULLETIN BANNER ─────────── */
         .bulletin-banner {
             background: #3a2400;
@@ -997,6 +1031,24 @@
                     <div class="stat-box">
                         <div class="stat-lbl">to Flood Stage</div>
                         <div class="stat-val" id="toFlood">—</div>
+                    </div>
+                </div>
+                <div class="context-row">
+                    <div class="context-item">
+                        <span class="context-lbl">Normal range</span>
+                        <span class="context-val">below 854.8 ft</span>
+                    </div>
+                    <div class="context-item">
+                        <span class="context-lbl">2011 peak</span>
+                        <span class="context-val context-warn">860.76 ft</span>
+                    </div>
+                    <div class="context-item">
+                        <span class="context-lbl">Flood stage</span>
+                        <span class="context-val context-flood">858.0 ft</span>
+                    </div>
+                    <div class="context-item">
+                        <span class="context-lbl">Record low</span>
+                        <span class="context-val context-low">851.5 ft</span>
                     </div>
                 </div>
             </div>
