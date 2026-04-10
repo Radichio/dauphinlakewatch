@@ -464,39 +464,26 @@
             line-height: 1.5;
         }
 
-        /* ─────────── HISTORICAL CONTEXT ROW ─────────── */
-        .context-row {
-            display: flex;
-            gap: 6px;
-            margin-top: 8px;
-            flex-wrap: wrap;
-        }
-        .context-item {
-            background: var(--paper);
-            border-radius: 4px;
-            padding: 6px 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            flex: 1;
-            min-width: 80px;
-        }
-        .context-lbl {
+        /* ─────────── PREV READING + CONTEXT LINE ─────────── */
+        .prev-reading {
             font-family: var(--mono);
-            font-size: 8.5px;
-            letter-spacing: .08em;
-            text-transform: uppercase;
+            font-size: 11px;
             color: var(--muted);
+            margin-top: 5px;
+            letter-spacing: .02em;
+            min-height: 14px;
         }
-        .context-val {
+        .context-line {
             font-family: var(--mono);
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text);
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 10px;
+            line-height: 1.7;
+            opacity: .75;
         }
-        .context-warn  { color: #8b0000; }
-        .context-flood { color: var(--amber); }
-        .context-low   { color: var(--blue); }
+        @media (max-width: 720px) {
+            .context-line { font-size: 10px; line-height: 1.8; }
+        }
 
         /* ─────────── BULLETIN BANNER ─────────── */
         .bulletin-banner {
@@ -1031,6 +1018,7 @@
             <div class="beacon-num-block">
                 <div class="level-num" id="levelNum" style="color:var(--yellow)">—</div>
                 <div class="level-unit">FEET ABOVE SEA LEVEL (ASL) &nbsp;·&nbsp; WSC PROVISIONAL</div>
+                <div class="prev-reading" id="prevReading"></div>
             </div>
             <div class="beacon-details">
                 <div class="status-badge badge-yellow" id="statusBadge">
@@ -1051,23 +1039,11 @@
                         <div class="stat-val" id="toFlood">—</div>
                     </div>
                 </div>
-                <div class="context-row">
-                    <div class="context-item">
-                        <span class="context-lbl">Normal range</span>
-                        <span class="context-val">below 854.8 ft</span>
-                    </div>
-                    <div class="context-item">
-                        <span class="context-lbl">2011 peak</span>
-                        <span class="context-val context-warn">860.76 ft</span>
-                    </div>
-                    <div class="context-item">
-                        <span class="context-lbl">Flood stage</span>
-                        <span class="context-val context-flood">858.0 ft</span>
-                    </div>
-                    <div class="context-item">
-                        <span class="context-lbl">Record low</span>
-                        <span class="context-val context-low">851.5 ft</span>
-                    </div>
+                <div class="context-line">
+                    Normal range below 854.8 ft &nbsp;·&nbsp;
+                    Flood stage <span style="color:var(--amber)">858.0 ft</span> &nbsp;·&nbsp;
+                    2011 peak <span style="color:var(--red)">860.76 ft</span> &nbsp;·&nbsp;
+                    Record low <span style="color:var(--blue)">851.5 ft</span>
                 </div>
             </div>
         </div>
@@ -1505,6 +1481,23 @@ function renderBeacon(ft, series) {
         const tz = 'America/Winnipeg';
         tsStr = `${ts.toLocaleDateString('en-CA',{month:'short',day:'numeric',timeZone:tz})} ${ts.toLocaleTimeString('en-CA',{hour:'numeric',minute:'2-digit',hour12:true,timeZoneName:'short',timeZone:tz})}`;
         document.getElementById('lastUpdate').textContent = `Updated: ${tsStr}`;
+    }
+
+    // ── Previous reading
+    const prevEl = document.getElementById('prevReading');
+    if (series && series.length > 1) {
+        const prev = series.find((r, i) => i > 0 && r.level != null);
+        if (prev) {
+            const prevFt = mToFt(prev.level).toFixed(2);
+            const prevTs = prev.dt.toLocaleTimeString('en-CA', {
+                hour:'numeric', minute:'2-digit', hour12:true,
+                timeZone:'America/Winnipeg'
+            });
+            const prevDate = prev.dt.toLocaleDateString('en-CA', {
+                month:'short', day:'numeric', timeZone:'America/Winnipeg'
+            });
+            prevEl.textContent = `prev ${prevFt} ft · ${prevDate} ${prevTs} CDT`;
+        }
     }
 
     // ── Sticky bar
