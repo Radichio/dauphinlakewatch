@@ -1312,7 +1312,7 @@ const BULLETINS = [
         date:     'April 10, 2026',
         severity: 'warning',
         title:    'Melt Season Watch — April 10',
-        text:     'Temperatures are climbing — +4°C today, +7°C tomorrow. Surface melt is underway. First movement in the system: the Mossy River outlet is rising. Turtle River and Valley River are running. The lake responds days after the rivers move. We\'re watching closely — updates will follow.',
+        text:     'Temperatures are climbing — +4°C today, +9°C tomorrow. Surface melt is underway. First movement in the system: the Mossy River outlet is rising. Turtle River and Valley River are running. The lake responds days after the rivers move. We\'re watching closely — updates will follow.',
     },
 ];
 
@@ -2399,18 +2399,20 @@ function renderCYDN(obs) {
     const el = document.getElementById('cydnObs');
     if (!el || !obs) return;
 
-    // Present weather code 376 = heavy blowing snow, etc — map key codes
+    // ── Override main temp with CYDN ground truth — more accurate than model
+    if (obs.temp != null) {
+        document.getElementById('wxTemp').textContent = `${obs.temp.toFixed(1)}°C`;
+    }
+
     const wxLabel = obs.wx_code ? wxCodeLabel(obs.wx_code) : null;
 
     const parts = [];
-    if (obs.temp  != null) parts.push(`${obs.temp.toFixed(1)}°C`);
     if (obs.wspd  != null) parts.push(`Wind ${Math.round(obs.wspd)} km/h`);
     if (obs.wgust != null && obs.wgust > (obs.wspd || 0) + 5)
         parts.push(`gusting ${Math.round(obs.wgust)}`);
     if (obs.vis   != null) parts.push(`Vis ${obs.vis.toFixed(1)} km`);
     if (wxLabel)           parts.push(wxLabel);
 
-    // Time in CDT
     let timeStr = '';
     if (obs.time) {
         const d = new Date(obs.time);
@@ -2419,7 +2421,7 @@ function renderCYDN(obs) {
         });
     }
 
-    el.innerHTML = `<span style="font-weight:600;color:var(--text);">Dauphin Airport (CYDN)</span> &nbsp;·&nbsp; ${parts.join(' &nbsp;·&nbsp; ')}${timeStr ? ` &nbsp;·&nbsp; <span style="color:var(--muted)">${timeStr} CDT</span>` : ''}`;
+    el.innerHTML = `<span style="font-weight:600;color:var(--text);">Dauphin Airport (CYDN) · ${obs.temp != null ? obs.temp.toFixed(1)+'°C' : ''}</span> &nbsp;·&nbsp; ${parts.join(' &nbsp;·&nbsp; ')}${timeStr ? ` &nbsp;·&nbsp; <span style="color:var(--muted)">${timeStr} CDT</span>` : ''}`;
     el.style.display = 'block';
 }
 
