@@ -559,8 +559,26 @@
             flex-shrink: 0;
             margin-top: 2px;
             transition: background .15s;
+            white-space: nowrap;
         }
         .bulletin-dismiss:hover { background: rgba(200,162,0,.1); }
+        @media (max-width: 480px) {
+            .bulletin-inner {
+                flex-wrap: wrap;
+                padding: 10px 14px;
+                gap: 8px;
+            }
+            .bulletin-icon { display: none; }
+            .bulletin-body { width: 100%; }
+            .bulletin-dismiss {
+                align-self: flex-end;
+                margin-top: 4px;
+                font-size: 11px;
+                padding: 6px 14px;
+            }
+            .bulletin-title { font-size: 14px; }
+            .bulletin-text  { font-size: 13px; line-height: 1.6; }
+        }
 
         /* ─────────── SWE PANEL ─────────── */
         .swe-panel {
@@ -1306,12 +1324,12 @@ const SEED = {
 // ─────────────────────────────────────────────────────────
 const BULLETINS = [
     {
-        id:       'melt-watch-apr8',
+        id:       'melt-watch-apr10',
         active:   true,
-        date:     'April 8, 2026',
+        date:     'April 10, 2026',
         severity: 'warning',
-        title:    'Storm Cleared — Melt Season Watch Begins',
-        text:     'The Alberta clipper has moved through the watershed. Skies are clearing tonight. Temperatures rebound through the week — Thursday +2°C, Friday +4°C, Saturday +7°C. Three consecutive days above freezing. Surface melt will begin. All snow deposited today remains in the basin. The melt window is opening. We\'ll be watching closely — updates will follow.',
+        title:    'Melt Season Watch — April 10',
+        text:     'Temperatures are climbing. Today +4°C, tomorrow +7°C. Surface melt is underway across the watershed. The lake is holding steady — that\'s expected. Lake response lags melt by several days as water works its way down the tributaries. The rivers are what to watch right now. Updates will follow.',
     },
 ];
 
