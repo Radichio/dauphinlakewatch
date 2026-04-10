@@ -468,10 +468,10 @@
         .prev-reading {
             font-family: var(--mono);
             font-size: 11px;
-            color: var(--muted);
             margin-top: 5px;
             letter-spacing: .02em;
             min-height: 14px;
+            font-weight: 600;
         }
         .context-line {
             font-family: var(--mono);
@@ -1370,9 +1370,9 @@ const SCENARIOS = {
 // ─────────────────────────────────────────────────────────
 const SWE_CONFIG = {
     swe_mm:  '160–185',
-    status:  'ACCUMULATING',
-    context: 'Highest recorded snowpack in Manitoba near Riding Mountain. Based on HFC field measurements (March 9–12) plus estimated accumulation since, including today\'s Alberta clipper (10–25 cm additional). No significant melt has occurred — all snow remains in the basin and is still growing.',
-    updated: 'April 8, 2026',
+    status:  'MELTING',
+    context: 'Highest recorded snowpack in Manitoba near Riding Mountain. Based on HFC field measurements (March 9–12) plus storm accumulation April 8. Surface melt is now underway — temperatures above zero through the weekend. This water is moving toward the lake. The full volume has not yet reached the tributaries.',
+    updated: 'April 10, 2026',
 };
 
 // ─────────────────────────────────────────────────────────
@@ -2437,9 +2437,20 @@ function wxCodeLabel(code) {
 }
 function renderSWE() {
     document.getElementById('sweNumber').textContent  = SWE_CONFIG.swe_mm;
-    document.getElementById('sweBadge').textContent   = SWE_CONFIG.status;
     document.getElementById('sweContext').textContent = SWE_CONFIG.context;
     document.getElementById('sweUpdated').textContent = `Estimated · ${SWE_CONFIG.updated}`;
+    const badge = document.getElementById('sweBadge');
+    badge.textContent = SWE_CONFIG.status;
+    // Colour badge by phase
+    if (SWE_CONFIG.status === 'MELTING') {
+        badge.style.background = 'rgba(184,76,0,.2)';
+        badge.style.borderColor = 'rgba(184,76,0,.4)';
+        badge.style.color = '#ffaa66';
+    } else {
+        badge.style.background = 'rgba(74,159,212,.2)';
+        badge.style.borderColor = 'rgba(74,159,212,.4)';
+        badge.style.color = '#7dd3fc';
+    }
 }
 
 // ─────────────────────────────────────────────────────────
