@@ -1329,7 +1329,7 @@ const BULLETINS = [
         date:     'April 10, 2026',
         severity: 'warning',
         title:    'Melt Season Watch — April 10',
-        text:     'Temperatures are climbing. Today +4°C, tomorrow +7°C. Surface melt is underway across the watershed. The lake is holding steady — that\'s expected. Lake response lags melt by several days as water works its way down the tributaries. The rivers are what to watch right now. Updates will follow.',
+        text:     'Temperatures are climbing — +4°C today, +7°C tomorrow. Surface melt is underway. First movement in the system: the Mossy River outlet is rising. Turtle River and Valley River are running. The lake responds days after the rivers move. We\'re watching closely — updates will follow.',
     },
 ];
 
@@ -1811,8 +1811,8 @@ function renderOutlet(cfs) {
     document.getElementById('outletPct').textContent = `${pct.toFixed(0)}% of max`;
 
     let note;
-    if (pct > 85)       note = `<strong>Near capacity.</strong> The dam is releasing ${Math.round(cfs)} cfs — close to its practical maximum of ~500 cfs. Incoming meltwater now exceeds what the outlet can remove.`;
-    else if (pct > 60)  note = `Running at ${pct.toFixed(0)}% of outlet capacity. Some headroom remains. Dam will be pushed to maximum as spring melt accelerates in April.`;
+    if (pct > 85)       note = `<strong>Near capacity and rising.</strong> The outlet is releasing ${Math.round(cfs)} cfs — approaching its practical maximum of ~500 cfs. This is the first measurable movement in the system. Incoming meltwater is beginning to exceed what the channel can remove.`;
+    else if (pct > 60)  note = `Running at ${pct.toFixed(0)}% of outlet capacity. Flow is increasing as surface melt begins. Headroom is narrowing.`;
     else                note = `Outlet has capacity available (${pct.toFixed(0)}%). Lake is draining normally for now.`;
     document.getElementById('outletNote').innerHTML = note;
 }
