@@ -766,7 +766,9 @@
         @media (max-width: 720px) {
             .grid-2 { grid-template-columns: 1fr; }
             .beacon-wrap { flex-direction: column; gap: 14px; }
-            .level-num { font-size: 72px; }
+            .beacon-num-block { width: 100%; }
+            .level-num { font-size: 80px; }
+            .beacon-details { width: 100%; }
             .stat-row { grid-template-columns: 1fr 1fr; }
             .stat-lbl { font-size: 10px; }
             .stat-val { font-size: 15px; }
@@ -1026,10 +1028,6 @@
                     <span id="statusLabel">WATCH</span>
                 </div>
                 <div class="stat-row">
-                    <div class="stat-box">
-                        <div class="stat-lbl">Trend</div>
-                        <div class="stat-val" id="trendVal">—</div>
-                    </div>
                     <div class="stat-box">
                         <div class="stat-lbl">vs. Operating Range</div>
                         <div class="stat-val" id="vsRange">—</div>
@@ -1459,10 +1457,6 @@ function renderBeacon(ft, series) {
     badge.className = `status-badge ${st.bg}`;
     document.getElementById('statusLabel').textContent = st.lbl;
 
-    const tv = document.getElementById('trendVal');
-    tv.textContent  = tr.t;
-    tv.className    = `stat-val ${tr.c}`;
-
     const diff = ft - CFG.upperRange;
     const vr = document.getElementById('vsRange');
     if (diff < 0) {
@@ -1483,20 +1477,23 @@ function renderBeacon(ft, series) {
         document.getElementById('lastUpdate').textContent = `Updated: ${tsStr}`;
     }
 
-    // ── Previous reading
+    // ── Previous reading — Option B: directional
     const prevEl = document.getElementById('prevReading');
     if (series && series.length > 1) {
         const prev = series.find((r, i) => i > 0 && r.level != null);
         if (prev) {
-            const prevFt = mToFt(prev.level).toFixed(2);
-            const prevTs = prev.dt.toLocaleTimeString('en-CA', {
-                hour:'numeric', minute:'2-digit', hour12:true,
-                timeZone:'America/Winnipeg'
+            const prevFt   = parseFloat(mToFt(prev.level).toFixed(2));
+            const diff     = ft - prevFt;
+            const arrow    = diff > 0.005 ? '↑' : diff < -0.005 ? '↓' : '—';
+            const diffStr  = Math.abs(diff) > 0.005 ? ` ${Math.abs(diff).toFixed(2)} ft` : '';
+            const prevTs   = prev.dt.toLocaleTimeString('en-CA', {
+                hour:'numeric', minute:'2-digit', hour12:true, timeZone:'America/Winnipeg'
             });
             const prevDate = prev.dt.toLocaleDateString('en-CA', {
                 month:'short', day:'numeric', timeZone:'America/Winnipeg'
             });
-            prevEl.textContent = `prev ${prevFt} ft · ${prevDate} ${prevTs} CDT`;
+            prevEl.textContent = `${arrow}${diffStr} from ${prevFt} ft · ${prevDate} ${prevTs} CDT`;
+            prevEl.style.color = diff > 0.005 ? '#b84c00' : diff < -0.005 ? '#1a6b3a' : '';
         }
     }
 
