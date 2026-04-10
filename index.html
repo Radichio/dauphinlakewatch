@@ -765,9 +765,11 @@
         /* ─────────── RESPONSIVE ─────────── */
         @media (max-width: 720px) {
             .grid-2 { grid-template-columns: 1fr; }
-            .beacon-wrap { flex-direction: column; gap: 14px; }
+            .beacon-wrap { flex-direction: column; gap: 10px; }
             .beacon-num-block { width: 100%; }
-            .level-num { font-size: 80px; }
+            .level-num { font-size: 96px; }
+            .level-unit { font-size: 9px; }
+            .prev-reading { font-size: 12px; margin-top: 4px; display: block !important; }
             .beacon-details { width: 100%; }
             .stat-row { grid-template-columns: 1fr 1fr; }
             .stat-lbl { font-size: 10px; }
@@ -1477,23 +1479,32 @@ function renderBeacon(ft, series) {
         document.getElementById('lastUpdate').textContent = `Updated: ${tsStr}`;
     }
 
-    // ── Previous reading — Option B: directional
+    // ── Previous reading — 1 hour ago
     const prevEl = document.getElementById('prevReading');
-    if (series && series.length > 1) {
-        const prev = series.find((r, i) => i > 0 && r.level != null);
+    if (series && series.length > 1 && series[0].dt) {
+        const oneHourAgo = series[0].dt.getTime() - (60 * 60 * 1000);
+        // Find reading closest to 1 hour ago
+        const prev = series
+            .filter((r, i) => i > 0 && r.level != null)
+            .reduce((best, r) => {
+                const d = Math.abs(r.dt.getTime() - oneHourAgo);
+                const bd = Math.abs(best.dt.getTime() - oneHourAgo);
+                return d < bd ? r : best;
+            }, series.filter((r, i) => i > 0 && r.level != null)[0]);
+
         if (prev) {
-            const prevFt   = parseFloat(mToFt(prev.level).toFixed(2));
-            const diff     = ft - prevFt;
-            const arrow    = diff > 0.005 ? '↑' : diff < -0.005 ? '↓' : '—';
-            const diffStr  = Math.abs(diff) > 0.005 ? ` ${Math.abs(diff).toFixed(2)} ft` : '';
-            const prevTs   = prev.dt.toLocaleTimeString('en-CA', {
+            const prevFt  = parseFloat(mToFt(prev.level).toFixed(2));
+            const delta   = ft - prevFt;
+            const arrow   = delta > 0.005 ? '↑' : delta < -0.005 ? '↓' : '—';
+            const diffStr = Math.abs(delta) > 0.005 ? ` ${Math.abs(delta).toFixed(2)} ft` : '';
+            const prevTs  = prev.dt.toLocaleTimeString('en-CA', {
                 hour:'numeric', minute:'2-digit', hour12:true, timeZone:'America/Winnipeg'
             });
             const prevDate = prev.dt.toLocaleDateString('en-CA', {
                 month:'short', day:'numeric', timeZone:'America/Winnipeg'
             });
-            prevEl.textContent = `${arrow}${diffStr} from ${prevFt} ft · ${prevDate} ${prevTs} CDT`;
-            prevEl.style.color = diff > 0.005 ? '#b84c00' : diff < -0.005 ? '#1a6b3a' : '';
+            prevEl.textContent = `${arrow}${diffStr} from ${prevFt} ft · 1 hr ago (${prevDate} ${prevTs} CDT)`;
+            prevEl.style.color = delta > 0.005 ? '#b84c00' : delta < -0.005 ? '#1a6b3a' : '';
         }
     }
 
