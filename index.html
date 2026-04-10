@@ -667,21 +667,25 @@
         }
         @media (max-width: 720px) {
             .sticky-bar {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
+                display: block;
                 position: sticky;
                 top: 0;
                 z-index: 100;
-                padding: 10px 16px;
+                padding: 14px 16px 12px;
                 background: var(--navy);
                 border-bottom: 2px solid var(--blue);
                 box-shadow: 0 2px 8px rgba(0,0,0,.25);
             }
+            .sticky-top-row {
+                display: flex;
+                align-items: flex-end;
+                justify-content: space-between;
+                gap: 12px;
+            }
             .sticky-level {
                 font-family: var(--cond);
                 font-weight: 800;
-                font-size: 28px;
+                font-size: 64px;
                 color: white;
                 line-height: 1;
             }
@@ -689,24 +693,28 @@
                 font-family: var(--mono);
                 font-size: 9px;
                 color: rgba(255,255,255,.5);
-                margin-top: 2px;
+                margin-top: 3px;
+            }
+            .sticky-prev {
+                font-family: var(--mono);
+                font-size: 11px;
+                color: rgba(255,255,255,.5);
+                margin-top: 4px;
+                min-height: 14px;
             }
             .sticky-badge {
                 font-family: var(--cond);
                 font-weight: 700;
-                font-size: 13px;
+                font-size: 15px;
                 letter-spacing: .06em;
                 text-transform: uppercase;
-                padding: 5px 12px;
+                padding: 6px 14px;
                 border-radius: 3px;
+                flex-shrink: 0;
+                align-self: center;
             }
-            .sticky-right { text-align: right; }
-            .sticky-update {
-                font-family: var(--mono);
-                font-size: 9px;
-                color: rgba(255,255,255,.45);
-                margin-top: 3px;
-            }
+            .sticky-right { display: none; }
+            .sticky-update { display: none; }
         }
 
         /* ─────────── COLLAPSIBLE LADDER (mobile) ─────────── */
@@ -793,8 +801,6 @@
             .s-desc     { font-size: 13px; }
             .s-range    { font-size: 12px; }
             .outlet-note { font-size: 14px; }
-            /* weather card moves up on mobile via order */
-            .card-weather { order: -1; }
         }
         @media (max-width: 480px) {
             .header-main { flex-direction: column; align-items: flex-start; gap: 6px; }
@@ -996,13 +1002,13 @@
      STICKY MOBILE STATUS BAR
 ════════════════════════════════════════════════════════ -->
 <div class="sticky-bar" id="stickyBar">
-    <div>
-        <div class="sticky-level" id="stickyLevel">—</div>
-        <div class="sticky-unit">FT ASL · WSC PROVISIONAL</div>
-    </div>
-    <div class="sticky-right">
+    <div class="sticky-top-row">
+        <div>
+            <div class="sticky-level" id="stickyLevel">—</div>
+            <div class="sticky-unit">FT ASL · WSC PROVISIONAL</div>
+            <div class="sticky-prev" id="stickyPrev"></div>
+        </div>
         <div class="sticky-badge" id="stickyBadge">LOADING</div>
-        <div class="sticky-update" id="stickyUpdate">Connecting…</div>
     </div>
 </div>
 
@@ -1514,7 +1520,24 @@ function renderBeacon(ft, series) {
     sb.textContent = st.lbl;
     sb.style.background = bgMap[st.cls];
     sb.style.color = colorMap[st.cls];
-    if (tsStr) document.getElementById('stickyUpdate').textContent = `Updated ${tsStr}`;
+
+    // Sticky prev reading
+    const spEl = document.getElementById('stickyPrev');
+    if (spEl && series && series.length > 1 && series[0].dt) {
+        const oneHourAgo = series[0].dt.getTime() - (60 * 60 * 1000);
+        const candidates = series.filter((r, i) => i > 0 && r.level != null);
+        if (candidates.length) {
+            const prev = candidates.reduce((best, r) => {
+                return Math.abs(r.dt.getTime() - oneHourAgo) < Math.abs(best.dt.getTime() - oneHourAgo) ? r : best;
+            }, candidates[0]);
+            const prevFt  = parseFloat(mToFt(prev.level).toFixed(2));
+            const delta   = ft - prevFt;
+            const arrow   = delta > 0.005 ? '↑' : delta < -0.005 ? '↓' : '—';
+            const diffStr = Math.abs(delta) > 0.005 ? ` ${Math.abs(delta).toFixed(2)} ft` : '';
+            spEl.textContent = `${arrow}${diffStr} from ${prevFt} ft · 1 hr ago`;
+            spEl.style.color = delta > 0.005 ? '#ffaa66' : delta < -0.005 ? '#66dd99' : 'rgba(255,255,255,.5)';
+        }
+    }
 
     const dot = document.getElementById('liveDot');
     dot.className = 'dot';
