@@ -1212,6 +1212,17 @@
     <!-- ── HFC PROVINCIAL FORECAST REFERENCE ── -->
     <div class="hfc-ref" id="hfcRef"></div>
 
+    <!-- ── ABOUT THIS ANALYSIS ── -->
+    <div class="card" style="margin-bottom:16px;">
+        <div class="card-label">About This Analysis</div>
+        <p style="font-size:14px;line-height:1.75;color:var(--text);margin-bottom:14px;">
+            Dauphin Lake Watch integrates live data from federal hydrometric networks, provincial flood forecasts, and ground observation stations. iConnect Studio interprets that data in real time — reading conditions, assessing risk, and translating it into plain language for the people who live and work on this lake. Not simply a raw data feed, but active analysis.
+        </p>
+        <p style="font-size:13px;line-height:1.7;color:var(--muted);padding-top:12px;border-top:1px solid var(--paper-mid);">
+            iConnect Studio designs, develops and deploys specialized data dashboards — turning live data streams into decision-ready tools for communities. <span style="color:var(--blue);">dauphinlakewatch.ca</span> is one example of what that looks like in practice.
+        </p>
+    </div>
+
     <!-- ── ALERTS SIGNUP ── -->
     <div class="card" style="margin-top:16px;">
         <div class="card-label">Get Flood Alerts &nbsp;·&nbsp; Email &amp; SMS Notifications</div>
@@ -1322,13 +1333,13 @@ const BULLETINS = [
 // Rebuild will pick these up automatically.
 // ─────────────────────────────────────────────────────────
 const SCENARIOS = {
-    revised:  'April 8, 2026',
-    note:     'iConnect Studio analysis — revised April 8 following storm accumulation and continued melt delay. Conditions are evolving rapidly. We\'ll update this as the picture clarifies.',
+    revised:  'April 11, 2026',
+    note:     'iConnect Studio analysis — revised April 11. Rain forecast Sunday (13.5mm) landing on an actively melting snowpack shifts the risk profile upward. Unfavourable scenario probability increases. Conditions are evolving — we\'ll update this as the picture clarifies.',
     bands: [
         {
             key:   'fav',
             cls:   's-fav',
-            prob:  '~20%',
+            prob:  '~15%',
             color: 'var(--green)',
             name:  'Favourable',
             range: '855.0 – 855.8 ft',
@@ -1337,7 +1348,7 @@ const SCENARIOS = {
         {
             key:   'likely',
             cls:   's-likely',
-            prob:  '~45%',
+            prob:  '~40%',
             color: 'var(--yellow)',
             name:  'Most Likely',
             range: '856.0 – 857.0 ft',
@@ -1346,7 +1357,7 @@ const SCENARIOS = {
         {
             key:   'unfav',
             cls:   's-unfav',
-            prob:  '~25%',
+            prob:  '~32%',
             color: 'var(--amber)',
             name:  'Unfavourable',
             range: '857.5 – 858.5 ft',
@@ -1355,7 +1366,7 @@ const SCENARIOS = {
         {
             key:   'severe',
             cls:   's-severe',
-            prob:  '~10%',
+            prob:  '~13%',
             color: 'var(--red)',
             name:  'Severe',
             range: '858.5 ft+',
