@@ -1115,7 +1115,7 @@
             <canvas id="histChart"></canvas>
         </div>
         <div class="chart-note">
-            Melt delayed — the lake is holding steady while the snowpack continues to grow. An Alberta clipper deposited 10–25 cm of additional snow across the watershed on April 8. No significant runoff has occurred — all accumulated snow remains in the basin. Projected melt window: mid-April to mid-May. When it comes, it will be rapid and concentrated.
+            Melt is underway. The lake is holding steady — lake response typically lags melt by several days as water works through the tributaries. The April 8 storm added 10–25 cm to the basin. Rain is forecast Sunday. Projected peak: late April to mid-May.
         </div>
     </div>
 
@@ -1212,17 +1212,6 @@
     <!-- ── HFC PROVINCIAL FORECAST REFERENCE ── -->
     <div class="hfc-ref" id="hfcRef"></div>
 
-    <!-- ── ABOUT THIS ANALYSIS ── -->
-    <div class="card" style="margin-bottom:16px;">
-        <div class="card-label">About This Analysis</div>
-        <p style="font-size:14px;line-height:1.75;color:var(--text);margin-bottom:14px;">
-            Dauphin Lake Watch integrates live data from federal hydrometric networks, provincial flood forecasts, and ground observation stations. iConnect Studio interprets that data in real time — reading conditions, assessing risk, and translating it into plain language for the people who live and work on this lake. Not simply a raw data feed, but active analysis.
-        </p>
-        <p style="font-size:13px;line-height:1.7;color:var(--muted);padding-top:12px;border-top:1px solid var(--paper-mid);">
-            iConnect Studio designs, develops and deploys specialized data dashboards — turning live data streams into decision-ready tools for communities. <span style="color:var(--blue);">dauphinlakewatch.ca</span> is one example of what that looks like in practice.
-        </p>
-    </div>
-
     <!-- ── ALERTS SIGNUP ── -->
     <div class="card" style="margin-top:16px;">
         <div class="card-label">Get Flood Alerts &nbsp;·&nbsp; Email &amp; SMS Notifications</div>
@@ -1259,9 +1248,10 @@
             <img src="iconnect-logo.png" alt="iConnect Studio" style="width:32px;height:32px;opacity:.6;filter:invert(1);">
             <span>iConnect Studio — Independent Community Hydrological Research &amp; Advisory</span>
         </div>
-        <div>Water level data: Water Survey of Canada, Environment and Climate Change Canada. Provisional real-time data subject to revision. Source: wateroffice.ec.gc.ca</div>
-        <div style="margin-top:4px;">This is an independent community monitoring tool, not an official government forecast. For official provincial flood guidance: <span style="color:rgba(255,255,255,.85)">www.manitoba.ca/floodinfo/</span></div>
-        <div style="margin-top:4px;opacity:.45;">Compiled from federal and provincial open data sources. Dashboard refreshes every 15 minutes.</div>
+        <div style="margin-top:4px;font-style:italic;opacity:.7;">Live data and active analysis. iConnect designs, develops and deploys specialized data dashboards for communities.</div>
+        <div style="margin-top:8px;">Water level data: Water Survey of Canada, Environment and Climate Change Canada. Provisional real-time data subject to revision. Source: wateroffice.ec.gc.ca</div>
+        <div style="margin-top:4px;">Independent community monitoring tool — not an official government forecast. For official provincial flood guidance: <span style="color:rgba(255,255,255,.85)">www.manitoba.ca/floodinfo/</span></div>
+        <div style="margin-top:4px;opacity:.45;">Dashboard refreshes every 15 minutes.</div>
     </div>
 </footer>
 
@@ -1334,7 +1324,7 @@ const BULLETINS = [
 // ─────────────────────────────────────────────────────────
 const SCENARIOS = {
     revised:  'April 11, 2026',
-    note:     'iConnect Studio analysis — revised April 11. Rain forecast Sunday (13.5mm) landing on an actively melting snowpack shifts the risk profile upward. Unfavourable scenario probability increases. Conditions are evolving — we\'ll update this as the picture clarifies.',
+    note:     'iConnect Studio analysis — revised April 11. Rain forecast Sunday (13.5mm) on an actively melting snowpack shifts the risk profile upward. Unfavourable probability increases.',
     bands: [
         {
             key:   'fav',
