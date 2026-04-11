@@ -1115,7 +1115,7 @@
             <canvas id="histChart"></canvas>
         </div>
         <div class="chart-note">
-            Melt is underway. The lake is holding steady — lake response typically lags melt by several days as water works through the tributaries. The April 8 storm added 10–25 cm to the basin. Rain is forecast Sunday. Projected peak: late April to mid-May.
+            Melt is underway. The lake is holding steady — lake response typically lags melt by several days as water works through the tributaries. Significant snowpack remains in the basin from a winter of above-normal accumulation. Projected peak: late April to mid-May.
         </div>
     </div>
 
@@ -1324,12 +1324,12 @@ const BULLETINS = [
 // ─────────────────────────────────────────────────────────
 const SCENARIOS = {
     revised:  'April 11, 2026',
-    note:     'iConnect Studio analysis — revised April 11. Rain forecast Sunday (13.5mm) on an actively melting snowpack shifts the risk profile upward. Unfavourable probability increases.',
+    note:     'iConnect Studio analysis — revised April 11. Sunday rain downgraded. Tuesday forecast of 12°C remains the primary driver. Significant snowpack in the basin. Risk profile remains elevated.',
     bands: [
         {
             key:   'fav',
             cls:   's-fav',
-            prob:  '~15%',
+            prob:  '~20%',
             color: 'var(--green)',
             name:  'Favourable',
             range: '855.0 – 855.8 ft',
@@ -1338,7 +1338,7 @@ const SCENARIOS = {
         {
             key:   'likely',
             cls:   's-likely',
-            prob:  '~40%',
+            prob:  '~42%',
             color: 'var(--yellow)',
             name:  'Most Likely',
             range: '856.0 – 857.0 ft',
@@ -1347,7 +1347,7 @@ const SCENARIOS = {
         {
             key:   'unfav',
             cls:   's-unfav',
-            prob:  '~32%',
+            prob:  '~28%',
             color: 'var(--amber)',
             name:  'Unfavourable',
             range: '857.5 – 858.5 ft',
@@ -1356,7 +1356,7 @@ const SCENARIOS = {
         {
             key:   'severe',
             cls:   's-severe',
-            prob:  '~13%',
+            prob:  '~10%',
             color: 'var(--red)',
             name:  'Severe',
             range: '858.5 ft+',
@@ -1372,7 +1372,7 @@ const SCENARIOS = {
 const SWE_CONFIG = {
     swe_mm:  '160–185',
     status:  'MELTING',
-    context: 'Highest recorded snowpack in Manitoba near Riding Mountain. Based on HFC field measurements (March 9–12) plus storm accumulation April 8. Surface melt is now underway — temperatures above zero through the weekend. This water is moving toward the lake. The full volume has not yet reached the tributaries.',
+    context: 'Highest recorded snowpack in Manitoba near Riding Mountain. Based on HFC field measurements (March 9–12) plus subsequent accumulation through early April. Surface melt is now underway — temperatures above zero through the weekend. This water is moving toward the lake. The full volume has not yet reached the tributaries.',
     updated: 'April 10, 2026',
 };
 
