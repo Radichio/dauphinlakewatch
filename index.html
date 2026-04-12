@@ -1308,12 +1308,12 @@ const SEED = {
 // ─────────────────────────────────────────────────────────
 const BULLETINS = [
     {
-        id:       'melt-watch-apr11',
+        id:       'melt-watch-apr12',
         active:   true,
-        date:     'April 11, 2026',
+        date:     'April 12, 2026',
         severity: 'warning',
-        title:    'Melt Season Watch — April 11',
-        text:     'Melt is active. Today +8°C, Sunday rain chance downgraded. The key signal is Tuesday — forecast high of 12°C. That is when tributary response accelerates and the lake begins to move. The Mossy River outlet is already rising. We\'re watching closely — updates will follow.',
+        title:    'Melt Season Watch — April 12',
+        text:     'Rain falling now at +3°C. Melt is active. Turtle River rising. High-elevation tributaries still frozen — that snowpack is intact. Tuesday forecast of +11°C is the key event. Updates will follow.',
     },
 ];
 
@@ -1323,8 +1323,8 @@ const BULLETINS = [
 // Rebuild will pick these up automatically.
 // ─────────────────────────────────────────────────────────
 const SCENARIOS = {
-    revised:  'April 11, 2026',
-    note:     'iConnect Studio analysis — revised April 11. Sunday rain downgraded. Tuesday forecast of 12°C remains the primary driver. Significant snowpack in the basin. Risk profile remains elevated.',
+    revised:  'April 12, 2026',
+    note:     'iConnect Studio analysis — revised April 12. Sunday rain confirmed. Tuesday forecast of +11°C remains the primary driver. Thursday cold snap (forecast high –5°C, 5–10 cm snow) delays but does not eliminate peak inflow. Wilson and Mink headwaters still frozen — that snowpack is intact. Risk profile remains elevated.',
     bands: [
         {
             key:   'fav',
@@ -1332,26 +1332,26 @@ const SCENARIOS = {
             prob:  '~20%',
             color: 'var(--green)',
             name:  'Favourable',
-            range: '855.0 – 855.8 ft',
-            desc:  'Slow gradual melt, dry April–May. Near or slightly above operating range. Minor impacts.',
+            range: '855.0 – 856.0 ft',
+            desc:  'Slow melt, cold snaps hold. Near or slightly above operating range. Minor impacts.',
         },
         {
             key:   'likely',
             cls:   's-likely',
-            prob:  '~42%',
+            prob:  '~45%',
             color: 'var(--yellow)',
             name:  'Most Likely',
-            range: '856.0 – 857.0 ft',
+            range: '856.0 – 857.5 ft',
             desc:  'Normal melt pace with near-average April precipitation. Above operating range. Low-lying flooding and road impacts expected.',
         },
         {
             key:   'unfav',
             cls:   's-unfav',
-            prob:  '~28%',
+            prob:  '~25%',
             color: 'var(--amber)',
             name:  'Unfavourable',
             range: '857.5 – 858.5 ft',
-            desc:  'Fast melt with wet April. Approaching or exceeding flood stage. Active sandbagging required.',
+            desc:  'Fast melt combined with rain-on-snow events. Approaching or exceeding flood stage. Active sandbagging required.',
         },
         {
             key:   'severe',
@@ -1360,7 +1360,7 @@ const SCENARIOS = {
             color: 'var(--red)',
             name:  'Severe',
             range: '858.5 ft+',
-            desc:  'Rapid melt combined with rain-on-snow events. Significant flooding above historical operating range.',
+            desc:  'Rapid melt combined with sustained rain-on-snow events. Significant flooding above historical operating range.',
         },
     ],
 };
