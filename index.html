@@ -637,6 +637,7 @@
 
         /* ─────────── HFC REFERENCE ─────────── */
         .hfc-ref {
+            display: none;
             background: var(--white);
             border: 1px solid var(--paper-dark);
             border-left: 3px solid var(--blue);
@@ -1054,6 +1055,24 @@
                     Record low <span style="color:var(--blue)">851.5 ft</span>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- ── SITUATION STRIP ── -->
+    <div style="background:linear-gradient(135deg,#0d2137 0%,#0f2a45 100%);border-radius:6px;padding:16px 20px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;border:1px solid rgba(74,159,212,.2);">
+        <div style="flex:1;min-width:120px;border-right:1px solid rgba(255,255,255,.1);padding-right:16px;">
+            <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:4px;">Outlet Flow</div>
+            <div style="font-family:var(--cond);font-weight:800;font-size:28px;color:#7dd3fc;line-height:1;" id="stripOutlet">—</div>
+            <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">cfs · Mossy River</div>
+        </div>
+        <div style="flex:1;min-width:120px;border-right:1px solid rgba(255,255,255,.1);padding:0 16px;">
+            <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:4px;">Tributaries Running Hard</div>
+            <div style="font-family:var(--cond);font-weight:800;font-size:28px;color:#f87171;line-height:1;" id="stripTribs">—</div>
+            <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">of 7 rivers monitored</div>
+        </div>
+        <div style="flex:1;min-width:140px;padding-left:16px;display:flex;flex-direction:column;justify-content:center;">
+            <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:6px;">Get Level Alerts</div>
+            <a href="/alerts" style="display:inline-block;background:#4aafd4;color:white;font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:8px 16px;border-radius:4px;text-decoration:none;text-align:center;">Subscribe Free →</a>
         </div>
     </div>
 
@@ -1817,6 +1836,14 @@ function renderTribs(data) {
     } else {
         ins.textContent = 'Monitoring all 7 basin tributaries. Lower-elevation rivers showing early movement; high-elevation stations remain dormant.';
     }
+
+    // Update situation strip — count Running Hard
+    const hardCount = TRIBS.filter(def => {
+        const d = data[def.key] || SEED.tribs[def.key] || {};
+        return tribStatus(d.cfs || 0, def.elev || 0, d.prev || 0).lbl === 'Running Hard';
+    }).length;
+    const stripTribs = document.getElementById('stripTribs');
+    if (stripTribs) stripTribs.textContent = hardCount;
 }
 
 // ─────────────────────────────────────────────────────────
@@ -1835,6 +1862,9 @@ function renderOutlet(cfs) {
     else if (pct > 60)  note = `Running at ${pct.toFixed(0)}% of outlet capacity. Flow is increasing as surface melt begins. Headroom is narrowing.`;
     else                note = `Outlet has capacity available (${pct.toFixed(0)}%). Lake is draining normally for now.`;
     document.getElementById('outletNote').innerHTML = note;
+    // Update situation strip
+    const stripOutlet = document.getElementById('stripOutlet');
+    if (stripOutlet) stripOutlet.textContent = Math.round(cfs);
 }
 
 // ─────────────────────────────────────────────────────────
