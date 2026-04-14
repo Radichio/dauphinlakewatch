@@ -1056,22 +1056,6 @@
         </div>
     </div>
 
-    <!-- ── SWE BASIN SNOW LOAD (config-driven) ── -->
-    <div class="swe-panel" id="swePanel">
-        <div class="swe-label">Basin Snow Water Equivalent — Estimated</div>
-        <div class="swe-inner">
-            <div class="swe-num-block">
-                <div class="swe-number" id="sweNumber">—</div>
-                <div class="swe-unit">MM SWE</div>
-                <div class="swe-badge" id="sweBadge">—</div>
-            </div>
-            <div class="swe-info">
-                <div class="swe-context" id="sweContext">Loading…</div>
-                <div class="swe-updated" id="sweUpdated"></div>
-            </div>
-        </div>
-    </div>
-
     <!-- ── 2. BULLETIN / SHARE CARD ── -->
     <div class="card" id="status">
         <div class="card-label">Current Status Bulletin &nbsp;·&nbsp; Tap to share with neighbours</div>
@@ -1108,35 +1092,7 @@
         <div id="thresholdLadder"></div>
     </div>
 
-    <!-- ── 3. HISTORICAL COMPARISON CHART ── -->
-    <div class="card">
-        <div class="card-label">2026 Lake Level vs. Historic Flood Years &nbsp;·&nbsp; Feet ASL, Jan–Jul</div>
-        <div class="chart-wrap">
-            <canvas id="histChart"></canvas>
-        </div>
-        <div class="chart-note">
-            Melt is underway and headwaters have broken. Wilson River and Mink Creek — the highest-elevation tributaries carrying the heaviest snowpack — are now running hard. Lake rise is expected over coming days. Projected peak: late April to mid-May.
-        </div>
-    </div>
-
-    <!-- ── 4. HYDROGRAPH — 30-day rolling lake level ── -->
-    <div class="card">
-        <div class="card-label">Lake Level — Last 30 Days &nbsp;·&nbsp; Rate of Rise</div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
-            <div id="hydroSummary" style="font-size:13px;color:var(--muted);line-height:1.5;"></div>
-            <div style="display:flex;gap:6px;">
-                <button class="hydro-btn active" onclick="setHydroRange(7,this)">7 days</button>
-                <button class="hydro-btn" onclick="setHydroRange(14,this)">14 days</button>
-                <button class="hydro-btn" disabled title="Available as data accumulates">30 days</button>
-            </div>
-        </div>
-        <p style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;">Live data collection began March 28, 2026. Additional ranges will unlock as the record builds.</p>
-        <div class="chart-wrap" style="height:220px;">
-            <canvas id="hydroChart"></canvas>
-        </div>
-    </div>
-
-    <!-- ── 5. TRIBUTARY EARLY WARNING ── -->
+    <!-- ── 4. TRIBUTARY EARLY WARNING ── -->
     <div class="card">
         <div class="card-label">Tributary Early Warning &nbsp;·&nbsp; Basin Feeder Rivers — Water Survey of Canada (Provisional)</div>
         <div class="trib-insight" id="tribInsight">Loading tributary data…</div>
@@ -1155,7 +1111,7 @@
         </table>
     </div>
 
-    <!-- ── 5+6. OUTLET + SCENARIOS (two-col on desktop) ── -->
+    <!-- ── 5. OUTLET + SCENARIOS (two-col on desktop) ── -->
     <div class="grid-2">
 
         <!-- OUTLET MONITOR -->
@@ -1189,6 +1145,43 @@
             <p style="margin-top:11px;font-size:11.5px;color:var(--muted);line-height:1.5;padding-top:10px;border-top:1px solid var(--paper-mid);" id="scenarioNote"></p>
         </div>
 
+    </div>
+
+    <!-- ── 6. HISTORICAL COMPARISON CHART ── -->
+    <div class="card" style="margin-top:16px;">
+        <div class="card-label">2026 Lake Level vs. Historic Flood Years &nbsp;·&nbsp; Feet ASL, Jan–Jul</div>
+        <div class="chart-wrap">
+            <canvas id="histChart"></canvas>
+        </div>
+        <div class="chart-note">
+            Melt is underway and headwaters have broken. Wilson River and Mink Creek — the highest-elevation tributaries carrying the heaviest snowpack — are now running hard. Lake rise is expected over coming days. Projected peak: late April to mid-May.
+        </div>
+    </div>
+
+    <!-- ── 7. HYDROGRAPH — rolling lake level ── -->
+    <div class="card">
+        <div class="card-label">Lake Level — Last 30 Days &nbsp;·&nbsp; Rate of Rise</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+            <div id="hydroSummary" style="font-size:13px;color:var(--muted);line-height:1.5;"></div>
+            <div style="display:flex;gap:6px;">
+                <button class="hydro-btn active" onclick="setHydroRange(7,this)">7 days</button>
+                <button class="hydro-btn" onclick="setHydroRange(14,this)">14 days</button>
+                <button class="hydro-btn" disabled title="Available as data accumulates">30 days</button>
+            </div>
+        </div>
+        <p style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;">Live data collection began March 28, 2026. Additional ranges will unlock as the record builds.</p>
+        <div class="chart-wrap" style="height:220px;">
+            <canvas id="hydroChart"></canvas>
+        </div>
+    </div>
+
+    <!-- ── 8. SWE — contributing context, downgraded ── -->
+    <div class="card" style="background:var(--paper);border:1px solid var(--paper-dark);">
+        <div class="card-label">Basin Snowpack — Contributing Context</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.6;">
+            The basin entered melt season with <strong style="color:var(--text)">160–185 mm SWE</strong> — the highest recorded snowpack near Riding Mountain. That water is now actively moving through the watershed. The high-elevation headwaters (Wilson River, Mink Creek) broke on April 14. Residual snowpack continues to contribute as melt progresses.
+            <span style="font-family:var(--mono);font-size:10px;display:block;margin-top:8px;color:var(--muted)">Based on HFC field measurements (March 9–12) · Estimated · April 14, 2026</span>
+        </p>
     </div>
 
     <!-- ── 7. WEATHER ── -->
