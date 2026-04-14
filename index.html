@@ -1115,7 +1115,7 @@
             <canvas id="histChart"></canvas>
         </div>
         <div class="chart-note">
-            Melt is underway. The lake is holding steady — lake response typically lags melt by several days as water works through the tributaries. Significant snowpack remains in the basin from a winter of above-normal accumulation. Projected peak: late April to mid-May.
+            Melt is underway and headwaters have broken. Wilson River and Mink Creek — the highest-elevation tributaries carrying the heaviest snowpack — are now running hard. Lake rise is expected over coming days. Projected peak: late April to mid-May.
         </div>
     </div>
 
@@ -1126,7 +1126,7 @@
             <div id="hydroSummary" style="font-size:13px;color:var(--muted);line-height:1.5;"></div>
             <div style="display:flex;gap:6px;">
                 <button class="hydro-btn active" onclick="setHydroRange(7,this)">7 days</button>
-                <button class="hydro-btn" disabled title="Available as data accumulates">14 days</button>
+                <button class="hydro-btn" onclick="setHydroRange(14,this)">14 days</button>
                 <button class="hydro-btn" disabled title="Available as data accumulates">30 days</button>
             </div>
         </div>
@@ -1308,12 +1308,12 @@ const SEED = {
 // ─────────────────────────────────────────────────────────
 const BULLETINS = [
     {
-        id:       'melt-watch-apr12',
+        id:       'melt-watch-apr14',
         active:   true,
-        date:     'April 12, 2026',
+        date:     'April 14, 2026',
         severity: 'warning',
-        title:    'Melt Season Watch — April 12',
-        text:     'Rain this morning at +3°C. Melt is active. Turtle River rising. High-elevation tributaries still frozen — that snowpack is intact. A warm-up mid-week is the key event. Updates will follow.',
+        title:    'Melt Season Watch — April 14',
+        text:     'High-elevation headwaters are breaking. Wilson River and Mink Creek — the heaviest snowpack in the basin — are now running hard. Major inflows to the lake are beginning. Watch the outlet monitor closely. Updates will follow.',
     },
 ];
 
@@ -1323,8 +1323,8 @@ const BULLETINS = [
 // Rebuild will pick these up automatically.
 // ─────────────────────────────────────────────────────────
 const SCENARIOS = {
-    revised:  'April 12, 2026',
-    note:     'iConnect Studio analysis — revised April 12. Sunday rain confirmed. Tuesday forecast of +11°C remains the primary driver. Thursday cold snap (forecast high –5°C, 5–10 cm snow) delays but does not eliminate peak inflow. Wilson and Mink headwaters still frozen — that snowpack is intact. Risk profile remains elevated.',
+    revised:  'April 14, 2026',
+    note:     'iConnect Studio analysis — revised April 14. Wilson River and Mink Creek are now running hard — the high-elevation headwaters have broken. Major inflows are beginning. Thursday cold snap will slow but not reverse the melt. Risk profile remains elevated.',
     bands: [
         {
             key:   'fav',
@@ -1372,8 +1372,8 @@ const SCENARIOS = {
 const SWE_CONFIG = {
     swe_mm:  '160–185',
     status:  'MELTING',
-    context: 'Highest recorded snowpack in Manitoba near Riding Mountain. Based on HFC field measurements (March 9–12) plus subsequent accumulation through early April. Surface melt is now underway — temperatures above zero through the weekend. This water is moving toward the lake. The full volume has not yet reached the tributaries.',
-    updated: 'April 10, 2026',
+    context: 'Highest recorded snowpack in Manitoba near Riding Mountain. Based on HFC field measurements (March 9–12). Melt is now active at all elevations — Wilson River and Mink Creek have broken and are running hard. Snowpack water is moving through the basin.',
+    updated: 'April 14, 2026',
 };
 
 // ─────────────────────────────────────────────────────────
