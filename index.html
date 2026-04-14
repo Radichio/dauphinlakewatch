@@ -1061,17 +1061,16 @@
     <!-- ── SITUATION STRIP ── -->
     <div style="background:linear-gradient(135deg,#0d2137 0%,#0f2a45 100%);border-radius:6px;padding:16px 20px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;border:1px solid rgba(74,159,212,.2);">
         <div style="flex:1;min-width:120px;border-right:1px solid rgba(255,255,255,.1);padding-right:16px;">
-            <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:4px;">Outlet Flow</div>
-            <div style="font-family:var(--cond);font-weight:800;font-size:28px;color:#7dd3fc;line-height:1;" id="stripOutlet">—</div>
-            <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">cfs · Mossy River</div>
+            <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#7dd3fc;text-transform:uppercase;margin-bottom:6px;font-weight:600;">Outlet Flow</div>
+            <div style="font-family:var(--cond);font-weight:800;font-size:36px;color:white;line-height:1;" id="stripOutlet">—</div>
+            <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;">cfs · Mossy River Dam</div>
         </div>
-        <div style="flex:1;min-width:120px;border-right:1px solid rgba(255,255,255,.1);padding:0 16px;">
-            <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:4px;">Tributaries Running Hard</div>
-            <div style="font-family:var(--cond);font-weight:800;font-size:28px;color:#f87171;line-height:1;" id="stripTribs">—</div>
-            <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.4);margin-top:2px;">of 7 rivers monitored</div>
+        <div style="flex:2;min-width:160px;border-right:1px solid rgba(255,255,255,.1);padding:0 16px;">
+            <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#f87171;text-transform:uppercase;margin-bottom:6px;font-weight:600;">Running Hard</div>
+            <div style="font-family:var(--mono);font-size:12px;color:white;line-height:1.7;" id="stripTribs">—</div>
         </div>
         <div style="flex:1;min-width:140px;padding-left:16px;display:flex;flex-direction:column;justify-content:center;">
-            <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:6px;">Get Level Alerts</div>
+            <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:8px;">Get Level Alerts</div>
             <a href="/alerts" style="display:inline-block;background:#4aafd4;color:white;font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:8px 16px;border-radius:4px;text-decoration:none;text-align:center;">Subscribe Free →</a>
         </div>
     </div>
@@ -1837,13 +1836,13 @@ function renderTribs(data) {
         ins.textContent = 'Monitoring all 7 basin tributaries. Lower-elevation rivers showing early movement; high-elevation stations remain dormant.';
     }
 
-    // Update situation strip — count Running Hard
-    const hardCount = TRIBS.filter(def => {
+    // Update situation strip — list rivers Running Hard by name
+    const hardRivers = TRIBS.filter(def => {
         const d = data[def.key] || SEED.tribs[def.key] || {};
         return tribStatus(d.cfs || 0, def.elev || 0, d.prev || 0).lbl === 'Running Hard';
-    }).length;
+    }).map(def => def.name.replace(' River','').replace(' Creek',''));
     const stripTribs = document.getElementById('stripTribs');
-    if (stripTribs) stripTribs.textContent = hardCount;
+    if (stripTribs) stripTribs.textContent = hardRivers.length ? hardRivers.join(' · ') : 'None yet';
 }
 
 // ─────────────────────────────────────────────────────────
@@ -2063,7 +2062,6 @@ async function init() {
     renderTribs(tribData);
     renderOutlet(outCfs);
     renderBulletin();
-    renderSWE();
     renderScenarios();
     renderHFC();
 
