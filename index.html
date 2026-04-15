@@ -1152,7 +1152,20 @@
                 <span>0 cfs</span>
                 <span>Max capacity ~500 cfs</span>
             </div>
-            <div class="outlet-note" id="outletNote">—</div>
+            <!-- Headroom + Inflow vs Outflow -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
+                <div style="background:var(--paper);border-radius:4px;padding:10px 12px;">
+                    <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Headroom Left</div>
+                    <div style="font-family:var(--mono);font-size:18px;font-weight:600;" id="outletHeadroom">—</div>
+                    <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px;">cfs before capacity</div>
+                </div>
+                <div style="background:var(--paper);border-radius:4px;padding:10px 12px;">
+                    <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Est. Basin Inflow</div>
+                    <div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--amber);" id="outletInflow">—</div>
+                    <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px;">cfs entering lake</div>
+                </div>
+            </div>
+            <div class="outlet-note" id="outletNote" style="margin-top:10px;">—</div>
         </div>
 
         <!-- SCENARIO TRACKER -->
@@ -1848,7 +1861,7 @@ function renderTribs(data) {
 // ─────────────────────────────────────────────────────────
 // RENDER: OUTLET
 // ─────────────────────────────────────────────────────────
-function renderOutlet(cfs) {
+function renderOutlet(cfs, tribData) {
     const pct = Math.min(100, (cfs / CFG.outletMax) * 100);
     document.getElementById('outletCfs').textContent = `${Math.round(cfs)} cfs`;
     const bar = document.getElementById('outletBar');
@@ -1856,11 +1869,38 @@ function renderOutlet(cfs) {
     bar.style.background = pct > 80 ? '#b84c00' : '#2c5f7c';
     document.getElementById('outletPct').textContent = `${pct.toFixed(0)}% of max`;
 
+    // Headroom
+    const headroom = Math.max(0, CFG.outletMax - cfs);
+    const hrEl = document.getElementById('outletHeadroom');
+    if (hrEl) {
+        hrEl.textContent = Math.round(headroom);
+        hrEl.style.color = headroom < 50 ? '#8b0000' : headroom < 100 ? '#b84c00' : 'var(--text)';
+    }
+
+    // Inflow estimate — sum all tribs
+    let totalInflow = 0;
+    if (tribData) {
+        TRIBS.forEach(def => {
+            const d = tribData[def.key] || SEED.tribs[def.key] || {};
+            totalInflow += d.cfs || 0;
+        });
+    }
+    const inflowEl = document.getElementById('outletInflow');
+    if (inflowEl) {
+        inflowEl.textContent = Math.round(totalInflow);
+        inflowEl.style.color = totalInflow > cfs ? '#b84c00' : 'var(--green)';
+    }
+
+    const gap = Math.round(totalInflow - cfs);
     let note;
-    if (pct > 85)       note = `<strong>Near capacity and rising.</strong> The outlet is releasing ${Math.round(cfs)} cfs — approaching its practical maximum of ~500 cfs. This is the first measurable movement in the system. Incoming meltwater is beginning to exceed what the channel can remove.`;
-    else if (pct > 60)  note = `Running at ${pct.toFixed(0)}% of outlet capacity. Flow is increasing as surface melt begins. Headroom is narrowing.`;
-    else                note = `Outlet has capacity available (${pct.toFixed(0)}%). Lake is draining normally for now.`;
+    if (pct > 85 && gap > 0)
+        note = `<strong>Near capacity and rising.</strong> Outlet releasing ${Math.round(cfs)} cfs — only <strong>${Math.round(headroom)} cfs of headroom</strong> remaining. Tributaries are delivering ~${Math.round(totalInflow)} cfs to the lake — <strong>${gap > 0 ? '+'+gap : gap} cfs net inflow.</strong> The lake will rise.`;
+    else if (pct > 60)
+        note = `Running at ${pct.toFixed(0)}% of outlet capacity. Headroom narrowing. Net inflow ~${gap > 0 ? '+'+gap : gap} cfs.`;
+    else
+        note = `Outlet has capacity available. Net inflow ~${gap > 0 ? '+'+gap : gap} cfs.`;
     document.getElementById('outletNote').innerHTML = note;
+
     // Update situation strip
     const stripOutlet = document.getElementById('stripOutlet');
     if (stripOutlet) stripOutlet.textContent = Math.round(cfs);
@@ -2060,7 +2100,7 @@ async function init() {
     renderLadder(lakeFt);
     renderChart(lakeData);
     renderTribs(tribData);
-    renderOutlet(outCfs);
+    renderOutlet(outCfs, tribData);
     renderBulletin();
     renderScenarios();
     renderHFC();
