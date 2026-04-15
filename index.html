@@ -1060,14 +1060,20 @@
 
     <!-- ── SITUATION STRIP ── -->
     <div style="background:linear-gradient(135deg,#0d2137 0%,#0f2a45 100%);border-radius:6px;padding:16px 20px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;border:1px solid rgba(74,159,212,.2);">
-        <div style="flex:1;min-width:120px;border-right:1px solid rgba(255,255,255,.1);padding-right:16px;">
+        <div style="flex:1;min-width:90px;border-right:1px solid rgba(255,255,255,.1);padding-right:16px;">
             <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#7dd3fc;text-transform:uppercase;margin-bottom:6px;font-weight:600;">Outlet Flow</div>
             <div style="font-family:var(--cond);font-weight:800;font-size:36px;color:white;line-height:1;" id="stripOutlet">—</div>
-            <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;">cfs · Mossy River Dam</div>
+            <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;">cfs · Mossy River</div>
         </div>
-        <div style="flex:2;min-width:160px;border-right:1px solid rgba(255,255,255,.1);padding:0 16px;">
-            <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#f87171;text-transform:uppercase;margin-bottom:6px;font-weight:600;">Running Hard</div>
-            <div style="font-family:var(--mono);font-size:12px;color:white;line-height:1.7;" id="stripTribs">—</div>
+        <div style="flex:1;min-width:90px;border-right:1px solid rgba(255,255,255,.1);padding:0 16px;">
+            <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#f87171;text-transform:uppercase;margin-bottom:6px;font-weight:600;">Headroom Left</div>
+            <div style="font-family:var(--cond);font-weight:800;font-size:36px;color:#f87171;line-height:1;" id="stripHeadroom">—</div>
+            <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;">cfs to capacity</div>
+        </div>
+        <div style="flex:1;min-width:90px;border-right:1px solid rgba(255,255,255,.1);padding:0 16px;">
+            <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#fbbf24;text-transform:uppercase;margin-bottom:6px;font-weight:600;">Basin Inflow</div>
+            <div style="font-family:var(--cond);font-weight:800;font-size:36px;color:#fbbf24;line-height:1;" id="stripInflow">—</div>
+            <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;">cfs entering lake</div>
         </div>
         <div style="flex:1;min-width:140px;padding-left:16px;display:flex;flex-direction:column;justify-content:center;">
             <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:8px;">Get Level Alerts</div>
@@ -1904,6 +1910,10 @@ function renderOutlet(cfs, tribData) {
     // Update situation strip
     const stripOutlet = document.getElementById('stripOutlet');
     if (stripOutlet) stripOutlet.textContent = Math.round(cfs);
+    const stripHeadroom = document.getElementById('stripHeadroom');
+    if (stripHeadroom) stripHeadroom.textContent = Math.round(headroom);
+    const stripInflow = document.getElementById('stripInflow');
+    if (stripInflow) stripInflow.textContent = Math.round(totalInflow);
 }
 
 // ─────────────────────────────────────────────────────────
