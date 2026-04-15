@@ -1074,6 +1074,7 @@
             <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#fbbf24;text-transform:uppercase;margin-bottom:6px;font-weight:600;">Basin Inflow</div>
             <div style="font-family:var(--cond);font-weight:800;font-size:36px;color:#fbbf24;line-height:1;" id="stripInflow">—</div>
             <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;">cfs entering lake</div>
+            <canvas id="inflowSparkline" height="32" style="width:100%;max-width:120px;display:block;margin-top:6px;opacity:.85;"></canvas>
         </div>
         <div style="flex:1;min-width:140px;padding-left:16px;display:flex;flex-direction:column;justify-content:center;">
             <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:8px;">Get Level Alerts</div>
@@ -1865,6 +1866,53 @@ function renderTribs(data) {
 }
 
 // ─────────────────────────────────────────────────────────
+// RENDER: BASIN INFLOW SPARKLINE
+// ─────────────────────────────────────────────────────────
+let inflowSparkInst = null;
+function renderInflowSparkline(tribSeries) {
+    const canvas = document.getElementById('inflowSparkline');
+    if (!canvas) return;
+
+    // Build hourly buckets over last 24h
+    const now = Date.now();
+    const buckets = {};
+    Object.values(tribSeries).forEach(series => {
+        series.forEach(pt => {
+            const age = now - pt.t.getTime();
+            if (age > 25 * 3600 * 1000) return; // skip >25h old
+            const bucket = Math.floor(pt.t.getTime() / (3600000)); // 1-hour buckets
+            if (!buckets[bucket]) buckets[bucket] = [];
+            buckets[bucket].push(pt.cfs);
+        });
+    });
+
+    const keys = Object.keys(buckets).sort().slice(-24);
+    if (keys.length < 3) { canvas.style.display = 'none'; return; }
+
+    const points = keys.map(k => ({
+        x: new Date(parseInt(k) * 3600000),
+        y: buckets[k].reduce((a,b) => a+b, 0)
+    }));
+
+    if (inflowSparkInst) inflowSparkInst.destroy();
+    inflowSparkInst = new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: { datasets: [{ data: points, borderColor: '#fbbf24', borderWidth: 1.5,
+            pointRadius: 0, tension: 0.3, fill: true,
+            backgroundColor: 'rgba(251,191,36,.12)' }] },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            animation: false,
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            scales: {
+                x: { type:'time', display: false },
+                y: { display: false, min: 0 }
+            }
+        }
+    });
+}
+
+// ─────────────────────────────────────────────────────────
 // RENDER: OUTLET
 // ─────────────────────────────────────────────────────────
 function renderOutlet(cfs, tribData) {
@@ -2074,9 +2122,10 @@ async function init() {
 
     // ── Tributaries
     const tribData = {};
+    const tribSeries = {};
     await Promise.allSettled(TRIBS.map(async def => {
         try {
-            const rows = await fetchStn(CFG.st[def.key], 16);
+            const rows = await fetchStn(CFG.st[def.key], 48);
             const now  = rows.find(r => r.q != null);
             const week = rows.find((r,i) => i > 5 && r.q != null);
             if (now) {
@@ -2086,6 +2135,10 @@ async function init() {
                     elev: def.elev
                 };
             }
+            tribSeries[def.key] = rows.filter(r => r.q != null).map(r => ({
+                t: r.dt instanceof Date ? r.dt : new Date(r.dt),
+                cfs: m3sCfs(r.q)
+            }));
         } catch (e) { console.warn(`[trib:${def.key}]`, e.message); }
     }));
 
@@ -2111,6 +2164,7 @@ async function init() {
     renderChart(lakeData);
     renderTribs(tribData);
     renderOutlet(outCfs, tribData);
+    renderInflowSparkline(tribSeries);
     renderBulletin();
     renderScenarios();
     renderHFC();
