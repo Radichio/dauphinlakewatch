@@ -1158,8 +1158,8 @@
                 <span>0 cfs</span>
                 <span>Max capacity ~500 cfs</span>
             </div>
-            <!-- Headroom + Inflow vs Outflow -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
+            <!-- Headroom + Inflow vs Outflow + Rise Rate -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;">
                 <div style="background:var(--paper);border-radius:4px;padding:10px 12px;">
                     <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Headroom Left</div>
                     <div style="font-family:var(--mono);font-size:18px;font-weight:600;" id="outletHeadroom">—</div>
@@ -1169,6 +1169,11 @@
                     <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Est. Basin Inflow</div>
                     <div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--amber);" id="outletInflow">—</div>
                     <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px;">cfs entering lake</div>
+                </div>
+                <div style="background:var(--paper);border-radius:4px;padding:10px 12px;">
+                    <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Est. Rise Rate</div>
+                    <div style="font-family:var(--mono);font-size:18px;font-weight:600;" id="outletRiseRate">—</div>
+                    <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px;">ft / day at current inflow</div>
                 </div>
             </div>
             <div class="outlet-note" id="outletNote" style="margin-top:10px;">—</div>
@@ -1906,6 +1911,23 @@ function renderOutlet(cfs, tribData) {
     else
         note = `Outlet has capacity available. Net inflow ~${gap > 0 ? '+'+gap : gap} cfs.`;
     document.getElementById('outletNote').innerHTML = note;
+
+    // Rise rate — net cfs surplus converted to ft/day over Dauphin Lake surface area
+    // Lake area ~270 km² = 2,906,400,000 ft²
+    // 1 cfs = 86,400 ft³/day → ft/day = (netCfs × 86400) / lakeAreaFt²
+    const riseEl = document.getElementById('outletRiseRate');
+    if (riseEl) {
+        const netCfs = totalInflow - cfs;
+        const LAKE_AREA_FT2 = 2906400000;
+        const ratePerDay = (netCfs * 86400) / LAKE_AREA_FT2;
+        if (netCfs > 0) {
+            riseEl.textContent = `+${ratePerDay.toFixed(2)} ft`;
+            riseEl.style.color = ratePerDay > 0.1 ? '#8b0000' : ratePerDay > 0.05 ? '#b84c00' : 'var(--text)';
+        } else {
+            riseEl.textContent = `${ratePerDay.toFixed(2)} ft`;
+            riseEl.style.color = 'var(--green)';
+        }
+    }
 
     // Update situation strip
     const stripOutlet = document.getElementById('stripOutlet');
