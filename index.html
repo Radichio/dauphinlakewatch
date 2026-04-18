@@ -1904,9 +1904,11 @@ function renderOutlet(cfs, tribData) {
 
     const gap = Math.round(totalInflow - cfs);
     let note;
-    if (pct > 85 && gap > 0)
-        note = `Outlet at ${pct.toFixed(0)}% — ${Math.round(headroom)} cfs headroom. Basin inflow ~${Math.round(totalInflow)} cfs. Net: +${gap} cfs.`;
-    else if (pct > 60)
+    if (pct > 85 && gap > 0) {
+        const LAKE_AREA_FT2 = 2906400000;
+        const ratePerDay = ((gap) * 86400) / LAKE_AREA_FT2;
+        note = `At current net inflow, the lake rises ~${ratePerDay.toFixed(2)} ft per day. When inflow increases with the warm-up, that rate accelerates — but the outlet stays capped at ~500 cfs.`;
+    } else if (pct > 60)
         note = `Outlet at ${pct.toFixed(0)}% capacity. Net inflow ~${gap > 0 ? '+'+gap : gap} cfs.`;
     else
         note = `Outlet has capacity available. Net inflow ~${gap > 0 ? '+'+gap : gap} cfs.`;
