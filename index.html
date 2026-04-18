@@ -1173,7 +1173,7 @@
                 <div style="background:var(--paper);border-radius:4px;padding:10px 12px;">
                     <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Est. Rise Rate</div>
                     <div style="font-family:var(--mono);font-size:18px;font-weight:600;" id="outletRiseRate">—</div>
-                    <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px;">ft / day at current inflow</div>
+                    <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px;white-space:nowrap;">ft/day at current inflow</div>
                 </div>
             </div>
             <div class="outlet-note" id="outletNote" style="margin-top:10px;">—</div>
@@ -1905,9 +1905,9 @@ function renderOutlet(cfs, tribData) {
     const gap = Math.round(totalInflow - cfs);
     let note;
     if (pct > 85 && gap > 0)
-        note = `<strong>Near capacity and rising.</strong> Outlet releasing ${Math.round(cfs)} cfs — only <strong>${Math.round(headroom)} cfs of headroom</strong> remaining. Tributaries are delivering ~${Math.round(totalInflow)} cfs to the lake — <strong>${gap > 0 ? '+'+gap : gap} cfs net inflow.</strong> The lake will rise.`;
+        note = `Outlet at ${pct.toFixed(0)}% — ${Math.round(headroom)} cfs headroom. Basin inflow ~${Math.round(totalInflow)} cfs. Net: +${gap} cfs.`;
     else if (pct > 60)
-        note = `Running at ${pct.toFixed(0)}% of outlet capacity. Headroom narrowing. Net inflow ~${gap > 0 ? '+'+gap : gap} cfs.`;
+        note = `Outlet at ${pct.toFixed(0)}% capacity. Net inflow ~${gap > 0 ? '+'+gap : gap} cfs.`;
     else
         note = `Outlet has capacity available. Net inflow ~${gap > 0 ? '+'+gap : gap} cfs.`;
     document.getElementById('outletNote').innerHTML = note;
