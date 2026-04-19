@@ -1359,17 +1359,17 @@ const BULLETINS = [
 // Rebuild will pick these up automatically.
 // ─────────────────────────────────────────────────────────
 const SCENARIOS = {
-    revised:  'April 18, 2026',
-    note:     'iConnect Studio analysis — revised April 19. Outlet at full capacity. Lake rising through cold snap. Warm-up arrives Sunday. Risk profile elevated.',
+    revised:  'April 19, 2026',
+    note:     'iConnect Studio analysis — revised April 19. Outlet at full capacity for 3+ days. Lake rising before warm-up begins. Provincial HFC Bulletin #2 confirms elevated overland flood risk in Parkland. Risk profile shifted upward.',
     bands: [
         {
             key:   'fav',
             cls:   's-fav',
-            prob:  '~20%',
+            prob:  '~15%',
             color: 'var(--green)',
             name:  'Favourable',
-            range: '855.0 – 856.0 ft',
-            desc:  'Slow melt, cold snaps hold. Near or slightly above operating range. Minor impacts.',
+            range: '855.5 – 856.5 ft',
+            desc:  'Slow melt pace, limited precipitation. Above operating range. Minor road and low-lying impacts.',
         },
         {
             key:   'likely',
@@ -1377,13 +1377,13 @@ const SCENARIOS = {
             prob:  '~45%',
             color: 'var(--yellow)',
             name:  'Most Likely',
-            range: '856.0 – 857.5 ft',
+            range: '856.5 – 857.5 ft',
             desc:  'Normal melt pace with near-average April precipitation. Above operating range. Low-lying flooding and road impacts expected.',
         },
         {
             key:   'unfav',
             cls:   's-unfav',
-            prob:  '~25%',
+            prob:  '~30%',
             color: 'var(--amber)',
             name:  'Unfavourable',
             range: '857.5 – 858.5 ft',
@@ -1417,10 +1417,10 @@ const SWE_CONFIG = {
 // ─────────────────────────────────────────────────────────
 const HFC_REF = {
     active: true,
-    date:   'April 7, 2026',
-    body:   '<strong>Provincial HFC (April 7):</strong> Dauphin Lake and Lake St. Martin are the only two Manitoba lakes expected to exceed operating range this spring. Melt delayed — temperatures near zero through mid-April. Rapid, concentrated runoff expected when it begins.',
-    link:   'https://news.gov.mb.ca/news/index.html?item=73277',
-    label:  'Full release →',
+    date:   'April 17, 2026',
+    body:   '<strong>Provincial HFC Flood Bulletin #2 (April 17):</strong> Partial snowmelt underway. Warmer temperatures this week will accelerate melt and increase ice movement. Elevated risk of overland flooding and ice jam flooding in the Parkland region. Runoff expected to begin early this week.',
+    link:   'https://news.gov.mb.ca/news/index.html?item=73439',
+    label:  'Full bulletin →',
 };
 
 // ─────────────────────────────────────────────────────────
