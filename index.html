@@ -1352,7 +1352,7 @@ const BULLETINS = [
         date:     'April 19, 2026 — AM',
         severity: 'warning',
         title:    'Melt Season Watch — April 19',
-        text:     'Outlet at {OUTLET_PCT}% of rated — {OUTLET_CFS} cfs, no headroom. Inflow surged overnight before the warm-up began. Rise rate {RISE_RATE} ft/day and accelerating. Advisory level {ADVISORY_DIST} ft away — likely Monday or Tuesday. Warm-up to double digits arrives Monday.',
+        text:     'Outlet {OUTLET_STATE}. Inflow surged overnight before the warm-up began. Rise rate {RISE_STATE}. {ADVISORY_STATE}. Warm-up to double digits arrives Monday.',
     },
 ];
 
@@ -2477,10 +2477,11 @@ function renderBulletin(lakeFt, outCfs, tribData) {
     const b = BULLETINS.find(x => x.active);
     if (!b || dismissed === b.id) return;
 
-    // ── Build live token map
-    const RATED = CFG.outletMax;
-    const advisoryFt = 854.8;
-    const floodFt    = 858.0;
+    // ── Live data
+    const RATED      = CFG.outletMax;
+    const ADVISORY   = 854.8;
+    const FLOOD      = 858.0;
+    const LAKE_AREA  = 2906400000;
 
     let totalInflow = 0;
     if (tribData) {
@@ -2489,29 +2490,62 @@ function renderBulletin(lakeFt, outCfs, tribData) {
             totalInflow += d.cfs || 0;
         });
     }
-    const netCfs      = totalInflow - (outCfs || 0);
-    const LAKE_AREA   = 2906400000;
-    const riseRate    = netCfs > 0 ? ((netCfs * 86400) / LAKE_AREA).toFixed(2) : '0.00';
-    const outPct      = outCfs ? Math.round((outCfs / RATED) * 100) : 0;
-    const advisoryDist = lakeFt ? Math.abs(advisoryFt - lakeFt).toFixed(2) : '—';
-    const floodDist    = lakeFt ? Math.abs(floodFt - lakeFt).toFixed(2) : '—';
-    const lakeLevel    = lakeFt ? lakeFt.toFixed(2) : '—';
-    const outflowCfs   = outCfs ? Math.round(outCfs) : '—';
-    const overCap      = outCfs > RATED ? `+${Math.round(outCfs - RATED)}` : '0';
+    const netCfs       = totalInflow - (outCfs || 0);
+    const riseRateNum  = netCfs > 0 ? (netCfs * 86400) / LAKE_AREA : 0;
+    const riseRate     = riseRateNum.toFixed(2);
+    const outPct       = outCfs ? Math.round((outCfs / RATED) * 100) : 0;
+    const advisoryDist = lakeFt ? (ADVISORY - lakeFt) : null;
+    const floodDist    = lakeFt ? (FLOOD - lakeFt) : null;
+    const overCapAmt   = outCfs > RATED ? Math.round(outCfs - RATED) : 0;
 
+    // ── State phrases — derived from live numbers, not hardcoded
+    const outletState = overCapAmt > 0
+        ? `at ${outPct}% of rated — ${Math.round(outCfs)} cfs, ${overCapAmt} cfs over rated capacity`
+        : outPct >= 95
+            ? `at full capacity — ${Math.round(outCfs)} cfs, no headroom`
+            : outPct >= 80
+                ? `at ${outPct}% of rated capacity — ${Math.round(outCfs)} cfs`
+                : `at ${outPct}% of rated capacity`;
+
+    const advisoryState = advisoryDist !== null
+        ? advisoryDist <= 0
+            ? `Advisory level exceeded`
+            : advisoryDist < 0.1
+                ? `Advisory level ${advisoryDist.toFixed(2)} ft away — imminent`
+                : advisoryDist < 0.3
+                    ? `Advisory level ${advisoryDist.toFixed(2)} ft away — approaching`
+                    : `Advisory level ${advisoryDist.toFixed(2)} ft away`
+        : 'Advisory level distance unknown';
+
+    const riseState = riseRateNum > 0.2
+        ? `${riseRate} ft/day and accelerating`
+        : riseRateNum > 0.05
+            ? `${riseRate} ft/day`
+            : riseRateNum > 0
+                ? `${riseRate} ft/day — slow rise`
+                : 'stable or falling';
+
+    const lakeState = lakeFt
+        ? `${lakeFt.toFixed(2)} ft`
+        : '—';
+
+    // ── Token map — numbers AND state phrases
     const tokens = {
-        '{LAKE_LEVEL}':     lakeLevel,
-        '{OUTLET_CFS}':     outflowCfs,
-        '{OUTLET_PCT}':     outPct,
-        '{RISE_RATE}':      riseRate,
-        '{ADVISORY_DIST}':  advisoryDist,
-        '{FLOOD_DIST}':     floodDist,
-        '{INFLOW}':         Math.round(totalInflow),
-        '{NET_CFS}':        Math.round(netCfs),
-        '{OVER_CAP}':       overCap,
+        '{LAKE_LEVEL}':      lakeState,
+        '{OUTLET_CFS}':      outCfs ? Math.round(outCfs) : '—',
+        '{OUTLET_PCT}':      outPct,
+        '{OUTLET_STATE}':    outletState,
+        '{RISE_RATE}':       riseRate,
+        '{RISE_STATE}':      riseState,
+        '{ADVISORY_DIST}':   advisoryDist !== null ? advisoryDist.toFixed(2) : '—',
+        '{ADVISORY_STATE}':  advisoryState,
+        '{FLOOD_DIST}':      floodDist !== null ? floodDist.toFixed(2) : '—',
+        '{INFLOW}':          Math.round(totalInflow),
+        '{NET_CFS}':         Math.round(netCfs),
+        '{OVER_CAP}':        overCapAmt > 0 ? `+${overCapAmt}` : '0',
     };
 
-    // ── Resolve tokens in bulletin text
+    // ── Resolve tokens
     let text = b.text;
     Object.entries(tokens).forEach(([token, val]) => {
         text = text.split(token).join(val);
