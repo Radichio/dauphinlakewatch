@@ -1149,21 +1149,24 @@
                 <span style="font-family:var(--mono);font-size:11px;color:var(--muted);">CURRENT OUTFLOW</span>
                 <span style="font-family:var(--mono);font-size:22px;font-weight:600;" id="outletCfs">— cfs</span>
             </div>
-            <div class="gauge-bg">
-                <div class="gauge-fill" id="outletBar" style="width:0%;background:var(--amber);">
-                    <span id="outletPct"></span>
-                </div>
+            <!-- Scaled bar: 0–600 cfs. Rated capacity marker at 500/600 = 83.3% -->
+            <div class="gauge-bg" style="position:relative;">
+                <div class="gauge-fill" id="outletBar" style="width:0%;background:var(--amber);"></div>
+                <!-- Rated capacity marker -->
+                <div style="position:absolute;top:0;bottom:0;left:83.3%;width:2px;background:var(--navy);opacity:0.5;"></div>
+                <span id="outletPct" style="position:absolute;left:6px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;"></span>
             </div>
             <div class="gauge-ends">
                 <span>0 cfs</span>
-                <span>Max capacity ~500 cfs</span>
+                <span style="position:relative;left:-16%;">rated capacity ~500 cfs</span>
+                <span>600 cfs</span>
             </div>
-            <!-- Headroom + Inflow vs Outflow + Rise Rate -->
+            <!-- Headroom + Inflow + Rise Rate -->
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;">
                 <div style="background:var(--paper);border-radius:4px;padding:10px 12px;">
-                    <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Headroom Left</div>
+                    <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;" id="headroomLabel">Headroom Left</div>
                     <div style="font-family:var(--mono);font-size:18px;font-weight:600;" id="outletHeadroom">—</div>
-                    <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px;">cfs before capacity</div>
+                    <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px;" id="headroomSub">cfs before capacity</div>
                 </div>
                 <div style="background:var(--paper);border-radius:4px;padding:10px 12px;">
                     <div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Est. Basin Inflow</div>
@@ -1873,19 +1876,40 @@ function renderTribs(data) {
 // RENDER: OUTLET
 // ─────────────────────────────────────────────────────────
 function renderOutlet(cfs, tribData) {
-    const pct = Math.min(100, (cfs / CFG.outletMax) * 100);
+    const RATED = CFG.outletMax;   // 500 cfs rated capacity
+    const SCALE = 600;             // bar scale max
+    const pct = Math.min(100, (cfs / SCALE) * 100);
+    const overCapacity = cfs > RATED;
+    const overage = Math.max(0, Math.round(cfs - RATED));
+
     document.getElementById('outletCfs').textContent = `${Math.round(cfs)} cfs`;
     const bar = document.getElementById('outletBar');
-    bar.style.width = `${pct.toFixed(0)}%`;
-    bar.style.background = pct > 80 ? '#b84c00' : '#2c5f7c';
-    document.getElementById('outletPct').textContent = `${pct.toFixed(0)}% of max`;
+    bar.style.width = `${pct.toFixed(1)}%`;
+    // Normal: blue. At/near rated: amber. Over rated: deep red
+    bar.style.background = overCapacity ? '#8b0000' : cfs / RATED > 0.8 ? '#b84c00' : '#2c5f7c';
 
-    // Headroom
-    const headroom = Math.max(0, CFG.outletMax - cfs);
+    const pctOfRated = Math.min(100, (cfs / RATED) * 100);
+    document.getElementById('outletPct').textContent = overCapacity
+        ? `${pctOfRated.toFixed(0)}% of rated`
+        : `${pctOfRated.toFixed(0)}% of rated`;
+
+    // Headroom box — flip to "over capacity" when above rated
     const hrEl = document.getElementById('outletHeadroom');
+    const labelEl = document.getElementById('headroomLabel');
+    const subEl = document.getElementById('headroomSub');
     if (hrEl) {
-        hrEl.textContent = Math.round(headroom);
-        hrEl.style.color = headroom < 50 ? '#8b0000' : headroom < 100 ? '#b84c00' : 'var(--text)';
+        if (overCapacity) {
+            hrEl.textContent = `+${overage}`;
+            hrEl.style.color = '#8b0000';
+            if (labelEl) labelEl.textContent = 'Over Rated Cap.';
+            if (subEl) subEl.textContent = 'cfs above rated capacity';
+        } else {
+            const headroom = Math.max(0, RATED - cfs);
+            hrEl.textContent = Math.round(headroom);
+            hrEl.style.color = headroom < 50 ? '#8b0000' : headroom < 100 ? '#b84c00' : 'var(--text)';
+            if (labelEl) labelEl.textContent = 'Headroom Left';
+            if (subEl) subEl.textContent = 'cfs before capacity';
+        }
     }
 
     // Inflow estimate — sum all tribs
@@ -1903,24 +1927,27 @@ function renderOutlet(cfs, tribData) {
     }
 
     const gap = Math.round(totalInflow - cfs);
+
+    // Outlet note
     let note;
-    if (pct > 85 && gap > 0) {
+    if (overCapacity) {
         const LAKE_AREA_FT2 = 2906400000;
-        const ratePerDay = ((gap) * 86400) / LAKE_AREA_FT2;
-        note = `At current net inflow, the lake rises ~${ratePerDay.toFixed(2)} ft per day. When inflow increases with the warm-up, that rate accelerates — but the outlet stays capped at ~500 cfs.`;
-    } else if (pct > 60)
-        note = `Outlet at ${pct.toFixed(0)}% capacity. Net inflow ~${gap > 0 ? '+'+gap : gap} cfs.`;
-    else
+        const ratePerDay = (gap * 86400) / LAKE_AREA_FT2;
+        note = `Outlet is being forced ${overage} cfs above its rated channel capacity by hydraulic head from the elevated lake. This is not additional relief — the channel is under pressure. At current net inflow, the lake rises ~${ratePerDay.toFixed(2)} ft/day. When inflow increases, that rate accelerates — the outlet stays capped near ~${RATED} cfs.`;
+    } else if (cfs / RATED > 0.8) {
+        const LAKE_AREA_FT2 = 2906400000;
+        const ratePerDay = (gap * 86400) / LAKE_AREA_FT2;
+        note = `Outlet at ${pctOfRated.toFixed(0)}% of rated capacity. At current net inflow, the lake rises ~${ratePerDay.toFixed(2)} ft/day. When inflow increases with the warm-up, that rate accelerates — but the outlet stays capped at ~${RATED} cfs.`;
+    } else {
         note = `Outlet has capacity available. Net inflow ~${gap > 0 ? '+'+gap : gap} cfs.`;
+    }
     document.getElementById('outletNote').innerHTML = note;
 
-    // Rise rate — net cfs surplus converted to ft/day over Dauphin Lake surface area
-    // Lake area ~270 km² = 2,906,400,000 ft²
-    // 1 cfs = 86,400 ft³/day → ft/day = (netCfs × 86400) / lakeAreaFt²
+    // Rise rate box
     const riseEl = document.getElementById('outletRiseRate');
     if (riseEl) {
-        const netCfs = totalInflow - cfs;
         const LAKE_AREA_FT2 = 2906400000;
+        const netCfs = totalInflow - cfs;
         const ratePerDay = (netCfs * 86400) / LAKE_AREA_FT2;
         if (netCfs > 0) {
             riseEl.textContent = `+${ratePerDay.toFixed(2)} ft`;
@@ -1935,7 +1962,7 @@ function renderOutlet(cfs, tribData) {
     const stripOutlet = document.getElementById('stripOutlet');
     if (stripOutlet) stripOutlet.textContent = Math.round(cfs);
     const stripHeadroom = document.getElementById('stripHeadroom');
-    if (stripHeadroom) stripHeadroom.textContent = Math.round(headroom);
+    if (stripHeadroom) stripHeadroom.textContent = overCapacity ? `+${overage} over` : Math.round(Math.max(0, RATED - cfs));
     const stripInflow = document.getElementById('stripInflow');
     if (stripInflow) stripInflow.textContent = Math.round(totalInflow);
 }
