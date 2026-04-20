@@ -1420,8 +1420,8 @@ const SWE_CONFIG = {
 // ─────────────────────────────────────────────────────────
 const HFC_REF = {
     active: true,
-    date:   'April 17, 2026',
-    body:   '<strong>Provincial HFC Flood Bulletin #2 (April 17):</strong> Partial snowmelt underway. Warmer temperatures this week will accelerate melt and increase ice movement. Elevated risk of overland flooding and ice jam flooding in the Parkland region. Runoff expected to begin early this week.',
+    date:   'April 14, 2026',
+    body:   '<strong>Provincial HFC Flood Bulletin #1 (April 14):</strong> Elevated risk of overland flooding in the Parkland region. Warm-up to above-zero temperatures accelerating snowmelt and increasing ice movement. Runoff underway across central Manitoba including the Parkland region.',
     link:   'https://news.gov.mb.ca/news/index.html?item=73439',
     label:  'Full bulletin →',
 };
@@ -2160,7 +2160,7 @@ async function init() {
     renderChart(lakeData);
     renderTribs(tribData);
     renderOutlet(outCfs, tribData);
-    renderBulletin(lakeFt, outCfs, tribData);
+    renderBulletin(lakeFt, outCfs, tribData, lakeData);
     renderScenarios();
     renderHFC();
 
@@ -2472,7 +2472,7 @@ async function shareCard() {
 // ─────────────────────────────────────────────────────────
 // RENDER: BULLETIN BANNER
 // ─────────────────────────────────────────────────────────
-function renderBulletin(lakeFt, outCfs, tribData) {
+function renderBulletin(lakeFt, outCfs, tribData, lakeData) {
     const dismissed = sessionStorage.getItem('bulletin-dismissed');
     const b = BULLETINS.find(x => x.active);
     if (!b || dismissed === b.id) return;
@@ -2482,6 +2482,16 @@ function renderBulletin(lakeFt, outCfs, tribData) {
     const ADVISORY   = 854.8;
     const FLOOD      = 858.0;
     const LAKE_AREA  = 2906400000;
+    const TZ         = 'America/Winnipeg';
+
+    // ── WSC data timestamp — drives the bulletin date automatically
+    let dataTimestamp = '';
+    let dataDate      = '';
+    if (lakeData && lakeData.length) {
+        const ts = lakeData[0].dt;
+        dataTimestamp = ts.toLocaleTimeString('en-CA', { hour:'numeric', minute:'2-digit', hour12:true, timeZoneName:'short', timeZone:TZ });
+        dataDate      = ts.toLocaleDateString('en-CA', { month:'long', day:'numeric', year:'numeric', timeZone:TZ });
+    }
 
     let totalInflow = 0;
     if (tribData) {
@@ -2498,7 +2508,7 @@ function renderBulletin(lakeFt, outCfs, tribData) {
     const floodDist    = lakeFt ? (FLOOD - lakeFt) : null;
     const overCapAmt   = outCfs > RATED ? Math.round(outCfs - RATED) : 0;
 
-    // ── State phrases — derived from live numbers, not hardcoded
+    // ── State phrases
     const outletState = overCapAmt > 0
         ? `at ${outPct}% of rated — ${Math.round(outCfs)} cfs, ${overCapAmt} cfs over rated capacity`
         : outPct >= 95
@@ -2525,13 +2535,9 @@ function renderBulletin(lakeFt, outCfs, tribData) {
                 ? `${riseRate} ft/day — slow rise`
                 : 'stable or falling';
 
-    const lakeState = lakeFt
-        ? `${lakeFt.toFixed(2)} ft`
-        : '—';
-
-    // ── Token map — numbers AND state phrases
+    // ── Token map
     const tokens = {
-        '{LAKE_LEVEL}':      lakeState,
+        '{LAKE_LEVEL}':      lakeFt ? lakeFt.toFixed(2) : '—',
         '{OUTLET_CFS}':      outCfs ? Math.round(outCfs) : '—',
         '{OUTLET_PCT}':      outPct,
         '{OUTLET_STATE}':    outletState,
@@ -2543,6 +2549,8 @@ function renderBulletin(lakeFt, outCfs, tribData) {
         '{INFLOW}':          Math.round(totalInflow),
         '{NET_CFS}':         Math.round(netCfs),
         '{OVER_CAP}':        overCapAmt > 0 ? `+${overCapAmt}` : '0',
+        '{DATA_TIMESTAMP}':  dataTimestamp,
+        '{DATA_DATE}':       dataDate,
     };
 
     // ── Resolve tokens
@@ -2551,7 +2559,12 @@ function renderBulletin(lakeFt, outCfs, tribData) {
         text = text.split(token).join(val);
     });
 
-    document.getElementById('bulletinDate').textContent  = b.date;
+    // ── Date: auto-generate from WSC timestamp — ignore hardcoded b.date
+    const autoDate = dataDate
+        ? `${dataDate} · ${dataTimestamp}`
+        : b.date;
+
+    document.getElementById('bulletinDate').textContent  = autoDate;
     document.getElementById('bulletinTitle').textContent = b.title;
     document.getElementById('bulletinText').textContent  = text;
     document.getElementById('bulletinBanner').classList.add('active');
