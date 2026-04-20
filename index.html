@@ -2559,13 +2559,27 @@ function renderBulletin(lakeFt, outCfs, tribData, lakeData) {
         text = text.split(token).join(val);
     });
 
-    // ── Date: auto-generate from WSC timestamp — ignore hardcoded b.date
+    // ── Date: auto-generate from WSC timestamp
     const autoDate = dataDate
         ? `${dataDate} · ${dataTimestamp}`
         : b.date;
 
+    // ── Title: self-updating based on lake level — never hardcoded
+    let autoTitle;
+    if (!lakeFt) {
+        autoTitle = 'MELT SEASON WATCH';
+    } else if (lakeFt >= FLOOD) {
+        autoTitle = 'FLOOD WARNING — DAUPHIN LAKE';
+    } else if (lakeFt >= 856.0) {
+        autoTitle = 'HIGH WATER ADVISORY';
+    } else if (lakeFt >= ADVISORY) {
+        autoTitle = 'ADVISORY — DAUPHIN LAKE';
+    } else {
+        autoTitle = 'MELT SEASON WATCH';
+    }
+
     document.getElementById('bulletinDate').textContent  = autoDate;
-    document.getElementById('bulletinTitle').textContent = b.title;
+    document.getElementById('bulletinTitle').textContent = autoTitle;
     document.getElementById('bulletinText').textContent  = text;
     document.getElementById('bulletinBanner').classList.add('active');
 }
