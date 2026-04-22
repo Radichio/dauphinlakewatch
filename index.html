@@ -1362,44 +1362,44 @@ const BULLETINS = [
 // Rebuild will pick these up automatically.
 // ─────────────────────────────────────────────────────────
 const SCENARIOS = {
-    revised:  'April 19, 2026',
-    note:     'iConnect Studio analysis — revised April 19. Outlet at full capacity for 3+ days. Lake rising before warm-up begins. Provincial HFC Bulletin #2 confirms elevated overland flood risk in Parkland. Risk profile shifted upward.',
+    revised:  'April 22, 2026',
+    note:     'iConnect Studio analysis — revised April 22. Outlet over rated capacity. Lake at advisory level. Provincial HFC Bulletin #3 confirms significant precipitation system Thu–Sat — 20 to 60 mm on already-saturated basin. Unfavourable and Severe probabilities raised.',
     bands: [
         {
             key:   'fav',
             cls:   's-fav',
-            prob:  '~15%',
+            prob:  '~10%',
             color: 'var(--green)',
             name:  'Favourable',
             range: '855.5 – 856.5 ft',
-            desc:  'Slow melt pace, limited precipitation. Above operating range. Minor road and low-lying impacts.',
+            desc:  'Precipitation system underperforms. Melt slows. Minor road and low-lying impacts.',
         },
         {
             key:   'likely',
             cls:   's-likely',
-            prob:  '~45%',
+            prob:  '~40%',
             color: 'var(--yellow)',
             name:  'Most Likely',
             range: '856.5 – 857.5 ft',
-            desc:  'Normal melt pace with near-average April precipitation. Above operating range. Low-lying flooding and road impacts expected.',
+            desc:  'Normal melt pace with near-forecast precipitation. Above operating range. Low-lying flooding and road impacts expected.',
         },
         {
             key:   'unfav',
             cls:   's-unfav',
-            prob:  '~30%',
+            prob:  '~35%',
             color: 'var(--amber)',
             name:  'Unfavourable',
             range: '857.5 – 858.5 ft',
-            desc:  'Fast melt combined with rain-on-snow events. Approaching or exceeding flood stage. Active sandbagging required.',
+            desc:  'Precipitation system delivers upper range. Approaching or exceeding flood stage. Active sandbagging required.',
         },
         {
             key:   'severe',
             cls:   's-severe',
-            prob:  '~10%',
+            prob:  '~15%',
             color: 'var(--red)',
             name:  'Severe',
             range: '858.5 ft+',
-            desc:  'Rapid melt combined with sustained rain-on-snow events. Significant flooding above historical operating range.',
+            desc:  'Precipitation system delivers upper range on saturated basin. Significant flooding above historical operating range.',
         },
     ],
 };
@@ -1420,9 +1420,9 @@ const SWE_CONFIG = {
 // ─────────────────────────────────────────────────────────
 const HFC_REF = {
     active: true,
-    date:   'April 14, 2026',
-    body:   '<strong>Provincial HFC Flood Bulletin #1 (April 14):</strong> Elevated risk of overland flooding in the Parkland region. Warm-up to above-zero temperatures accelerating snowmelt and increasing ice movement. Runoff underway across central Manitoba including the Parkland region.',
-    link:   'https://news.gov.mb.ca/news/index.html?item=73439',
+    date:   'April 20, 2026',
+    body:   '<strong>Provincial HFC Flood Bulletin #3 (April 20):</strong> Runoff underway across the Parkland. Elevated risk of ice jam and overland flooding. A significant precipitation system forecast Thu–Sat — 20 to 60 mm across central Manitoba. Dauphin Lake basin in the impact zone.',
+    link:   'https://news.gov.mb.ca/news/index.html?item=73481',
     label:  'Full bulletin →',
 };
 
