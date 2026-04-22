@@ -2168,9 +2168,15 @@ async function init() {
                 ? validRows.slice(0, 24).reduce((sum, r) => sum + m3sCfs(r.q), 0) / Math.min(validRows.length, 24)
                 : null;
 
+            // Only treat as offline if last valid reading is >3 hours old
+            const STALE_MS = 3 * 60 * 60 * 1000;
+            const lastValidDt = validRows[0]?.dt || null;
+            const isStale = meltSeason && (!lastValidDt || (Date.now() - lastValidDt.getTime()) > STALE_MS);
+
             if (now) {
                 const liveCfs = m3sCfs(now.q);
                 if (liveCfs >= 1.5 || !meltSeason) {
+                    // Live good data
                     tribData[def.key] = {
                         cfs:       liveCfs,
                         prev:      week ? m3sCfs(week.q) : (SEED.tribs[def.key]?.prev || 0),
@@ -2180,14 +2186,15 @@ async function init() {
                     if (avg48) {
                         try {
                             localStorage.setItem(`lkg_${def.key}`, avg48.toFixed(1));
-                            if (validRows[0]?.dt) localStorage.setItem(`lkg_dt_${def.key}`, validRows[0].dt.toISOString());
+                            if (lastValidDt) localStorage.setItem(`lkg_dt_${def.key}`, lastValidDt.toISOString());
                         } catch(e) {}
                     }
-                } else {
+                } else if (isStale) {
+                    // Zero AND stale — genuinely offline, use fallback average
                     const fallback48 = avg48 ||
                         (() => { try { return parseFloat(localStorage.getItem(`lkg_${def.key}`)); } catch(e) { return null; } })() ||
                         SEED.tribs[def.key]?.cfs || 0;
-                    let lkgDt = validRows[0]?.dt || null;
+                    let lkgDt = lastValidDt || null;
                     if (!lkgDt) { try { const s = localStorage.getItem(`lkg_dt_${def.key}`); if(s) lkgDt = new Date(s); } catch(e) {} }
                     tribData[def.key] = {
                         cfs:       fallback48,
@@ -2196,12 +2203,21 @@ async function init() {
                         estimated: true,
                         lastDt:    lkgDt,
                     };
+                } else {
+                    // Zero but recent — report as-is, not estimated
+                    tribData[def.key] = {
+                        cfs:       m3sCfs(now.q),
+                        prev:      week ? m3sCfs(week.q) : (SEED.tribs[def.key]?.prev || 0),
+                        elev:      def.elev,
+                        estimated: false,
+                    };
                 }
-            } else if (meltSeason) {
+            } else if (isStale) {
+                // No data and stale — use fallback average
                 const fallback48 = avg48 ||
                     (() => { try { return parseFloat(localStorage.getItem(`lkg_${def.key}`)); } catch(e) { return null; } })() ||
                     SEED.tribs[def.key]?.cfs || 0;
-                let lkgDt = validRows[0]?.dt || null;
+                let lkgDt = lastValidDt || null;
                 if (!lkgDt) { try { const s = localStorage.getItem(`lkg_dt_${def.key}`); if(s) lkgDt = new Date(s); } catch(e) {} }
                 tribData[def.key] = {
                     cfs:       fallback48,
