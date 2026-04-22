@@ -1464,13 +1464,13 @@ function lakeStatus(ft) {
     return                  { key:'normal',   lbl:'Normal',      cls:'g', bg:'badge-green'  };
 }
 
-function tribStatus(cfs, elev, prev) {
+function tribStatus(cfs, elev, prev, estimated) {
     const wasFlowing = prev && prev > 3;
-    // April–October: zero reading is a gauge outage, not ice
-    const month = new Date().getMonth() + 1; // 1-based
+    const month = new Date().getMonth() + 1;
     const meltSeason = month >= 3 && month <= 10;
     if (cfs < 1.5) {
-        if (meltSeason)  return { lbl:'No Data',    cls:'s-frozen'  };
+        if (estimated)   return { lbl:'No Data',    cls:'s-frozen'  };
+        if (meltSeason)  return { lbl:'Dormant',    cls:'s-dormant' };
         if (wasFlowing)  return { lbl:'Refrozen',   cls:'s-frozen'  };
         return                  { lbl:'Frozen',     cls:'s-frozen'  };
     }
@@ -1826,7 +1826,7 @@ function renderTribs(data) {
     const tbody = document.getElementById('tribBody');
     tbody.innerHTML = TRIBS.map(def => {
         const d = data[def.key] || SEED.tribs[def.key] || { cfs:0, prev:0, elev:def.elev };
-        const st = tribStatus(d.cfs, def.elev || 0, d.prev);
+        const st = tribStatus(d.cfs, def.elev || 0, d.prev, d.estimated);
         const ratio = d.prev > 0 ? d.cfs / d.prev : 1;
         let tc, tt;
         if (ratio > 1.5) { tc='up';   tt=`↑ ${ratio.toFixed(1)}×`; }
@@ -1865,7 +1865,7 @@ function renderTribs(data) {
     // Count stalled/refrozen rivers
     const stalledCount = TRIBS.filter(def => {
         const d = data[def.key] || SEED.tribs[def.key] || {};
-        const st = tribStatus(d.cfs || 0, def.elev || 0, d.prev || 0);
+        const st = tribStatus(d.cfs || 0, def.elev || 0, d.prev || 0, d.estimated);
         return st.lbl === 'Stalled' || st.lbl === 'Refrozen';
     }).length;
 
@@ -1882,7 +1882,7 @@ function renderTribs(data) {
     // Update situation strip — list rivers Running Hard by name
     const hardRivers = TRIBS.filter(def => {
         const d = data[def.key] || SEED.tribs[def.key] || {};
-        return tribStatus(d.cfs || 0, def.elev || 0, d.prev || 0).lbl === 'Running Hard';
+        return tribStatus(d.cfs || 0, def.elev || 0, d.prev || 0, d.estimated).lbl === 'Running Hard';
     }).map(def => def.name.replace(' River','').replace(' Creek',''));
     const stripTribs = document.getElementById('stripTribs');
     if (stripTribs) stripTribs.textContent = hardRivers.length ? hardRivers.join(' · ') : 'None yet';
