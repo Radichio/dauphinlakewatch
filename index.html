@@ -1834,8 +1834,15 @@ function renderTribs(data) {
         else              { tc='flat'; tt='→ stable'; }
 
         const isEst = d.estimated === true;
+        let estLabel = 'est.';
+        if (isEst && d.lastDt) {
+            const TZ = 'America/Winnipeg';
+            const dtStr = d.lastDt.toLocaleDateString('en-CA', { month:'short', day:'numeric', timeZone:TZ })
+                + ' ' + d.lastDt.toLocaleTimeString('en-CA', { hour:'numeric', minute:'2-digit', hour12:true, timeZone:TZ });
+            estLabel = `est. · last data ${dtStr}`;
+        }
         const cfsDisplay = isEst
-            ? `<span class="flow-num" style="color:var(--muted);">${d.cfs.toFixed(1)}</span><span style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-left:3px;">est.</span>`
+            ? `<span class="flow-num" style="color:var(--muted);">${d.cfs.toFixed(1)}</span><span style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-left:3px;">${estLabel}</span>`
             : `<span class="flow-num">${d.cfs.toFixed(1)}</span>`;
 
         return `<tr${isEst ? ' style="opacity:0.75;"' : ''}>
@@ -2154,51 +2161,54 @@ async function init() {
             const now  = rows.find(r => r.q != null);
             const week = rows.find((r,i) => i > 5 && r.q != null);
 
-            // Build valid average from last 200 rows — exclude zeros and nulls
-            // Covers up to ~8 days so extended outages still get real recent data
+            // Build valid average from last 24 valid readings (~24hrs at ~1 reading/hr)
+            // Fetch 200 rows to reach back far enough through any outage period
             const validRows = rows.filter(r => r.q != null && m3sCfs(r.q) >= 1.5);
             const avg48 = validRows.length > 0
-                ? validRows.slice(0, 48).reduce((sum, r) => sum + m3sCfs(r.q), 0) / Math.min(validRows.length, 48)
+                ? validRows.slice(0, 24).reduce((sum, r) => sum + m3sCfs(r.q), 0) / Math.min(validRows.length, 24)
                 : null;
 
             if (now) {
                 const liveCfs = m3sCfs(now.q);
                 if (liveCfs >= 1.5 || !meltSeason) {
-                    // Live good data — use it and cache the 48hr average
                     tribData[def.key] = {
                         cfs:       liveCfs,
                         prev:      week ? m3sCfs(week.q) : (SEED.tribs[def.key]?.prev || 0),
                         elev:      def.elev,
                         estimated: false,
                     };
-                    // Cache 48hr average for fallback
                     if (avg48) {
-                        try { localStorage.setItem(`lkg_${def.key}`, avg48.toFixed(1)); } catch(e) {}
+                        try {
+                            localStorage.setItem(`lkg_${def.key}`, avg48.toFixed(1));
+                            if (validRows[0]?.dt) localStorage.setItem(`lkg_dt_${def.key}`, validRows[0].dt.toISOString());
+                        } catch(e) {}
                     }
                 } else {
-                    // Zero in melt season — use 48hr average from this fetch if available,
-                    // else fall back to cached average
                     const fallback48 = avg48 ||
                         (() => { try { return parseFloat(localStorage.getItem(`lkg_${def.key}`)); } catch(e) { return null; } })() ||
                         SEED.tribs[def.key]?.cfs || 0;
+                    let lkgDt = validRows[0]?.dt || null;
+                    if (!lkgDt) { try { const s = localStorage.getItem(`lkg_dt_${def.key}`); if(s) lkgDt = new Date(s); } catch(e) {} }
                     tribData[def.key] = {
                         cfs:       fallback48,
                         prev:      week ? m3sCfs(week.q) : (SEED.tribs[def.key]?.prev || 0),
                         elev:      def.elev,
                         estimated: true,
+                        lastDt:    lkgDt,
                     };
                 }
             } else if (meltSeason) {
-                // No data at all — use 48hr average from this fetch if available,
-                // else cached average, else seed
                 const fallback48 = avg48 ||
                     (() => { try { return parseFloat(localStorage.getItem(`lkg_${def.key}`)); } catch(e) { return null; } })() ||
                     SEED.tribs[def.key]?.cfs || 0;
+                let lkgDt = validRows[0]?.dt || null;
+                if (!lkgDt) { try { const s = localStorage.getItem(`lkg_dt_${def.key}`); if(s) lkgDt = new Date(s); } catch(e) {} }
                 tribData[def.key] = {
                     cfs:       fallback48,
                     prev:      SEED.tribs[def.key]?.prev || 0,
                     elev:      def.elev,
                     estimated: true,
+                    lastDt:    lkgDt,
                 };
             }
         } catch (e) {
