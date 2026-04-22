@@ -2150,50 +2150,62 @@ async function init() {
 
     await Promise.allSettled(TRIBS.map(async def => {
         try {
-            const rows = await fetchStn(CFG.st[def.key], 16);
+            const rows = await fetchStn(CFG.st[def.key], 48);
             const now  = rows.find(r => r.q != null);
             const week = rows.find((r,i) => i > 5 && r.q != null);
+
+            // Build 48-hr valid average — exclude zeros and nulls
+            const validRows = rows.filter(r => r.q != null && m3sCfs(r.q) >= 1.5);
+            const avg48 = validRows.length > 0
+                ? validRows.reduce((sum, r) => sum + m3sCfs(r.q), 0) / validRows.length
+                : null;
+
             if (now) {
                 const liveCfs = m3sCfs(now.q);
                 if (liveCfs >= 1.5 || !meltSeason) {
-                    // Live good data — use it and cache it
+                    // Live good data — use it and cache the 48hr average
                     tribData[def.key] = {
                         cfs:       liveCfs,
                         prev:      week ? m3sCfs(week.q) : (SEED.tribs[def.key]?.prev || 0),
                         elev:      def.elev,
                         estimated: false,
                     };
-                    try { sessionStorage.setItem(`lkg_${def.key}`, liveCfs.toFixed(1)); } catch(e) {}
+                    // Cache 48hr average for fallback
+                    if (avg48) {
+                        try { localStorage.setItem(`lkg_${def.key}`, avg48.toFixed(1)); } catch(e) {}
+                    }
                 } else {
-                    // Zero in melt season — gauge offline, use last known good
-                    let lkg = null;
-                    try { lkg = parseFloat(sessionStorage.getItem(`lkg_${def.key}`)); } catch(e) {}
-                    const fallback = (lkg && lkg > 1.5) ? lkg : (SEED.tribs[def.key]?.cfs || 0);
+                    // Zero in melt season — use 48hr average from this fetch if available,
+                    // else fall back to cached average
+                    const fallback48 = avg48 ||
+                        (() => { try { return parseFloat(localStorage.getItem(`lkg_${def.key}`)); } catch(e) { return null; } })() ||
+                        SEED.tribs[def.key]?.cfs || 0;
                     tribData[def.key] = {
-                        cfs:       fallback,
+                        cfs:       fallback48,
                         prev:      week ? m3sCfs(week.q) : (SEED.tribs[def.key]?.prev || 0),
                         elev:      def.elev,
                         estimated: true,
                     };
                 }
             } else if (meltSeason) {
-                // No data at all — station fully offline, use last known good
-                let lkg = null;
-                try { lkg = parseFloat(sessionStorage.getItem(`lkg_${def.key}`)); } catch(e) {}
-                const fallback = (lkg && lkg > 1.5) ? lkg : (SEED.tribs[def.key]?.cfs || 0);
+                // No data at all — use 48hr average from this fetch if available,
+                // else cached average, else seed
+                const fallback48 = avg48 ||
+                    (() => { try { return parseFloat(localStorage.getItem(`lkg_${def.key}`)); } catch(e) { return null; } })() ||
+                    SEED.tribs[def.key]?.cfs || 0;
                 tribData[def.key] = {
-                    cfs:       fallback,
+                    cfs:       fallback48,
                     prev:      SEED.tribs[def.key]?.prev || 0,
                     elev:      def.elev,
                     estimated: true,
                 };
             }
         } catch (e) {
-            // Fetch failed entirely — use last known good if in melt season
+            // Fetch failed entirely — use cached 48hr average
             console.warn(`[trib:${def.key}]`, e.message);
             if (meltSeason) {
                 let lkg = null;
-                try { lkg = parseFloat(sessionStorage.getItem(`lkg_${def.key}`)); } catch(e2) {}
+                try { lkg = parseFloat(localStorage.getItem(`lkg_${def.key}`)); } catch(e2) {}
                 if (lkg && lkg > 1.5) {
                     tribData[def.key] = {
                         cfs:       lkg,
