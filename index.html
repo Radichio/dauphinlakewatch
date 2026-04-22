@@ -1466,9 +1466,13 @@ function lakeStatus(ft) {
 
 function tribStatus(cfs, elev, prev) {
     const wasFlowing = prev && prev > 3;
+    // April–October: zero reading is a gauge outage, not ice
+    const month = new Date().getMonth() + 1; // 1-based
+    const meltSeason = month >= 3 && month <= 10;
     if (cfs < 1.5) {
-        if (wasFlowing) return { lbl:'Refrozen',    cls:'s-frozen'  };
-        return               { lbl:'Frozen',        cls:'s-frozen'  };
+        if (meltSeason)  return { lbl:'No Data',    cls:'s-frozen'  };
+        if (wasFlowing)  return { lbl:'Refrozen',   cls:'s-frozen'  };
+        return                  { lbl:'Frozen',     cls:'s-frozen'  };
     }
     if (cfs < 5) {
         if (wasFlowing && cfs < prev * 0.6) return { lbl:'Stalled', cls:'s-dormant' };
@@ -1829,12 +1833,17 @@ function renderTribs(data) {
         else if(ratio<.7){ tc='down'; tt=`↓ ${ratio.toFixed(1)}×`; }
         else              { tc='flat'; tt='→ stable'; }
 
-        return `<tr>
+        const isEst = d.estimated === true;
+        const cfsDisplay = isEst
+            ? `<span class="flow-num" style="color:var(--muted);">${d.cfs.toFixed(1)}</span><span style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-left:3px;">est.</span>`
+            : `<span class="flow-num">${d.cfs.toFixed(1)}</span>`;
+
+        return `<tr${isEst ? ' style="opacity:0.75;"' : ''}>
             <td>
                 <div class="river-name">${def.name}</div>
                 <div class="river-sub">${def.zone} · ${def.elev ? def.elev+' ft elev' : 'Other'}</div>
             </td>
-            <td><span class="flow-num">${d.cfs.toFixed(1)}</span></td>
+            <td>${cfsDisplay}</td>
             <td><span class="spill ${st.cls}">${st.lbl}</span></td>
             <td class="hide-sm"><span class="${tc}" style="font-family:var(--mono);font-size:12px;">${tt}</span></td>
         </tr>`;
@@ -1926,18 +1935,31 @@ function renderOutlet(cfs, tribData) {
 
     const gap = Math.round(totalInflow - cfs);
 
+    // Detect major gauges offline during melt season
+    const month = new Date().getMonth() + 1;
+    const meltSeason = month >= 3 && month <= 10;
+    const offlineGauges = meltSeason && tribData
+        ? TRIBS.filter(def => {
+            const d = tribData[def.key] || {};
+            return (d.cfs || 0) < 1.5;
+          }).map(def => def.name)
+        : [];
+    const offlineCaveat = offlineGauges.length > 0
+        ? ` Note: ${offlineGauges.join(', ')} gauge${offlineGauges.length > 1 ? 's' : ''} offline — inflow estimate may be understated.`
+        : '';
+
     // Outlet note
     let note;
     if (overCapacity) {
         const LAKE_AREA_FT2 = 2906400000;
         const ratePerDay = (gap * 86400) / LAKE_AREA_FT2;
-        note = `Outlet is being forced ${overage} cfs above its rated channel capacity by hydraulic head from the elevated lake. This is not additional relief — the channel is under pressure. At current net inflow, the lake rises ~${ratePerDay.toFixed(2)} ft/day. When inflow increases, that rate accelerates — the outlet stays capped near ~${RATED} cfs.`;
+        note = `Outlet is being forced ${overage} cfs above its rated channel capacity by hydraulic head from the elevated lake. This is not additional relief — the channel is under pressure. At current net inflow, the lake rises ~${ratePerDay.toFixed(2)} ft/day. When inflow increases, that rate accelerates — the outlet stays capped near ~${RATED} cfs.${offlineCaveat}`;
     } else if (cfs / RATED > 0.8) {
         const LAKE_AREA_FT2 = 2906400000;
         const ratePerDay = (gap * 86400) / LAKE_AREA_FT2;
-        note = `Outlet at ${pctOfRated.toFixed(0)}% of rated capacity. At current net inflow, the lake rises ~${ratePerDay.toFixed(2)} ft/day. When inflow increases with the warm-up, that rate accelerates — but the outlet stays capped at ~${RATED} cfs.`;
+        note = `Outlet at ${pctOfRated.toFixed(0)}% of rated capacity. At current net inflow, the lake rises ~${ratePerDay.toFixed(2)} ft/day. When inflow increases, that rate accelerates — but the outlet stays capped at ~${RATED} cfs.${offlineCaveat}`;
     } else {
-        note = `Outlet has capacity available. Net inflow ~${gap > 0 ? '+'+gap : gap} cfs.`;
+        note = `Outlet has capacity available. Net inflow ~${gap > 0 ? '+'+gap : gap} cfs.${offlineCaveat}`;
     }
     document.getElementById('outletNote').innerHTML = note;
 
@@ -2123,19 +2145,65 @@ async function init() {
 
     // ── Tributaries
     const tribData = {};
+    const month = new Date().getMonth() + 1;
+    const meltSeason = month >= 3 && month <= 10;
+
     await Promise.allSettled(TRIBS.map(async def => {
         try {
             const rows = await fetchStn(CFG.st[def.key], 16);
             const now  = rows.find(r => r.q != null);
             const week = rows.find((r,i) => i > 5 && r.q != null);
             if (now) {
+                const liveCfs = m3sCfs(now.q);
+                if (liveCfs >= 1.5 || !meltSeason) {
+                    // Live good data — use it and cache it
+                    tribData[def.key] = {
+                        cfs:       liveCfs,
+                        prev:      week ? m3sCfs(week.q) : (SEED.tribs[def.key]?.prev || 0),
+                        elev:      def.elev,
+                        estimated: false,
+                    };
+                    try { sessionStorage.setItem(`lkg_${def.key}`, liveCfs.toFixed(1)); } catch(e) {}
+                } else {
+                    // Zero in melt season — gauge offline, use last known good
+                    let lkg = null;
+                    try { lkg = parseFloat(sessionStorage.getItem(`lkg_${def.key}`)); } catch(e) {}
+                    const fallback = (lkg && lkg > 1.5) ? lkg : (SEED.tribs[def.key]?.cfs || 0);
+                    tribData[def.key] = {
+                        cfs:       fallback,
+                        prev:      week ? m3sCfs(week.q) : (SEED.tribs[def.key]?.prev || 0),
+                        elev:      def.elev,
+                        estimated: true,
+                    };
+                }
+            } else if (meltSeason) {
+                // No data at all — station fully offline, use last known good
+                let lkg = null;
+                try { lkg = parseFloat(sessionStorage.getItem(`lkg_${def.key}`)); } catch(e) {}
+                const fallback = (lkg && lkg > 1.5) ? lkg : (SEED.tribs[def.key]?.cfs || 0);
                 tribData[def.key] = {
-                    cfs:  m3sCfs(now.q),
-                    prev: week ? m3sCfs(week.q) : (SEED.tribs[def.key]?.prev || 0),
-                    elev: def.elev
+                    cfs:       fallback,
+                    prev:      SEED.tribs[def.key]?.prev || 0,
+                    elev:      def.elev,
+                    estimated: true,
                 };
             }
-        } catch (e) { console.warn(`[trib:${def.key}]`, e.message); }
+        } catch (e) {
+            // Fetch failed entirely — use last known good if in melt season
+            console.warn(`[trib:${def.key}]`, e.message);
+            if (meltSeason) {
+                let lkg = null;
+                try { lkg = parseFloat(sessionStorage.getItem(`lkg_${def.key}`)); } catch(e2) {}
+                if (lkg && lkg > 1.5) {
+                    tribData[def.key] = {
+                        cfs:       lkg,
+                        prev:      SEED.tribs[def.key]?.prev || 0,
+                        elev:      def.elev,
+                        estimated: true,
+                    };
+                }
+            }
+        }
     }));
 
     // Fill gaps from seed
