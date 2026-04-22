@@ -2150,14 +2150,15 @@ async function init() {
 
     await Promise.allSettled(TRIBS.map(async def => {
         try {
-            const rows = await fetchStn(CFG.st[def.key], 48);
+            const rows = await fetchStn(CFG.st[def.key], 200);
             const now  = rows.find(r => r.q != null);
             const week = rows.find((r,i) => i > 5 && r.q != null);
 
-            // Build 48-hr valid average — exclude zeros and nulls
+            // Build valid average from last 200 rows — exclude zeros and nulls
+            // Covers up to ~8 days so extended outages still get real recent data
             const validRows = rows.filter(r => r.q != null && m3sCfs(r.q) >= 1.5);
             const avg48 = validRows.length > 0
-                ? validRows.reduce((sum, r) => sum + m3sCfs(r.q), 0) / validRows.length
+                ? validRows.slice(0, 48).reduce((sum, r) => sum + m3sCfs(r.q), 0) / Math.min(validRows.length, 48)
                 : null;
 
             if (now) {
