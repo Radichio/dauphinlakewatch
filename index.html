@@ -650,6 +650,27 @@
         }
         .hfc-ref strong { color: var(--text); }
         .hfc-ref a { color: var(--blue); }
+        .hfc-history {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--paper-dark);
+            font-size: 11.5px;
+            color: var(--muted);
+            letter-spacing: 0.02em;
+        }
+        .hfc-history-label {
+            text-transform: uppercase;
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            margin-right: 8px;
+        }
+        .hfc-history a {
+            color: var(--blue);
+            margin-right: 12px;
+            white-space: nowrap;
+        }
 
         /* ─────────── FOOTER ─────────── */
         .site-footer {
@@ -1420,10 +1441,15 @@ const SWE_CONFIG = {
 // ─────────────────────────────────────────────────────────
 const HFC_REF = {
     active: true,
-    date:   'April 20, 2026',
-    body:   '<strong>Provincial HFC Flood Bulletin #3 (April 20):</strong> Runoff underway across the Parkland. Elevated risk of ice jam and overland flooding. A significant precipitation system forecast Thu–Sat — 20 to 60 mm across central Manitoba. Dauphin Lake basin in the impact zone.',
-    link:   'https://news.gov.mb.ca/news/index.html?item=73481',
+    date:   'April 23, 2026',
+    body:   '<strong>Provincial HFC Flood Bulletin #4 (April 23):</strong> Flood warnings in effect for the Icelandic, Fisher and Assiniboine rivers. Provincial staff supporting preparations across the Interlake and Parkland regions. Significant precipitation system affecting northern Manitoba — up to 40 cm additional snow for The Pas, Flin Flon and Thompson through Sunday, with NE winds gusting to 60 km/h. Impacts on flows and water levels to be analyzed once temperatures warm mid-next week.',
+    link:   'https://news.gov.mb.ca/news/index.html?item=73501',
     label:  'Full bulletin →',
+    history: [
+        { label: 'Bulletin #3', date: 'April 20, 2026', link: 'https://news.gov.mb.ca/news/index.html?item=73481' },
+        { label: 'Bulletin #2', date: 'April 17, 2026', link: 'https://news.gov.mb.ca/news/index.html?item=73464' },
+        { label: 'Bulletin #1', date: 'April 14, 2026', link: 'https://news.gov.mb.ca/news/index.html?item=73439' },
+    ],
 };
 
 // ─────────────────────────────────────────────────────────
@@ -2821,7 +2847,14 @@ function renderScenarios() {
 function renderHFC() {
     if (!HFC_REF.active) return;
     const el = document.getElementById('hfcRef');
-    el.innerHTML = `${HFC_REF.body} &nbsp;<a href="${HFC_REF.link}" target="_blank" rel="noopener">${HFC_REF.label}</a>`;
+    let html = `${HFC_REF.body} &nbsp;<a href="${HFC_REF.link}" target="_blank" rel="noopener">${HFC_REF.label}</a>`;
+    if (Array.isArray(HFC_REF.history) && HFC_REF.history.length > 0) {
+        const links = HFC_REF.history
+            .map(h => `<a href="${h.link}" target="_blank" rel="noopener" title="${h.date}">${h.label}</a>`)
+            .join('');
+        html += `<div class="hfc-history"><span class="hfc-history-label">Previous:</span>${links}</div>`;
+    }
+    el.innerHTML = html;
     el.style.display = 'block';
 }
 
