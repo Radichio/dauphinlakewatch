@@ -53,11 +53,16 @@
             background: var(--paper);
             border-bottom: 1px solid var(--paper-mid);
             line-height: 0;
+            display: flex;
+            justify-content: center;
+            padding: 0 20px;
+            box-sizing: border-box;
         }
         .basin-strip svg {
             display: block;
             width: 100%;
-            height: 200px;
+            max-width: 680px;
+            height: auto;
         }
         .header-main {
             display: flex;
@@ -1037,7 +1042,7 @@
      BASIN STRIP — visual lake level indicator
 ════════════════════════════════════════════════════════ -->
 <div class="basin-strip" id="basinStrip" aria-label="Dauphin Lake level relative to threshold zones">
-<svg width="100%" viewBox="0 0 680 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" role="img" id="basinSvg">
+<svg width="100%" viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg" role="img" id="basinSvg">
 <title>Dauphin Lake basin water level</title>
 <desc>Vertical stack of threshold zones showing where the current Dauphin Lake level sits. Above the waterline, threshold bands retain warning colors. Below the waterline, submerged bands appear in grayscale and are tinted with light blue water. A translucent ice sheet sits at the current level during pre-breakup season.</desc>
 
