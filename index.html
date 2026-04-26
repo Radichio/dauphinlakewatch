@@ -48,21 +48,12 @@
             background: var(--navy);
             color: white;
         }
-        .basin-strip {
-            width: 100%;
-            background: var(--paper);
-            border-bottom: 1px solid var(--paper-mid);
-            line-height: 0;
-            display: flex;
-            justify-content: center;
-            padding: 0 20px;
-            box-sizing: border-box;
-        }
-        .basin-strip svg {
+        .basin-strip-svg {
             display: block;
             width: 100%;
-            max-width: 680px;
             height: auto;
+            border-radius: 4px;
+            overflow: hidden;
         }
         .header-main {
             display: flex;
@@ -1039,10 +1030,32 @@
 </header>
 
 <!-- ══════════════════════════════════════════════════════
-     BASIN STRIP — visual lake level indicator
+     STICKY MOBILE STATUS BAR
 ════════════════════════════════════════════════════════ -->
-<div class="basin-strip" id="basinStrip" aria-label="Dauphin Lake level relative to threshold zones">
-<svg width="100%" viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg" role="img" id="basinSvg">
+<div class="sticky-bar" id="stickyBar">
+    <div class="sticky-top-row">
+        <div>
+            <div class="sticky-level" id="stickyLevel">—</div>
+            <div class="sticky-unit">FT ASL · WSC PROVISIONAL</div>
+            <div class="sticky-prev" id="stickyPrev"></div>
+        </div>
+        <div class="sticky-badge" id="stickyBadge">LOADING</div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MAIN
+════════════════════════════════════════════════════════ -->
+<main class="container" style="display:flex;flex-direction:column;">
+
+    <div class="demo-banner" id="demoBanner">
+        Live API unreachable — displaying verified March 27 readings. For real-time data: <strong>wateroffice.ec.gc.ca</strong>
+    </div>
+
+    <!-- ── BASIN STRIP — visual lake level indicator ── -->
+    <div class="card" id="basinStripCard">
+        <div class="card-label">Basin at a Glance &nbsp;·&nbsp; Threshold Ladder</div>
+<svg class="basin-strip-svg" viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg" role="img" id="basinSvg" aria-label="Dauphin Lake level relative to threshold zones">
 <title>Dauphin Lake basin water level</title>
 <desc>Vertical stack of threshold zones showing where the current Dauphin Lake level sits. Above the waterline, threshold bands retain warning colors. Below the waterline, submerged bands appear in grayscale and are tinted with light blue water. A translucent ice sheet sits at the current level during pre-breakup season.</desc>
 
@@ -1056,9 +1069,9 @@
 <stop offset="1" stop-color="#d6e4ea" stop-opacity="0.78"/>
 </linearGradient>
 <clipPath id="bsBasin"><rect x="0" y="40" width="680" height="160"/></clipPath>
-<clipPath id="bsMelt1"><ellipse cx="180" cy="138" rx="22" ry="3" id="bsMeltClip1Shape"/></clipPath>
-<clipPath id="bsMelt2"><ellipse cx="430" cy="142" rx="34" ry="4" id="bsMeltClip2Shape"/></clipPath>
-<clipPath id="bsMelt3"><ellipse cx="610" cy="139" rx="18" ry="3" id="bsMeltClip3Shape"/></clipPath>
+<clipPath id="bsMelt1"><ellipse cx="180" cy="138" rx="22" ry="3"/></clipPath>
+<clipPath id="bsMelt2"><ellipse cx="430" cy="142" rx="34" ry="4"/></clipPath>
+<clipPath id="bsMelt3"><ellipse cx="610" cy="139" rx="18" ry="3"/></clipPath>
 </defs>
 
 <rect x="0" y="0" width="680" height="40" fill="url(#bsSky)"/>
@@ -1206,29 +1219,6 @@
 <text x="5" y="8" font-family="ui-monospace, monospace" font-size="8" fill="#3a5a6a" letter-spacing="0.04em" id="bsModeText">ICE · pre-breakup</text>
 </g>
 </svg>
-</div>
-
-<!-- ══════════════════════════════════════════════════════
-     STICKY MOBILE STATUS BAR
-════════════════════════════════════════════════════════ -->
-<div class="sticky-bar" id="stickyBar">
-    <div class="sticky-top-row">
-        <div>
-            <div class="sticky-level" id="stickyLevel">—</div>
-            <div class="sticky-unit">FT ASL · WSC PROVISIONAL</div>
-            <div class="sticky-prev" id="stickyPrev"></div>
-        </div>
-        <div class="sticky-badge" id="stickyBadge">LOADING</div>
-    </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════
-     MAIN
-════════════════════════════════════════════════════════ -->
-<main class="container" style="display:flex;flex-direction:column;">
-
-    <div class="demo-banner" id="demoBanner">
-        Live API unreachable — displaying verified March 27 readings. For real-time data: <strong>wateroffice.ec.gc.ca</strong>
     </div>
 
     <!-- ── 1. STATUS BEACON ── -->
