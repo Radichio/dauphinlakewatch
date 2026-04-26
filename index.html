@@ -2827,15 +2827,19 @@ function renderBulletin(lakeFt, outCfs, tribData, lakeData) {
                 ? `at ${outPct}% of rated capacity — ${Math.round(outCfs)} cfs`
                 : `at ${outPct}% of rated capacity`;
 
-    const advisoryState = advisoryDist !== null
-        ? advisoryDist <= 0
-            ? `Advisory level exceeded`
-            : advisoryDist < 0.1
-                ? `Advisory level ${advisoryDist.toFixed(2)} ft away — imminent`
-                : advisoryDist < 0.3
-                    ? `Advisory level ${advisoryDist.toFixed(2)} ft away — approaching`
-                    : `Advisory level ${advisoryDist.toFixed(2)} ft away`
-        : 'Advisory level distance unknown';
+    // {ADVISORY_STATE} — escalates phrasing as the lake crosses each tier of the action ladder
+    const advisoryState = (() => {
+        if (lakeFt == null) return 'Advisory level distance unknown';
+        if (lakeFt >= FLOOD)  return 'Flood stage reached';
+        if (lakeFt >= 857.0)  return 'Critical threshold crossed — approaching flood stage';
+        if (lakeFt >= 856.5)  return 'High threshold crossed';
+        if (lakeFt >= 855.5)  return 'Elevated threshold crossed';
+        if (lakeFt >= ADVISORY) return 'Advisory level exceeded';
+        if (advisoryDist == null) return 'Advisory level distance unknown';
+        if (advisoryDist < 0.1) return `Advisory level ${advisoryDist.toFixed(2)} ft away — imminent`;
+        if (advisoryDist < 0.3) return `Advisory level ${advisoryDist.toFixed(2)} ft away — approaching`;
+        return `Advisory level ${advisoryDist.toFixed(2)} ft away`;
+    })();
 
     const riseState = riseRateNum > 0.2
         ? `${riseRate} ft/day and accelerating`
@@ -2887,14 +2891,18 @@ function renderBulletin(lakeFt, outCfs, tribData, lakeData) {
         ? `${dataDate} · ${dataTimestamp}`
         : b.date;
 
-    // ── Title: self-updating based on lake level — never hardcoded
+    // ── Title: self-updating based on lake level — matches the 5-tier action ladder
     let autoTitle;
     if (!lakeFt) {
         autoTitle = 'MELT SEASON WATCH';
     } else if (lakeFt >= FLOOD) {
         autoTitle = 'FLOOD WARNING — DAUPHIN LAKE';
-    } else if (lakeFt >= 856.0) {
+    } else if (lakeFt >= 857.0) {
+        autoTitle = 'CRITICAL — DAUPHIN LAKE';
+    } else if (lakeFt >= 856.5) {
         autoTitle = 'HIGH WATER ADVISORY';
+    } else if (lakeFt >= 855.5) {
+        autoTitle = 'ELEVATED — DAUPHIN LAKE';
     } else if (lakeFt >= ADVISORY) {
         autoTitle = 'ADVISORY — DAUPHIN LAKE';
     } else {
