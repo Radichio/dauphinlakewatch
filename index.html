@@ -542,6 +542,18 @@
             color: rgba(255,255,255,.8);
             line-height: 1.55;
         }
+        .bulletin-phase {
+            font-size: 13px;
+            color: rgba(245, 215, 110, .92);
+            font-style: italic;
+            line-height: 1.55;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(200, 162, 0, .25);
+        }
+        .bulletin-phase:empty {
+            display: none;
+        }
         .bulletin-dismiss {
             background: none;
             border: 1px solid rgba(200,162,0,.4);
@@ -573,6 +585,7 @@
             }
             .bulletin-title { font-size: 14px; }
             .bulletin-text  { font-size: 13px; line-height: 1.6; }
+            .bulletin-phase { font-size: 13px; line-height: 1.6; }
         }
 
         /* ─────────── SWE PANEL ─────────── */
@@ -1004,6 +1017,7 @@
         <div class="bulletin-body">
             <div class="bulletin-date" id="bulletinDate"></div>
             <div class="bulletin-title" id="bulletinTitle"></div>
+            <div class="bulletin-phase" id="bulletinPhase"></div>
             <div class="bulletin-text" id="bulletinText"></div>
         </div>
         <button class="bulletin-dismiss" onclick="dismissBulletin()">Dismiss</button>
@@ -1626,6 +1640,18 @@ const HFC_REF = {
         { label: 'Bulletin #2', date: 'April 17, 2026', link: 'https://news.gov.mb.ca/news/index.html?item=73464' },
         { label: 'Bulletin #1', date: 'April 14, 2026', link: 'https://news.gov.mb.ca/news/index.html?item=73439' },
     ],
+};
+
+// ─────────────────────────────────────────────────────────
+// PHASE — narrative season state, leads the bulletin text
+// Editorial field. Update as the season's arc moves through:
+// pre-melt · early melt · first pulse active · first pulse winding down ·
+// inter-pulse · second pulse active · peak · post-peak · recovery · dormancy
+// ─────────────────────────────────────────────────────────
+const PHASE = {
+    active: true,
+    since:  'April 28, 2026',
+    text:   'First melt pulse winding down. Lake holding at elevated, basin draining. Second pulse expected with Thursday warmup.',
 };
 
 // ─────────────────────────────────────────────────────────
@@ -2878,6 +2904,7 @@ function renderBulletin(lakeFt, outCfs, tribData, lakeData) {
         '{DATA_TIMESTAMP}':  dataTimestamp,
         '{DATA_DATE}':       dataDate,
         '{SCENARIO_NOTE}':   scenarioNote,
+        '{PHASE}':           (PHASE && PHASE.active && PHASE.text) ? PHASE.text : '',
     };
 
     // ── Resolve tokens
@@ -2911,6 +2938,13 @@ function renderBulletin(lakeFt, outCfs, tribData, lakeData) {
 
     document.getElementById('bulletinDate').textContent  = autoDate;
     document.getElementById('bulletinTitle').textContent = autoTitle;
+
+    // ── Phase: editorial narrative line, leads the bulletin
+    const phaseEl = document.getElementById('bulletinPhase');
+    if (phaseEl) {
+        phaseEl.textContent = (PHASE && PHASE.active && PHASE.text) ? PHASE.text : '';
+    }
+
     document.getElementById('bulletinText').textContent  = text;
     document.getElementById('bulletinBanner').classList.add('active');
 }
