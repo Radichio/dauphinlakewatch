@@ -1112,33 +1112,44 @@
 </g>
 
 <g id="bsBands">
-<rect id="bsBandFlood"    x="0" y="40"  width="680" height="40" fill="#e89376" opacity="0.7"/>
-<rect id="bsBandHigh"     x="0" y="80"  width="680" height="40" fill="#f3b884" opacity="0.7"/>
-<rect id="bsBandAdvAbove" x="0" y="120" width="680" height="20" fill="#fbe4a3" opacity="0.7"/>
-<rect id="bsBandAdvBelow" x="0" y="140" width="680" height="20" fill="#e0e0e0" opacity="0.55"/>
-<rect id="bsBandNormal"   x="0" y="160" width="680" height="40" fill="#d4d4d4" opacity="0.6"/>
+<rect id="bsBandFlood"    x="0" y="40"  width="680" height="15" fill="#d56b5a" opacity="0.7"/>
+<rect id="bsBandCritical" x="0" y="55"  width="680" height="29" fill="#e89376" opacity="0.7"/>
+<rect id="bsBandHigh"     x="0" y="84"  width="680" height="15" fill="#f3b884" opacity="0.7"/>
+<rect id="bsBandElevated" x="0" y="99"  width="680" height="29" fill="#f8d68a" opacity="0.7"/>
+<rect id="bsBandAdvisory" x="0" y="128" width="680" height="20" fill="#fbe4a3" opacity="0.7"/>
+<rect id="bsBandWatch"    x="0" y="148" width="680" height="23" fill="#fdf2c4" opacity="0.7"/>
+<rect id="bsBandNormal"   x="0" y="171" width="680" height="29" fill="#dcdcda" opacity="0.55"/>
 </g>
 
 <g>
-<line x1="0" y1="80"  x2="680" y2="80"  stroke="#7a2418" stroke-width="0.5" opacity="0.4" stroke-dasharray="4 4"/>
-<line x1="0" y1="120" x2="680" y2="120" stroke="#7a3d18" stroke-width="0.5" opacity="0.4" stroke-dasharray="4 4"/>
-<line x1="0" y1="160" x2="680" y2="160" stroke="#888"    stroke-width="0.5" opacity="0.5" stroke-dasharray="4 4"/>
+<line x1="0" y1="55"  x2="680" y2="55"  stroke="#9a3826" stroke-width="0.5" opacity="0.4" stroke-dasharray="4 4"/>
+<line x1="0" y1="84"  x2="680" y2="84"  stroke="#7a2418" stroke-width="0.5" opacity="0.4" stroke-dasharray="4 4"/>
+<line x1="0" y1="99"  x2="680" y2="99"  stroke="#7a3d18" stroke-width="0.5" opacity="0.4" stroke-dasharray="4 4"/>
+<line x1="0" y1="128" x2="680" y2="128" stroke="#7a5d22" stroke-width="0.5" opacity="0.4" stroke-dasharray="4 4"/>
+<line x1="0" y1="148" x2="680" y2="148" stroke="#8a7d22" stroke-width="0.5" opacity="0.4" stroke-dasharray="4 4"/>
+<line x1="0" y1="171" x2="680" y2="171" stroke="#888"    stroke-width="0.5" opacity="0.5" stroke-dasharray="4 4"/>
 </g>
 
-<g font-family="ui-monospace, monospace" font-size="10" letter-spacing="0.05em">
-<text x="14" y="58"  fill="#7a2418" font-weight="500">FLOOD STAGE</text>
-<text x="135" y="58" fill="#7a2418" opacity="0.7">857.0 ft +</text>
-<text x="14" y="98"  fill="#7a3d18" font-weight="500">HIGH</text>
-<text x="105" y="98" fill="#7a3d18" opacity="0.7">855.5 — 857.0 ft</text>
-<text x="14" y="138" fill="#7a5d22" font-weight="500">ADVISORY</text>
-<text x="105" y="138" fill="#7a5d22" opacity="0.7">854.8 — 855.5 ft</text>
-<text x="14" y="178" fill="#555" font-weight="500" id="bsNormalLbl">NORMAL</text>
-<text x="105" y="178" fill="#555" opacity="0.7" id="bsNormalRange">below 854.8 ft</text>
+<g font-family="ui-monospace, monospace" font-size="9" letter-spacing="0.05em">
+<text x="14" y="50"  fill="#7a1818" font-weight="500">FLOOD STAGE</text>
+<text x="125" y="50" fill="#7a1818" opacity="0.7">858.0 ft +</text>
+<text x="14" y="73"  fill="#7a2418" font-weight="500">CRITICAL</text>
+<text x="125" y="73" fill="#7a2418" opacity="0.7">857.0 — 858.0 ft</text>
+<text x="14" y="94"  fill="#7a3d18" font-weight="500">HIGH</text>
+<text x="125" y="94" fill="#7a3d18" opacity="0.7">856.5 — 857.0 ft</text>
+<text x="14" y="118" fill="#7a4d18" font-weight="500">ELEVATED</text>
+<text x="125" y="118" fill="#7a4d18" opacity="0.7">855.5 — 856.5 ft</text>
+<text x="14" y="141" fill="#7a5d22" font-weight="500">ADVISORY</text>
+<text x="125" y="141" fill="#7a5d22" opacity="0.7">854.8 — 855.5 ft</text>
+<text x="14" y="163" fill="#8a6d22" font-weight="500" id="bsWatchLbl">WATCH</text>
+<text x="125" y="163" fill="#8a6d22" opacity="0.7" id="bsWatchRange">854.0 — 854.8 ft</text>
+<text x="14" y="188" fill="#555" font-weight="500" id="bsNormalLbl">NORMAL</text>
+<text x="125" y="188" fill="#555" opacity="0.7" id="bsNormalRange">below 854.0 ft</text>
 </g>
 
 <g id="bsYesterday" opacity="0.7">
-<line x1="0" y1="158" x2="680" y2="158" stroke="#1d4960" stroke-width="0.6" stroke-dasharray="2 5" id="bsYesterdayLine"/>
-<text x="450" y="155" font-family="ui-monospace, monospace" font-size="8.5" fill="#1d4960" letter-spacing="0.05em" opacity="0.85" id="bsYesterdayText">YESTERDAY · — ft</text>
+<line x1="0" y1="148" x2="680" y2="148" stroke="#1d4960" stroke-width="0.6" stroke-dasharray="2 5" id="bsYesterdayLine"/>
+<text x="450" y="145" font-family="ui-monospace, monospace" font-size="8.5" fill="#1d4960" letter-spacing="0.05em" opacity="0.85" id="bsYesterdayText">YESTERDAY · — ft</text>
 </g>
 
 <g clip-path="url(#bsBasin)">
@@ -3083,36 +3094,38 @@ function renderHFC() {
 function renderBasinStrip(ft, series) {
     if (typeof ft !== 'number' || isNaN(ft)) return;
 
-    // Threshold ladder used by the strip (collapsed from dashboard's 7-tier ladder)
+    // 7-tier ladder matching the action guidance card and auto-title generator
     const TH = {
-        normal:   CFG.upperRange,   // 854.8
-        advisory: 855.5,            // ADVISORY top / HIGH bottom
-        high:     857.0,            // HIGH top / FLOOD bottom
-        flood:    CFG.floodStage,   // 858.0
+        watch:    854.0,            // WATCH bottom / NORMAL top
+        normal:   CFG.upperRange,   // 854.8 — ADVISORY bottom / WATCH top
+        advisory: 855.5,            // ELEVATED bottom / ADVISORY top
+        elevated: 856.5,            // HIGH bottom / ELEVATED top
+        high:     857.0,            // CRITICAL bottom / HIGH top
+        flood:    CFG.floodStage,   // 858.0 — FLOOD STAGE bottom / CRITICAL top
     };
 
-    // SVG geometry — band y-coordinates as built in markup
-    const SVG_BANDS = {
-        flood:    { y: 40,  h: 40 },   // FLOOD STAGE: 857.0+
-        high:     { y: 80,  h: 40 },   // HIGH:        855.5–857.0
-        advTop:   { y: 120, h: 20 },   // ADVISORY upper half (854.8 + 0.35 to 855.5)
-        advBot:   { y: 140, h: 20 },   // ADVISORY lower half (854.8 to 854.8 + 0.35)
-        normal:   { y: 160, h: 40 },   // NORMAL: below 854.8
+    // SVG geometry — y-coordinates for each band's top and bottom
+    // Total basin column 40→200 (160px). Each ft of range gets ~29px except FLOOD which is fixed.
+    const Y = {
+        floodTop: 40,   floodBot: 55,    // FLOOD STAGE 858+ (fixed cap)
+        critTop:  55,   critBot:  84,    // CRITICAL 857.0–858.0
+        highTop:  84,   highBot:  99,    // HIGH 856.5–857.0
+        elevTop:  99,   elevBot:  128,   // ELEVATED 855.5–856.5
+        advTop:   128,  advBot:   148,   // ADVISORY 854.8–855.5
+        watchTop: 148,  watchBot: 171,   // WATCH 854.0–854.8
+        normTop:  171,  normBot:  200,   // NORMAL below 854.0
     };
 
-    // Map a real lake level to a y-coordinate. Anchors:
-    //   ft = TH.flood (858.0)     → y = 40   (top of basin)
-    //   ft = TH.high  (857.0)     → y = 80
-    //   ft = TH.advisory (855.5)  → y = 120
-    //   ft = TH.normal (854.8)    → y = 160
-    //   ft = 854.0 or below       → y = 200  (bottom of basin)
+    // Map a real lake level to a y-coordinate. Each tier interpolates linearly.
     function ftToY(level) {
-        if (level >= TH.flood)    return 40 - (level - TH.flood) * 40; // can go above 40 if above flood
-        if (level >= TH.high)     return 40  + ((TH.flood    - level) / (TH.flood    - TH.high))     * 40;
-        if (level >= TH.advisory) return 80  + ((TH.high     - level) / (TH.high     - TH.advisory)) * 40;
-        if (level >= TH.normal)   return 120 + ((TH.advisory - level) / (TH.advisory - TH.normal))   * 40;
-        if (level >= 854.0)       return 160 + ((TH.normal   - level) / (TH.normal   - 854.0))       * 40;
-        return 200;
+        if (level >= TH.flood)    return Y.floodTop - (level - TH.flood) * 15;  // above flood: extends upward but clamped
+        if (level >= TH.high)     return Y.critTop  + ((TH.flood    - level) / (TH.flood    - TH.high))     * (Y.critBot  - Y.critTop);
+        if (level >= TH.elevated) return Y.highTop  + ((TH.high     - level) / (TH.high     - TH.elevated)) * (Y.highBot  - Y.highTop);
+        if (level >= TH.advisory) return Y.elevTop  + ((TH.elevated - level) / (TH.elevated - TH.advisory)) * (Y.elevBot  - Y.elevTop);
+        if (level >= TH.normal)   return Y.advTop   + ((TH.advisory - level) / (TH.advisory - TH.normal))   * (Y.advBot   - Y.advTop);
+        if (level >= TH.watch)    return Y.watchTop + ((TH.normal   - level) / (TH.normal   - TH.watch))    * (Y.watchBot - Y.watchTop);
+        if (level >= 853.0)       return Y.normTop  + ((TH.watch    - level) / (TH.watch    - 853.0))       * (Y.normBot  - Y.normTop);
+        return Y.normBot;
     }
 
     // Clamp helper
@@ -3145,38 +3158,28 @@ function renderBasinStrip(ft, series) {
     const iceTopY = waterY - 7;
     const iceBotY = waterY + 7;
 
-    // ── Update bands: above-waterline keep color, submerged go gray
-    // Whichever bands the waterline cuts through get split visually.
+    // ── Update bands: above-waterline keep warning color, submerged go gray
+    // Each band carries its natural color + a gray fallback. Submerged = touched by lake.
     const bands = [
-        { id: 'bsBandFlood',    yTop: 40,  yBot: 80,  color: '#e89376', op: 0.7 },
-        { id: 'bsBandHigh',     yTop: 80,  yBot: 120, color: '#f3b884', op: 0.7 },
-        { id: 'bsBandAdvAbove', yTop: 120, yBot: 140, color: '#fbe4a3', op: 0.7 },
-        { id: 'bsBandAdvBelow', yTop: 140, yBot: 160, color: '#e0e0e0', op: 0.55 },
-        { id: 'bsBandNormal',   yTop: 160, yBot: 200, color: '#d4d4d4', op: 0.6 },
+        { id: 'bsBandFlood',    yTop: Y.floodTop, yBot: Y.floodBot, natColor: '#d56b5a', natOp: 0.7  },
+        { id: 'bsBandCritical', yTop: Y.critTop,  yBot: Y.critBot,  natColor: '#e89376', natOp: 0.7  },
+        { id: 'bsBandHigh',     yTop: Y.highTop,  yBot: Y.highBot,  natColor: '#f3b884', natOp: 0.7  },
+        { id: 'bsBandElevated', yTop: Y.elevTop,  yBot: Y.elevBot,  natColor: '#f8d68a', natOp: 0.7  },
+        { id: 'bsBandAdvisory', yTop: Y.advTop,   yBot: Y.advBot,   natColor: '#fbe4a3', natOp: 0.7  },
+        { id: 'bsBandWatch',    yTop: Y.watchTop, yBot: Y.watchBot, natColor: '#fdf2c4', natOp: 0.7  },
+        { id: 'bsBandNormal',   yTop: Y.normTop,  yBot: Y.normBot,  natColor: '#dcdcda', natOp: 0.55 },
     ];
 
     // Decide each band's color:
-    //   - Fully above waterline → keep warm color
-    //   - Fully below waterline → grayscale
-    //   - Straddling waterline → grayscale (the lake has reached this band)
+    //   - Fully above waterline (waterY >= yBot) → keep warm color (band is dry, threat ahead)
+    //   - Touched by water (any portion submerged) → grayscale (the lake has reached this band)
     bands.forEach(b => {
         const el = document.getElementById(b.id);
         if (!el) return;
-        const submerged = waterY <= b.yTop;       // strictly above this band's top means dry
-        const partiallySubmerged = waterY < b.yBot && waterY > b.yTop;
-        // We want: dry = warm color; touched-by-water (part or whole) = gray
-        const isWet = submerged === false ? false : true; // simpler: if waterY > b.yTop it's dry
-        // Re-derive cleanly:
-        const dry = waterY >= b.yBot;             // waterline at or below this band's bottom = band is dry
+        const dry = waterY >= b.yBot;
         if (dry) {
-            // Keep the band's natural color
-            const naturalColor = (b.id === 'bsBandFlood')    ? '#e89376' :
-                                 (b.id === 'bsBandHigh')     ? '#f3b884' :
-                                 (b.id === 'bsBandAdvAbove') ? '#fbe4a3' :
-                                 (b.id === 'bsBandAdvBelow') ? '#fbe4a3' : '#cfe2b8';
-            const naturalOp = (b.id === 'bsBandNormal') ? 0.65 : 0.7;
-            el.setAttribute('fill', naturalColor);
-            el.setAttribute('opacity', naturalOp);
+            el.setAttribute('fill', b.natColor);
+            el.setAttribute('opacity', b.natOp);
         } else {
             // Wet (or partially) — gray it out
             const grayColor = (b.id === 'bsBandNormal') ? '#d4d4d4' : '#e0e0e0';
