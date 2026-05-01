@@ -332,6 +332,7 @@
         .s-frozen  { background: #e6eaf4; color: #3a4e70; }
         .s-dormant { background: #eeeeee; color: #555555; }
         .s-waking  { background: #fff8dc; color: #7a5500; }
+        .s-easing  { background: #e3edf3; color: #3a5a72; }
         .s-running { background: #fff0e0; color: var(--amber); }
         .s-hard    { background: #ffe0e0; color: var(--red); }
 
@@ -1717,7 +1718,13 @@ function tribStatus(cfs, elev, prev, estimated) {
         if (wasFlowing && cfs < prev * 0.6) return { lbl:'Stalled', cls:'s-dormant' };
         return { lbl:'Dormant', cls:'s-dormant' };
     }
-    if (cfs < 15)  return { lbl:'Waking Up',   cls:'s-waking'  };
+    if (cfs < 15)  {
+        // Distinguish: was the creek flowing recently?
+        //   wasFlowing (prev > 3) → it's at a low level after running → Easing
+        //   not wasFlowing       → it's emerging from dormancy → Waking Up
+        if (wasFlowing) return { lbl:'Easing',     cls:'s-easing'  };
+        return                 { lbl:'Waking Up',  cls:'s-waking'  };
+    }
     if (cfs < 80)  return { lbl:'Running',     cls:'s-running' };
     return               { lbl:'Running Hard', cls:'s-hard'    };
 }
