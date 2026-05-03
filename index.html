@@ -1633,8 +1633,8 @@ const SCENARIOS = {
 // ─────────────────────────────────────────────────────────
 const SWE_CONFIG = {
     swe_mm:  '160–185',
-    status:  'MELTING',
-    context: 'Highest recorded snowpack in Manitoba near Riding Mountain. Based on HFC field measurements (March 9–12). Melt is now active at all elevations — Wilson River and Mink Creek have broken and are running hard. Snowpack water is moving through the basin.',
+    status:  'RESIDUAL',
+    context: 'The 2026 melt season opened with 160–185 mm SWE near Riding Mountain — the highest recorded snowpack in this dataset, exceeding even 2011 and 2014. High-elevation headwaters broke April 14 and ran hard through late April. Most of that water has now passed through the watershed; residual snowpack remains at upper elevations.',
     updated: 'April 14, 2026',
 };
 
@@ -1662,8 +1662,22 @@ const HFC_REF = {
 // ─────────────────────────────────────────────────────────
 const PHASE = {
     active: true,
-    since:  'May 1, 2026',
-    text:   'Inter-pulse hold ending. First pulse cleared, basin inflows back to baseline. Sustained warmth Sat–Mon drives the second pulse into a system that has had a week to recover.',
+    since:  'May 3, 2026',
+    text:   'Second pulse active under sustained warmth. Riding Mountain tributaries rising as Valley side drains. Ice breakup underway with strong NW wind — open water active in spots, watch SE shore for wind-driven setup.',
+};
+
+// ─────────────────────────────────────────────────────────
+// ICE_STATE — controls the surface-state badge on the basin strip
+// Values:
+//   'pre-breakup' — ice intact, cracks visible, melt patches small
+//   'breakup'     — ice fragmenting, open water in spots, movement active
+//   'open'        — ice gone, surface fully open water
+// As season progresses the basin strip's visual could evolve; for now
+// only the badge text and color update.
+// ─────────────────────────────────────────────────────────
+const ICE_STATE = {
+    state: 'breakup',
+    since: 'May 3, 2026',
 };
 
 // ─────────────────────────────────────────────────────────
@@ -3279,10 +3293,30 @@ function renderBasinStrip(ft, series) {
         }
     }
 
-    // ── Mode badge — for now always ICE · pre-breakup. Later this will swap based on date / surface state.
+    // ── Mode badge — reflects ICE_STATE config (pre-breakup / breakup / open)
     const modeBadge = document.getElementById('bsModeBadge');
     if (modeBadge) {
         modeBadge.setAttribute('transform', `translate(540 ${waterY + 2})`);
+
+        const modeText = document.getElementById('bsModeText');
+        const modeRect = modeBadge.querySelector('rect');
+        if (modeText && modeRect) {
+            const state = (typeof ICE_STATE !== 'undefined' && ICE_STATE.state) ? ICE_STATE.state : 'pre-breakup';
+            if (state === 'breakup') {
+                modeText.textContent = 'BREAKUP · active';
+                modeText.setAttribute('fill', '#7a3d18');
+                modeRect.setAttribute('stroke', '#b8893a');
+            } else if (state === 'open') {
+                modeText.textContent = 'OPEN WATER';
+                modeText.setAttribute('fill', '#1d4960');
+                modeRect.setAttribute('stroke', '#3a7da0');
+            } else {
+                // default: pre-breakup
+                modeText.textContent = 'ICE · pre-breakup';
+                modeText.setAttribute('fill', '#3a5a6a');
+                modeRect.setAttribute('stroke', '#5a7888');
+            }
+        }
     }
 }
 
