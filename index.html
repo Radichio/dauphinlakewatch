@@ -1585,44 +1585,44 @@ const BULLETINS = [
 // Rebuild will pick these up automatically.
 // ─────────────────────────────────────────────────────────
 const SCENARIOS = {
-    revised:  'May 1, 2026',
-    note:     'iConnect Studio analysis — revised May 1. First melt pulse cleared without approaching the Most Likely peak band. Basin inflow at season minimum, outlet still over rated capacity. Sustained warmth this weekend drives the second pulse into a recovered system. Probabilities shifted toward Favourable and Most Likely; upper bands cut as the principal upward risk (April rain-on-snow) did not materialize.',
+    revised:  'May 11, 2026',
+    note:     'iConnect Studio analysis — revised May 11. Both melt pulses cleared without entering the Most Likely peak band. Basin in drawdown — outlet exceeding inflow, tributaries 50–70% off recent peaks. Lake topped near 856.0 ft. Only forward risk is the wet pattern Wed–Sat (~25mm cumulative) producing a modest bump on an already-open basin. Probabilities shifted decisively toward Favourable; upper bands collapsed.',
     bands: [
         {
             key:   'fav',
             cls:   's-fav',
-            prob:  '~25%',
+            prob:  '~55%',
             color: 'var(--green)',
             name:  'Favourable',
             range: '855.5 – 856.5 ft',
-            desc:  'Second pulse underperforms. Lake holds near current level. Minor road and low-lying impacts.',
+            desc:  'Drawdown continues with modest interruption from the wet pattern. Lake holds near current level then declines. Minor low-lying impacts.',
         },
         {
             key:   'likely',
             cls:   's-likely',
-            prob:  '~45%',
+            prob:  '~35%',
             color: 'var(--yellow)',
             name:  'Most Likely',
             range: '856.5 – 857.5 ft',
-            desc:  'Normal melt pace through second pulse. Above operating range. Low-lying flooding and road impacts expected.',
+            desc:  'Wet pattern delivers upper-range precipitation, briefly pushing lake into Most Likely band before resuming drawdown. Above operating range, low-lying flooding possible.',
         },
         {
             key:   'unfav',
             cls:   's-unfav',
-            prob:  '~20%',
+            prob:  '~8%',
             color: 'var(--amber)',
             name:  'Unfavourable',
             range: '857.5 – 858.5 ft',
-            desc:  'Second pulse stronger than forecast or precipitation joins the warm window. Approaching or exceeding flood stage. Active sandbagging required.',
+            desc:  'Wet pattern delivers significantly above forecast onto basin that fails to drain in time. Approaching flood stage.',
         },
         {
             key:   'severe',
             cls:   's-severe',
-            prob:  '~10%',
+            prob:  '~2%',
             color: 'var(--red)',
             name:  'Severe',
             range: '858.5 ft+',
-            desc:  'Sustained warmth combined with significant precipitation on residual snowpack. Significant flooding above historical operating range.',
+            desc:  'Extreme precipitation event well above forecast. Flooding above historical operating range. Very low probability given current state.',
         },
     ],
 };
@@ -1662,8 +1662,8 @@ const HFC_REF = {
 // ─────────────────────────────────────────────────────────
 const PHASE = {
     active: true,
-    since:  'May 3, 2026',
-    text:   'Second pulse active under sustained warmth. Riding Mountain tributaries rising as Valley side drains. Ice breakup underway with strong NW wind — open water active in spots, watch SE shore for wind-driven setup.',
+    since:  'May 11, 2026',
+    text:   'Second pulse peaked, basin now in drawdown. Lake holding at elevated, inflow halved as tributaries recede. Wet pattern Wed–Sat will produce a modest bump but rain on an open basin, not rain on snow.',
 };
 
 // ─────────────────────────────────────────────────────────
@@ -1676,8 +1676,8 @@ const PHASE = {
 // only the badge text and color update.
 // ─────────────────────────────────────────────────────────
 const ICE_STATE = {
-    state: 'breakup',
-    since: 'May 3, 2026',
+    state: 'open',
+    since: 'May 11, 2026',
 };
 
 // ─────────────────────────────────────────────────────────
