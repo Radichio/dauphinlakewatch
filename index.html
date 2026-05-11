@@ -1154,9 +1154,9 @@
 </g>
 
 <g clip-path="url(#bsBasin)">
-<rect id="bsWaterFill" x="0" y="142" width="680" height="58" fill="#a8d4e8" opacity="0.45"/>
+<rect id="bsWaterFill" x="0" y="142" width="680" height="58" fill="#a8d4e8" opacity="0.5"/>
 
-<g id="bsWaterRipples" opacity="0.6">
+<g id="bsWaterRipples" opacity="0.7">
 <path d="M -100 152 Q 80 150 260 152 T 600 152 T 940 152" stroke="#7fb6d3" stroke-width="0.7" fill="none">
 <animateTransform attributeName="transform" type="translate" values="0 0; -80 0" dur="11s" repeatCount="indefinite"/>
 </path>
@@ -1172,8 +1172,10 @@
 </g>
 
 <g id="bsSurface">
-<animateTransform attributeName="transform" attributeType="XML" type="translate" values="0 0; 0 -0.4; 0 0.3; 0 -0.2; 0 0" dur="9s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" attributeType="XML" type="translate" values="0 0; 0 -0.8; 0 0.6; 0 -0.3; 0 0" dur="7s" repeatCount="indefinite"/>
 
+<!-- Ice elements — retained for future pre-breakup state, hidden when ICE_STATE.state !== 'pre-breakup'/'breakup' -->
+<g id="bsIceGroup">
 <rect id="bsIceSheet" x="0" y="130" width="680" height="14" fill="url(#bsIce)"/>
 <rect id="bsIceTop"    x="0" y="130" width="680" height="2" fill="#fff" opacity="0.7"/>
 <rect id="bsIceBottom" x="0" y="143" width="680" height="1" fill="#5a7888" opacity="0.45"/>
@@ -1188,7 +1190,6 @@
 <path d="M 510 132 L 550 140 L 590 133 L 625 142" stroke="#5a7888" stroke-width="0.5" fill="none"/>
 <path d="M 630 132 L 660 138 L 678 134" stroke="#5a7888" stroke-width="0.5" fill="none"/>
 </g>
-
 <g id="bsIceDots" opacity="0.45">
 <circle cx="55"  cy="137" r="0.8" fill="#3a5a6a"/>
 <circle cx="125" cy="138" r="0.7" fill="#3a5a6a"/>
@@ -1200,31 +1201,87 @@
 <circle cx="555" cy="138" r="0.6" fill="#3a5a6a"/>
 <circle cx="635" cy="139" r="0.7" fill="#3a5a6a"/>
 </g>
-
 <g id="bsMeltPatches">
 <ellipse cx="180" cy="138" rx="22" ry="3" fill="#5a92ad" opacity="0.7"/>
 <ellipse cx="430" cy="142" rx="34" ry="4" fill="#5a92ad" opacity="0.7"/>
 <ellipse cx="610" cy="139" rx="18" ry="3" fill="#5a92ad" opacity="0.7"/>
+</g>
+</g>
 
-<g clip-path="url(#bsMelt1)">
-<path d="M -300 138 Q -270 137 -240 138 T -180 138 T -120 138 T -60 138 T 0 138 T 60 138 T 120 138 T 180 138 T 240 138 T 300 138 T 360 138 T 420 138" stroke="#dceaef" stroke-width="0.9" fill="none" opacity="0.9">
-<animateTransform attributeName="transform" type="translate" values="0 0; -60 0" dur="6s" repeatCount="indefinite"/>
+<!-- Open water spring surface — active when ICE_STATE.state === 'open' -->
+<g id="bsOpenWater">
+<!-- Wavy waterline as a continuous wave train, drifts left -->
+<path d="M -100 142 Q -85 140 -70 142 T -40 142 T -10 142 T 20 142 T 50 142 T 80 142 T 110 142 T 140 142 T 170 142 T 200 142 T 230 142 T 260 142 T 290 142 T 320 142 T 350 142 T 380 142 T 410 142 T 440 142 T 470 142 T 500 142 T 530 142 T 560 142 T 590 142 T 620 142 T 650 142 T 680 142 T 710 142 T 740 142 T 770 142 T 800 142" stroke="#1d4960" stroke-width="1.5" fill="none" opacity="0.85">
+<animateTransform attributeName="transform" type="translate" values="0 0; -60 0" dur="9s" repeatCount="indefinite"/>
+</path>
+
+<!-- Surface highlight wave just below the waterline -->
+<path d="M -100 145 Q -85 143 -70 145 T -40 145 T -10 145 T 20 145 T 50 145 T 80 145 T 110 145 T 140 145 T 170 145 T 200 145 T 230 145 T 260 145 T 290 145 T 320 145 T 350 145 T 380 145 T 410 145 T 440 145 T 470 145 T 500 145 T 530 145 T 560 145 T 590 145 T 620 145 T 650 145 T 680 145 T 710 145 T 740 145 T 770 145 T 800 145" stroke="#bcdde9" stroke-width="0.7" fill="none" opacity="0.7">
+<animateTransform attributeName="transform" type="translate" values="0 0; -60 0" dur="9s" repeatCount="indefinite"/>
+</path>
+
+<!-- Whitecaps — small bright dashes riding the wave crests, drifting and fading -->
+<g id="bsWhitecaps">
+<path d="M 80 141 L 88 141" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 0.85; 0" dur="3s" begin="0s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -50 0" dur="3s" begin="0s" repeatCount="indefinite"/>
+</path>
+<path d="M 220 142 L 230 142" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 0.85; 0" dur="3.5s" begin="0.6s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -55 0" dur="3.5s" begin="0.6s" repeatCount="indefinite"/>
+</path>
+<path d="M 350 141 L 357 141" stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 0.8; 0" dur="2.8s" begin="1.2s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -45 0" dur="2.8s" begin="1.2s" repeatCount="indefinite"/>
+</path>
+<path d="M 470 142 L 480 142" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 0.85; 0" dur="3.2s" begin="1.8s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -55 0" dur="3.2s" begin="1.8s" repeatCount="indefinite"/>
+</path>
+<path d="M 580 141 L 587 141" stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 0.8; 0" dur="3s" begin="2.4s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -50 0" dur="3s" begin="2.4s" repeatCount="indefinite"/>
+</path>
+<path d="M 130 144 L 138 144" stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 0.75; 0" dur="3.4s" begin="0.3s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -55 0" dur="3.4s" begin="0.3s" repeatCount="indefinite"/>
+</path>
+<path d="M 295 144 L 303 144" stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 0.75; 0" dur="3s" begin="1.5s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -50 0" dur="3s" begin="1.5s" repeatCount="indefinite"/>
+</path>
+<path d="M 410 144 L 418 144" stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 0.75; 0" dur="3.6s" begin="2.1s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -55 0" dur="3.6s" begin="2.1s" repeatCount="indefinite"/>
 </path>
 </g>
-<g clip-path="url(#bsMelt2)">
-<path d="M -100 142 Q -70 141 -40 142 T 20 142 T 80 142 T 140 142 T 200 142 T 260 142 T 320 142 T 380 142 T 440 142 T 500 142 T 560 142 T 620 142" stroke="#dceaef" stroke-width="1" fill="none" opacity="0.9">
-<animateTransform attributeName="transform" type="translate" values="0 0; -55 0" dur="5s" repeatCount="indefinite"/>
-</path>
-<path d="M -100 144 Q -70 143 -40 144 T 20 144 T 80 144 T 140 144 T 200 144 T 260 144 T 320 144 T 380 144 T 440 144 T 500 144 T 560 144 T 620 144" stroke="#fff" stroke-width="0.7" fill="none" opacity="0.7">
-<animateTransform attributeName="transform" type="translate" values="0 0; 50 0" dur="6.5s" repeatCount="indefinite"/>
-</path>
+
+<!-- Residual ice floes — drifting slowly across the surface -->
+<g id="bsIceFloes">
+<ellipse cx="120" cy="148" rx="11" ry="2" fill="#f0f4f6" stroke="#bcdde9" stroke-width="0.4" opacity="0.92">
+<animateTransform attributeName="transform" type="translate" values="0 0; -80 0; 0 0" dur="42s" repeatCount="indefinite"/>
+</ellipse>
+<ellipse cx="320" cy="151" rx="7" ry="1.5" fill="#f0f4f6" stroke="#bcdde9" stroke-width="0.4" opacity="0.88">
+<animateTransform attributeName="transform" type="translate" values="0 0; -60 0; 0 0" dur="38s" repeatCount="indefinite"/>
+</ellipse>
+<ellipse cx="490" cy="149" rx="14" ry="2.2" fill="#f0f4f6" stroke="#bcdde9" stroke-width="0.4" opacity="0.9">
+<animateTransform attributeName="transform" type="translate" values="0 0; -90 0; 0 0" dur="48s" repeatCount="indefinite"/>
+</ellipse>
+<ellipse cx="610" cy="152" rx="6" ry="1.2" fill="#f0f4f6" stroke="#bcdde9" stroke-width="0.4" opacity="0.85">
+<animateTransform attributeName="transform" type="translate" values="0 0; -55 0; 0 0" dur="36s" repeatCount="indefinite"/>
+</ellipse>
+<ellipse cx="220" cy="154" rx="4" ry="1" fill="#f0f4f6" stroke="#bcdde9" stroke-width="0.3" opacity="0.8">
+<animateTransform attributeName="transform" type="translate" values="0 0; -45 0; 0 0" dur="34s" repeatCount="indefinite"/>
+</ellipse>
 </g>
-<g clip-path="url(#bsMelt3)">
-<path d="M 400 139 Q 430 138 460 139 T 520 139 T 580 139 T 640 139 T 700 139 T 760 139" stroke="#dceaef" stroke-width="0.9" fill="none" opacity="0.9">
-<animateTransform attributeName="transform" type="translate" values="0 0; -50 0" dur="6s" repeatCount="indefinite"/>
+</g>
+</g>
+
+<!-- Bird silhouette gliding across the sky — lazy slow loop -->
+<g id="bsBird" opacity="0.55">
+<path d="M -30 26 q 3 -3 6 0 q 3 -3 6 0" stroke="#3a5572" stroke-width="0.8" stroke-linecap="round" fill="none">
+<animateTransform attributeName="transform" type="translate" values="0 0; 750 4; 0 0" dur="60s" repeatCount="indefinite"/>
 </path>
-</g>
-</g>
 </g>
 </g>
 
@@ -3223,6 +3280,20 @@ function renderBasinStrip(ft, series) {
     if (iceSheet)  { iceSheet.setAttribute('y', iceTopY); }
     if (iceTop)    { iceTop.setAttribute('y', iceTopY); }
     if (iceBottom) { iceBottom.setAttribute('y', iceBotY - 1); }
+
+    // ── Swap ice vs open-water surface per ICE_STATE.state
+    const state = (typeof ICE_STATE !== 'undefined' && ICE_STATE.state) ? ICE_STATE.state : 'pre-breakup';
+    const iceGroup   = document.getElementById('bsIceGroup');
+    const openWater  = document.getElementById('bsOpenWater');
+    if (iceGroup && openWater) {
+        if (state === 'open') {
+            iceGroup.style.display  = 'none';
+            openWater.style.display = '';
+        } else {
+            iceGroup.style.display  = '';
+            openWater.style.display = 'none';
+        }
+    }
 
     // Shift cracks/dots/melt patches with the surface (group transform on bsSurface
     // doesn't move because elements have absolute coords — apply translate dy)
