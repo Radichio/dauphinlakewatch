@@ -1536,7 +1536,7 @@
             <canvas id="histChart"></canvas>
         </div>
         <div class="chart-note">
-            Melt is underway and headwaters have broken. Wilson River and Mink Creek — the highest-elevation tributaries carrying the heaviest snowpack — are now running hard. Lake rise is expected over coming days. Projected peak: late April to mid-May.
+            Lake at upper elevated tier — climbing under rain-driven inflow. Outlet at season-high 278% of rated. Trajectory tracking the Most Likely projected peak band.
         </div>
     </div>
 
@@ -1561,7 +1561,7 @@
     <div class="card" style="background:#e8f2f8;border:1px solid #b8d4e8;">
         <div class="card-label" style="color:var(--blue);">Basin Snowpack — Contributing Context</div>
         <p style="font-size:13px;color:var(--navy-mid);line-height:1.6;">
-            The basin entered melt season with <strong style="color:var(--navy)">160–185 mm SWE</strong> — the highest recorded snowpack near Riding Mountain. That water is now actively moving through the watershed. The high-elevation headwaters (Wilson River, Mink Creek) broke on April 14. Residual snowpack continues to contribute as melt progresses.
+            The 2026 season opened with <strong style="color:var(--navy)">160–185 mm SWE</strong> near Riding Mountain — the highest recorded snowpack in this dataset, exceeding even 2011 and 2014. High-elevation headwaters broke April 14 and ran hard through late April. That water has now passed through the watershed; residual at upper elevations is minor.
             <span style="font-family:var(--mono);font-size:10px;display:block;margin-top:8px;color:var(--muted)">Based on HFC field measurements (March 9–12) · Estimated · April 14, 2026</span>
         </p>
     </div>
@@ -1580,7 +1580,7 @@
             </div>
         </div>
         <div class="wx-note">
-            Watch for: Rain during melt accelerates lake rise significantly. Cold snaps are temporary pauses, not resets. Above-normal temperatures are forecast for April–June 2026 (IRI / all models agree on the temperature signal).
+            Watch for: Sustained rain accelerates lake rise on a charged basin. Strong winds — particularly from the NW — can push effective waterline well above gauge readings on the SE shore (Ochre Beach, Dauphin Beach). Above-normal temperatures forecast through June 2026 (IRI / all models agree).
         </div>
         <div id="cydnObs" style="display:none;margin-top:10px;padding:8px 12px;background:var(--paper);border-radius:4px;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.5;border-left:3px solid var(--blue);"></div>
     </div>
@@ -1698,44 +1698,44 @@ const BULLETINS = [
 // Rebuild will pick these up automatically.
 // ─────────────────────────────────────────────────────────
 const SCENARIOS = {
-    revised:  'May 11, 2026',
-    note:     'iConnect Studio analysis — revised May 11. Both melt pulses cleared without entering the Most Likely peak band. Basin in drawdown — outlet exceeding inflow, tributaries 50–70% off recent peaks. Lake topped near 856.0 ft. Only forward risk is the wet pattern Wed–Sat (~25mm cumulative) producing a modest bump on an already-open basin. Probabilities shifted decisively toward Favourable; upper bands collapsed.',
+    revised:  'May 14, 2026',
+    note:     'iConnect Studio analysis — revised May 14. Rain-driven pulse climbing the lake into upper elevated. Inflow rising, outlet at season high (278% of rated). Lake gained 0.34 ft over three days. Thursday windstorm adds short-term wind setup risk on SE shore that the outlet gauge will not capture. Probabilities shifted upward — Most Likely band now genuinely most likely.',
     bands: [
         {
             key:   'fav',
             cls:   's-fav',
-            prob:  '~55%',
+            prob:  '~20%',
             color: 'var(--green)',
             name:  'Favourable',
             range: '855.5 – 856.5 ft',
-            desc:  'Drawdown continues with modest interruption from the wet pattern. Lake holds near current level then declines. Minor low-lying impacts.',
+            desc:  'Rain event tails off quickly, inflow plateaus, outlet drawdown resumes. Lake holds near current level. Minor low-lying impacts.',
         },
         {
             key:   'likely',
             cls:   's-likely',
-            prob:  '~35%',
+            prob:  '~55%',
             color: 'var(--yellow)',
             name:  'Most Likely',
             range: '856.5 – 857.5 ft',
-            desc:  'Wet pattern delivers upper-range precipitation, briefly pushing lake into Most Likely band before resuming drawdown. Above operating range, low-lying flooding possible.',
+            desc:  'Pulse continues at current pace through the weekend before tapering. Lake settles in mid-band. Above operating range, low-lying flooding and road impacts expected.',
         },
         {
             key:   'unfav',
             cls:   's-unfav',
-            prob:  '~8%',
+            prob:  '~20%',
             color: 'var(--amber)',
             name:  'Unfavourable',
             range: '857.5 – 858.5 ft',
-            desc:  'Wet pattern delivers significantly above forecast onto basin that fails to drain in time. Approaching flood stage.',
+            desc:  'Additional rain on a basin that fails to drain in time, or wind-driven shore effects compound the picture. Approaching flood stage. Active sandbagging warranted.',
         },
         {
             key:   'severe',
             cls:   's-severe',
-            prob:  '~2%',
+            prob:  '~5%',
             color: 'var(--red)',
             name:  'Severe',
             range: '858.5 ft+',
-            desc:  'Extreme precipitation event well above forecast. Flooding above historical operating range. Very low probability given current state.',
+            desc:  'Extended precipitation well above forecast onto an already-charged basin. Flooding above historical operating range.',
         },
     ],
 };
@@ -1747,7 +1747,7 @@ const SCENARIOS = {
 const SWE_CONFIG = {
     swe_mm:  '160–185',
     status:  'RESIDUAL',
-    context: 'The 2026 melt season opened with 160–185 mm SWE near Riding Mountain — the highest recorded snowpack in this dataset, exceeding even 2011 and 2014. High-elevation headwaters broke April 14 and ran hard through late April. Most of that water has now passed through the watershed; residual snowpack remains at upper elevations.',
+    context: 'The 2026 season opened with 160–185 mm SWE near Riding Mountain — the highest recorded snowpack in this dataset, exceeding even 2011 and 2014. High-elevation headwaters broke April 14 and ran hard through late April. That water has now passed through the watershed; residual at upper elevations is minor.',
     updated: 'April 14, 2026',
 };
 
@@ -1775,8 +1775,8 @@ const HFC_REF = {
 // ─────────────────────────────────────────────────────────
 const PHASE = {
     active: true,
-    since:  'May 11, 2026',
-    text:   'Second pulse peaked, basin now in drawdown. Lake holding at elevated, inflow halved as tributaries recede. Wet pattern Wed–Sat will produce a modest bump but rain on an open basin, not rain on snow.',
+    since:  'May 14, 2026',
+    text:   'Rain-driven pulse climbing the lake into upper elevated. Outlet at season high, inflow rising. Powerful Thursday windstorm bringing 60–80 km/h gusts — significant wind setup risk on SE shore beyond what the outlet gauge will show.',
 };
 
 // ─────────────────────────────────────────────────────────
@@ -2243,7 +2243,7 @@ function renderTribs(data) {
     }).length;
 
     if (w.cfs > 15 || m.cfs > 15) {
-        ins.innerHTML = '<strong>High-elevation headwaters are breaking.</strong> Major inflows to the lake are beginning. Lake rise expected over coming days. Watch the outlet monitor closely.';
+        ins.innerHTML = '<strong>Major inflows active.</strong> High-elevation tributaries are carrying significant flow. Lake rise expected. Watch the outlet monitor closely.';
     } else if (stalledCount >= 2) {
         ins.innerHTML = `<strong>Early melt activity has stalled.</strong> ${stalledCount} tributaries that showed movement in late March have slowed or refrozen under persistent cold and fresh snowfall. The high-elevation headwaters on Riding Mountain remain frozen. When temperatures rebound, all of this water releases at once.`;
     } else if (t.cfs > 8 && w.cfs < 3) {
