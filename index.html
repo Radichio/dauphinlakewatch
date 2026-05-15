@@ -1350,6 +1350,173 @@
 </g>
 </g>
 
+<!-- Open water — ACTIVE / CHOPPY surface (medium waves, whitecaps hitting shore).
+     Active when ICE_STATE.state === 'open-active'. -->
+<g id="bsOpenWaterActive" style="display:none;">
+
+<!-- Background ripples — energetic, bigger amplitudes than calm version -->
+<g opacity="0.9">
+<!-- Distant water — tighter wavelength, slightly bigger amp than calm, faster drift -->
+<path d="M -100 150 Q -86 148 -72 150 T -44 150 T -16 150 T 12 150 T 40 150 T 68 150 T 96 150 T 124 150 T 152 150 T 180 150 T 208 150 T 236 150 T 264 150 T 292 150 T 320 150 T 348 150 T 376 150 T 404 150 T 432 150 T 460 150 T 488 150 T 516 150 T 544 150 T 572 150 T 600 150 T 628 150 T 656 150 T 684 150 T 712 150 T 740 150" stroke="#7fb6d3" stroke-width="0.7" fill="none" opacity="0.75">
+<animateTransform attributeName="transform" type="translate" values="0 0; -75 0" dur="6s" repeatCount="indefinite"/>
+</path>
+<path d="M -100 154 Q -84 151.5 -68 154 T -36 154 T -4 154 T 28 154 T 60 154 T 92 154 T 124 154 T 156 154 T 188 154 T 220 154 T 252 154 T 284 154 T 316 154 T 348 154 T 380 154 T 412 154 T 444 154 T 476 154 T 508 154 T 540 154 T 572 154 T 604 154 T 636 154 T 668 154 T 700 154 T 732 154 T 764 154" stroke="#6ea8c8" stroke-width="0.7" fill="none" opacity="0.75">
+<animateTransform attributeName="transform" type="translate" values="0 0; 80 0" dur="7s" repeatCount="indefinite"/>
+</path>
+
+<!-- Mid-water — bigger waves -->
+<path d="M -100 160 Q -78 156 -56 160 T -12 160 T 32 160 T 76 160 T 120 160 T 164 160 T 208 160 T 252 160 T 296 160 T 340 160 T 384 160 T 428 160 T 472 160 T 516 160 T 560 160 T 604 160 T 648 160 T 692 160 T 736 160 T 780 160" stroke="#7fb6d3" stroke-width="1" fill="none" opacity="0.8">
+<animateTransform attributeName="transform" type="translate" values="0 0; -92 0" dur="7s" repeatCount="indefinite"/>
+</path>
+<path d="M -100 167 Q -74 162 -48 167 T 4 167 T 56 167 T 108 167 T 160 167 T 212 167 T 264 167 T 316 167 T 368 167 T 420 167 T 472 167 T 524 167 T 576 167 T 628 167 T 680 167 T 732 167 T 784 167" stroke="#6ea8c8" stroke-width="1" fill="none" opacity="0.8">
+<animateTransform attributeName="transform" type="translate" values="0 0; 100 0" dur="8s" repeatCount="indefinite"/>
+</path>
+
+<!-- Near-mid water — bigger amplitudes, swell-like -->
+<path d="M -100 176 Q -70 170 -40 176 T 20 176 T 80 176 T 140 176 T 200 176 T 260 176 T 320 176 T 380 176 T 440 176 T 500 176 T 560 176 T 620 176 T 680 176 T 740 176 T 800 176" stroke="#7fb6d3" stroke-width="1.2" fill="none" opacity="0.85">
+<animateTransform attributeName="transform" type="translate" values="0 0; -108 0" dur="9s" repeatCount="indefinite"/>
+</path>
+<path d="M -100 184 Q -66 177 -32 184 T 36 184 T 104 184 T 172 184 T 240 184 T 308 184 T 376 184 T 444 184 T 512 184 T 580 184 T 648 184 T 716 184 T 784 184" stroke="#6ea8c8" stroke-width="1.3" fill="none" opacity="0.85">
+<animateTransform attributeName="transform" type="translate" values="0 0; 100 0" dur="10s" repeatCount="indefinite"/>
+</path>
+
+<!-- Near water — real swells with strong amplitude, foreground waves -->
+<path d="M -100 193 Q -62 184 -24 193 T 52 193 T 128 193 T 204 193 T 280 193 T 356 193 T 432 193 T 508 193 T 584 193 T 660 193 T 736 193" stroke="#7fb6d3" stroke-width="1.4" fill="none" opacity="0.9">
+<animateTransform attributeName="transform" type="translate" values="0 0; -120 0" dur="11s" repeatCount="indefinite"/>
+</path>
+<path d="M -100 199 Q -60 189 -20 199 T 60 199 T 140 199 T 220 199 T 300 199 T 380 199 T 460 199 T 540 199 T 620 199 T 700 199 T 780 199" stroke="#6ea8c8" stroke-width="1.5" fill="none" opacity="0.9">
+<animateTransform attributeName="transform" type="translate" values="0 0; 105 0" dur="12s" repeatCount="indefinite"/>
+</path>
+</g>
+
+<!-- Wavy waterline — sharper, deeper amplitude -->
+<path d="M -100 142 Q -82 138 -64 142 T -28 142 T 8 142 T 44 142 T 80 142 T 116 142 T 152 142 T 188 142 T 224 142 T 260 142 T 296 142 T 332 142 T 368 142 T 404 142 T 440 142 T 476 142 T 512 142 T 548 142 T 584 142 T 620 142 T 656 142 T 692 142 T 728 142 T 764 142" stroke="#1d4960" stroke-width="1.2" fill="none" opacity="0.8">
+<animateTransform attributeName="transform" type="translate" values="0 0; -80 0" dur="7s" repeatCount="indefinite"/>
+</path>
+<path d="M -100 145 Q -82 142 -64 145 T -28 145 T 8 145 T 44 145 T 80 145 T 116 145 T 152 145 T 188 145 T 224 145 T 260 145 T 296 145 T 332 145 T 368 145 T 404 145 T 440 145 T 476 145 T 512 145 T 548 145 T 584 145 T 620 145 T 656 145 T 692 145 T 728 145 T 764 145" stroke="#cce4ee" stroke-width="0.7" fill="none" opacity="0.7">
+<animateTransform attributeName="transform" type="translate" values="0 0; -80 0" dur="7s" repeatCount="indefinite"/>
+</path>
+
+<!-- Whitecaps — building offshore AND meaningful near-shore impact -->
+<g>
+<!-- Far whitecaps (offshore, building) -->
+<path d="M 70 148 L 79 148" stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 0.85; 0" dur="2.2s" begin="0s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -60 0" dur="2.2s" begin="0s" repeatCount="indefinite"/>
+</path>
+<path d="M 175 149 L 184 149" stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 0.85; 0" dur="2.4s" begin="0.4s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -62 0" dur="2.4s" begin="0.4s" repeatCount="indefinite"/>
+</path>
+<path d="M 285 148 L 295 148" stroke="#fff" stroke-width="1.3" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 0.9; 0" dur="2.3s" begin="0.8s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -64 0" dur="2.3s" begin="0.8s" repeatCount="indefinite"/>
+</path>
+<path d="M 395 149 L 404 149" stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 0.85; 0" dur="2.4s" begin="1.2s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -62 0" dur="2.4s" begin="1.2s" repeatCount="indefinite"/>
+</path>
+<path d="M 505 148 L 514 148" stroke="#fff" stroke-width="1.3" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 0.9; 0" dur="2.3s" begin="1.6s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -64 0" dur="2.3s" begin="1.6s" repeatCount="indefinite"/>
+</path>
+<path d="M 610 149 L 620 149" stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 0.85; 0" dur="2.4s" begin="2s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -62 0" dur="2.4s" begin="2s" repeatCount="indefinite"/>
+</path>
+
+<!-- Mid whitecaps — strong, frequent -->
+<path d="M 85 159 L 97 159" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 0.95; 0" dur="2.8s" begin="0.2s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -78 0" dur="2.8s" begin="0.2s" repeatCount="indefinite"/>
+</path>
+<path d="M 215 161 L 228 161" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 0.95; 0" dur="3s" begin="0.7s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -82 0" dur="3s" begin="0.7s" repeatCount="indefinite"/>
+</path>
+<path d="M 350 159 L 363 159" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 0.95; 0" dur="2.9s" begin="1.3s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -80 0" dur="2.9s" begin="1.3s" repeatCount="indefinite"/>
+</path>
+<path d="M 480 161 L 494 161" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 0.95; 0" dur="3s" begin="1.9s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -82 0" dur="3s" begin="1.9s" repeatCount="indefinite"/>
+</path>
+<path d="M 600 159 L 614 159" stroke="#fff" stroke-width="1.5" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 0.95; 0" dur="2.9s" begin="2.5s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -80 0" dur="2.9s" begin="2.5s" repeatCount="indefinite"/>
+</path>
+
+<!-- Near-shore whitecaps — meaningful presence, splashing toward viewer -->
+<path d="M 90 184 L 106 184" stroke="#fff" stroke-width="1.8" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 1; 0" dur="3.6s" begin="0.3s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -92 0" dur="3.6s" begin="0.3s" repeatCount="indefinite"/>
+</path>
+<path d="M 250 186 L 268 186" stroke="#fff" stroke-width="1.9" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 1; 0" dur="3.8s" begin="1.1s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -96 0" dur="3.8s" begin="1.1s" repeatCount="indefinite"/>
+</path>
+<path d="M 420 184 L 437 184" stroke="#fff" stroke-width="1.8" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 1; 0" dur="3.7s" begin="2s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -94 0" dur="3.7s" begin="2s" repeatCount="indefinite"/>
+</path>
+<path d="M 570 186 L 588 186" stroke="#fff" stroke-width="1.9" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 1; 0" dur="3.8s" begin="2.8s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -96 0" dur="3.8s" begin="2.8s" repeatCount="indefinite"/>
+</path>
+
+<!-- Foreground splash whitecaps — biggest, brightest, catching light as they hit shore -->
+<path d="M 150 196 L 172 196" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 1; 0" dur="4.5s" begin="0.6s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -115 0" dur="4.5s" begin="0.6s" repeatCount="indefinite"/>
+</path>
+<path d="M 360 196 L 384 196" stroke="#fff" stroke-width="2.3" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 1; 0" dur="4.6s" begin="2.2s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -118 0" dur="4.6s" begin="2.2s" repeatCount="indefinite"/>
+</path>
+<path d="M 530 196 L 553 196" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity="0">
+<animate attributeName="opacity" values="0; 1; 0" dur="4.5s" begin="3.8s" repeatCount="indefinite"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; -115 0" dur="4.5s" begin="3.8s" repeatCount="indefinite"/>
+</path>
+</g>
+
+<!-- Ice floes — bob harder with wave motion -->
+<g>
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 0; -70 0; 0 0" dur="34s" repeatCount="indefinite" additive="sum"/>
+<animateTransform attributeName="transform" type="translate" values="0 -1.5; 0 1.5; 0 -1.5" dur="4s" repeatCount="indefinite" additive="sum"/>
+<ellipse cx="140" cy="148" rx="9" ry="2" fill="#f0f4f6" stroke="#bcdde9" stroke-width="0.4" opacity="0.88"/>
+</g>
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 0; -55 0; 0 0" dur="32s" repeatCount="indefinite" additive="sum"/>
+<animateTransform attributeName="transform" type="translate" values="0 -1; 0 1; 0 -1" dur="3.5s" repeatCount="indefinite" additive="sum"/>
+<ellipse cx="380" cy="152" rx="6" ry="1.4" fill="#f0f4f6" stroke="#bcdde9" stroke-width="0.4" opacity="0.85"/>
+</g>
+<g>
+<animateTransform attributeName="transform" type="translate" values="0 0; -80 0; 0 0" dur="40s" repeatCount="indefinite" additive="sum"/>
+<animateTransform attributeName="transform" type="translate" values="0 -1.8; 0 1.8; 0 -1.8" dur="4.5s" repeatCount="indefinite" additive="sum"/>
+<ellipse cx="540" cy="150" rx="11" ry="2" fill="#f0f4f6" stroke="#bcdde9" stroke-width="0.4" opacity="0.86"/>
+</g>
+</g>
+</g>
+
+<!-- Active surface gulls — two seagulls soaring, banking, playing the wind. Active when ICE_STATE.state === 'open-active' -->
+<g id="bsBirdsActive" opacity="0.7" style="display:none;">
+<!-- Gull 1: a fuller silhouette, soaring slowly, slight bob -->
+<g>
+<animateTransform attributeName="transform" type="translate" values="-40 32; 720 22; 720 22; -40 32" keyTimes="0; 0.55; 0.6; 1" dur="45s" repeatCount="indefinite" additive="sum"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; 0 -3; 0 1; 0 -2; 0 0" dur="6s" repeatCount="indefinite" additive="sum"/>
+<path d="M -8 0 q 3 -4 7 0 q 1.5 -1 3 0 q 1.5 -1 3 0 q 4 -4 7 0" stroke="#2d4660" stroke-width="0.9" stroke-linecap="round" fill="none"/>
+</g>
+<!-- Gull 2: smaller, higher, faster, banking the other direction -->
+<g>
+<animateTransform attributeName="transform" type="translate" values="720 18; -40 26; -40 26; 720 18" keyTimes="0; 0.5; 0.55; 1" dur="38s" repeatCount="indefinite" additive="sum"/>
+<animateTransform attributeName="transform" type="translate" values="0 0; 0 2; 0 -1.5; 0 1; 0 0" dur="5s" repeatCount="indefinite" additive="sum"/>
+<path d="M -6 0 q 2.5 -3 5 0 q 1 -0.8 2 0 q 1 -0.8 2 0 q 3 -3 5 0" stroke="#2d4660" stroke-width="0.8" stroke-linecap="round" fill="none"/>
+</g>
+</g>
+
+
 <!-- Bird silhouette gliding across the sky — lazy slow loop -->
 <g id="bsBird" opacity="0.55">
 <path d="M -30 26 q 3 -3 6 0 q 3 -3 6 0" stroke="#3a5572" stroke-width="0.8" stroke-linecap="round" fill="none">
@@ -1802,13 +1969,14 @@ const PHASE = {
 // Values:
 //   'pre-breakup' — ice intact, cracks visible, melt patches small
 //   'breakup'     — ice fragmenting, open water in spots, movement active
-//   'open'        — ice gone, surface fully open water
+//   'open'        — ice gone, surface calm open water (default summer)
+//   'open-active' — ice gone, choppy water with whitecaps + seagulls (windy days)
 // As season progresses the basin strip's visual could evolve; for now
 // only the badge text and color update.
 // ─────────────────────────────────────────────────────────
 const ICE_STATE = {
-    state: 'open',
-    since: 'May 11, 2026',
+    state: 'open-active',
+    since: 'May 15, 2026',
 };
 
 // ─────────────────────────────────────────────────────────
@@ -3285,17 +3453,36 @@ function renderBasinStrip(ft, series) {
     if (iceTop)    { iceTop.setAttribute('y', iceTopY); }
     if (iceBottom) { iceBottom.setAttribute('y', iceBotY - 1); }
 
-    // ── Swap ice vs open-water surface per ICE_STATE.state
+    // ── Swap surface variant per ICE_STATE.state
+    //    'pre-breakup' / 'breakup' → ice surface visible
+    //    'open'                    → calm open water (default spring/summer)
+    //    'open-active'             → choppy open water with seagulls (windy days)
     const state = (typeof ICE_STATE !== 'undefined' && ICE_STATE.state) ? ICE_STATE.state : 'pre-breakup';
-    const iceGroup   = document.getElementById('bsIceGroup');
-    const openWater  = document.getElementById('bsOpenWater');
-    if (iceGroup && openWater) {
-        if (state === 'open') {
-            iceGroup.style.display  = 'none';
-            openWater.style.display = '';
+    const iceGroup        = document.getElementById('bsIceGroup');
+    const openWater       = document.getElementById('bsOpenWater');
+    const openWaterActive = document.getElementById('bsOpenWaterActive');
+    const birdCalm        = document.getElementById('bsBird');
+    const birdsActive     = document.getElementById('bsBirdsActive');
+
+    if (iceGroup && openWater && openWaterActive) {
+        if (state === 'open-active') {
+            iceGroup.style.display        = 'none';
+            openWater.style.display       = 'none';
+            openWaterActive.style.display = '';
+            if (birdCalm)    birdCalm.style.display    = 'none';
+            if (birdsActive) birdsActive.style.display = '';
+        } else if (state === 'open') {
+            iceGroup.style.display        = 'none';
+            openWater.style.display       = '';
+            openWaterActive.style.display = 'none';
+            if (birdCalm)    birdCalm.style.display    = '';
+            if (birdsActive) birdsActive.style.display = 'none';
         } else {
-            iceGroup.style.display  = '';
-            openWater.style.display = 'none';
+            iceGroup.style.display        = '';
+            openWater.style.display       = 'none';
+            openWaterActive.style.display = 'none';
+            if (birdCalm)    birdCalm.style.display    = 'none';
+            if (birdsActive) birdsActive.style.display = 'none';
         }
     }
 
@@ -3378,7 +3565,7 @@ function renderBasinStrip(ft, series) {
         const modeRect = modeBadge.querySelector('rect');
         const state = (typeof ICE_STATE !== 'undefined' && ICE_STATE.state) ? ICE_STATE.state : 'pre-breakup';
 
-        if (state === 'open') {
+        if (state === 'open' || state === 'open-active') {
             modeBadge.style.display = 'none';
         } else {
             modeBadge.style.display = '';
