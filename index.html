@@ -1500,29 +1500,30 @@
 </g>
 </g>
 
+</g>
+<!-- End basin clip-path group. Birds live above the basin, outside the clip. -->
+
 <!-- Active surface gulls — two seagulls soaring, banking, playing the wind. Active when ICE_STATE.state === 'open-active' -->
-<g id="bsBirdsActive" opacity="0.7" style="display:none;">
+<g id="bsBirdsActive" opacity="0.75" style="display:none;">
 <!-- Gull 1: a fuller silhouette, soaring slowly, slight bob -->
 <g>
-<animateTransform attributeName="transform" type="translate" values="-40 32; 720 22; 720 22; -40 32" keyTimes="0; 0.55; 0.6; 1" dur="45s" repeatCount="indefinite" additive="sum"/>
+<animateTransform attributeName="transform" type="translate" values="-40 28; 720 18; 720 18; -40 28" keyTimes="0; 0.55; 0.6; 1" dur="45s" repeatCount="indefinite" additive="sum"/>
 <animateTransform attributeName="transform" type="translate" values="0 0; 0 -3; 0 1; 0 -2; 0 0" dur="6s" repeatCount="indefinite" additive="sum"/>
-<path d="M -8 0 q 3 -4 7 0 q 1.5 -1 3 0 q 1.5 -1 3 0 q 4 -4 7 0" stroke="#2d4660" stroke-width="0.9" stroke-linecap="round" fill="none"/>
+<path d="M -8 0 q 3 -4 7 0 q 1.5 -1 3 0 q 1.5 -1 3 0 q 4 -4 7 0" stroke="#1d2d3a" stroke-width="1" stroke-linecap="round" fill="none"/>
 </g>
 <!-- Gull 2: smaller, higher, faster, banking the other direction -->
 <g>
-<animateTransform attributeName="transform" type="translate" values="720 18; -40 26; -40 26; 720 18" keyTimes="0; 0.5; 0.55; 1" dur="38s" repeatCount="indefinite" additive="sum"/>
+<animateTransform attributeName="transform" type="translate" values="720 22; -40 14; -40 14; 720 22" keyTimes="0; 0.5; 0.55; 1" dur="38s" repeatCount="indefinite" additive="sum"/>
 <animateTransform attributeName="transform" type="translate" values="0 0; 0 2; 0 -1.5; 0 1; 0 0" dur="5s" repeatCount="indefinite" additive="sum"/>
-<path d="M -6 0 q 2.5 -3 5 0 q 1 -0.8 2 0 q 1 -0.8 2 0 q 3 -3 5 0" stroke="#2d4660" stroke-width="0.8" stroke-linecap="round" fill="none"/>
+<path d="M -6 0 q 2.5 -3 5 0 q 1 -0.8 2 0 q 1 -0.8 2 0 q 3 -3 5 0" stroke="#1d2d3a" stroke-width="0.9" stroke-linecap="round" fill="none"/>
 </g>
 </g>
 
-
-<!-- Bird silhouette gliding across the sky — lazy slow loop -->
+<!-- Single bird silhouette — lazy slow loop. Visible when ICE_STATE.state === 'open' (calm). -->
 <g id="bsBird" opacity="0.55">
 <path d="M -30 26 q 3 -3 6 0 q 3 -3 6 0" stroke="#3a5572" stroke-width="0.8" stroke-linecap="round" fill="none">
 <animateTransform attributeName="transform" type="translate" values="0 0; 750 4; 0 0" dur="60s" repeatCount="indefinite"/>
 </path>
-</g>
 </g>
 
 <g id="bsNowTag">
