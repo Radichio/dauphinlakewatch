@@ -1742,11 +1742,11 @@
         </div>
     </div>
 
-    <!-- ── 8. SWE — contributing context, downgraded ── -->
+    <!-- ── 8. SWE — historical interest, season retrospective ── -->
     <div class="card" style="background:#e8f2f8;border:1px solid #b8d4e8;">
-        <div class="card-label" style="color:var(--blue);">Basin Snowpack — Contributing Context</div>
+        <div class="card-label" style="color:var(--blue);">Looking Back &nbsp;·&nbsp; 2026 Snowpack</div>
         <p style="font-size:13px;color:var(--navy-mid);line-height:1.6;">
-            The 2026 season opened with <strong style="color:var(--navy)">160–185 mm SWE</strong> near Riding Mountain — the highest recorded snowpack in this dataset, exceeding even 2011 and 2014. High-elevation headwaters broke April 14 and ran hard through late April. That water has now passed through the watershed; residual at upper elevations is minor.
+            The 2026 season opened with <strong style="color:var(--navy)">160–185 mm SWE</strong> near Riding Mountain — the highest recorded snowpack in this dataset, exceeding even 2011 and 2014. Despite that record-setting starting volume, the basin handled it: high-elevation headwaters broke April 14, ran hard through late April, then receded cleanly without ever pushing the lake into the Most Likely peak band. By mid-May the snowpack story was over.
             <span style="font-family:var(--mono);font-size:10px;display:block;margin-top:8px;color:var(--muted)">Based on HFC field measurements (March 9–12) · Estimated · April 14, 2026</span>
         </p>
     </div>
@@ -1765,7 +1765,7 @@
             </div>
         </div>
         <div class="wx-note">
-            Watch for: Sustained rain accelerates lake rise on a charged basin. Strong winds can push effective waterline well above gauge readings on the downwind shore. Above-normal temperatures forecast through June 2026 (IRI / all models agree).
+            Watch for: Sustained rain still adds to inflow even as the basin draws down. Strong winds can push effective waterline well above gauge readings on the downwind shore — a real consideration through the open-water season. Above-normal temperatures forecast through June 2026 (IRI / all models agree).
         </div>
         <div id="cydnObs" style="display:none;margin-top:10px;padding:8px 12px;background:var(--paper);border-radius:4px;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.5;border-left:3px solid var(--blue);"></div>
     </div>
@@ -1884,43 +1884,43 @@ const BULLETINS = [
 // ─────────────────────────────────────────────────────────
 const SCENARIOS = {
     revised:  'May 19, 2026',
-    note:     'iConnect Studio analysis — revised May 19. Lake at 855.97 ft and gently declining. Outlet drawing harder than inflow; tributaries 50–70% off their early-May peaks. The May 14 storm passed without producing real lake change. Mild showery week ahead in the forecast — nothing that disturbs the trajectory. Probability framing held pending any unexpected shift.',
+    note:     'iConnect Studio analysis — revised May 19. Lake at 855.97 ft and gently declining. Outlet drawing harder than inflow; tributaries well off early-May peaks and easing. Wed–Fri forecast brings ~22 mm cumulative rain — modest input to a basin already drawing down. Probabilities shifted toward Favourable; upper bands trimmed as no forcing event is on the horizon.',
     bands: [
         {
             key:   'fav',
             cls:   's-fav',
-            prob:  '~20%',
+            prob:  '~45%',
             color: 'var(--green)',
             name:  'Favourable',
             range: '855.5 – 856.5 ft',
-            desc:  'Rain event tails off quickly, inflow plateaus, outlet drawdown resumes. Lake holds near current level. Minor low-lying impacts.',
+            desc:  'Rain inputs offset by ongoing drawdown. Lake holds near current level or continues easing toward operating range. Minor low-lying impacts only.',
         },
         {
             key:   'likely',
             cls:   's-likely',
-            prob:  '~55%',
+            prob:  '~40%',
             color: 'var(--yellow)',
             name:  'Most Likely',
             range: '856.5 – 857.5 ft',
-            desc:  'Pulse continues at current pace through the weekend before tapering. Lake settles in mid-band. Above operating range, low-lying flooding and road impacts expected.',
+            desc:  'Forecast rain delivers above expectation or arrives faster than the basin can drain. Brief bump into mid-band before drawdown resumes. Above operating range, low-lying impacts.',
         },
         {
             key:   'unfav',
             cls:   's-unfav',
-            prob:  '~20%',
+            prob:  '~12%',
             color: 'var(--amber)',
             name:  'Unfavourable',
             range: '857.5 – 858.5 ft',
-            desc:  'Additional rain on a basin that fails to drain in time, or wind-driven shore effects compound the picture. Approaching flood stage. Active sandbagging warranted.',
+            desc:  'Significant above-forecast rain combined with reduced drainage. Approaching flood stage. Active sandbagging warranted.',
         },
         {
             key:   'severe',
             cls:   's-severe',
-            prob:  '~5%',
+            prob:  '~3%',
             color: 'var(--red)',
             name:  'Severe',
             range: '858.5 ft+',
-            desc:  'Extended precipitation well above forecast onto an already-charged basin. Flooding above historical operating range.',
+            desc:  'Unforeseen storm forcing not currently in any forecast model. Flooding above historical operating range.',
         },
     ],
 };
@@ -1931,8 +1931,8 @@ const SCENARIOS = {
 // ─────────────────────────────────────────────────────────
 const SWE_CONFIG = {
     swe_mm:  '160–185',
-    status:  'RESIDUAL',
-    context: 'The 2026 season opened with 160–185 mm SWE near Riding Mountain — the highest recorded snowpack in this dataset, exceeding even 2011 and 2014. High-elevation headwaters broke April 14 and ran hard through late April. That water has now passed through the watershed; residual at upper elevations is minor.',
+    status:  'CLOSED',
+    context: 'The 2026 season opened with 160–185 mm SWE near Riding Mountain — the highest recorded snowpack in this dataset, exceeding even 2011 and 2014. Despite that record-setting starting volume, the basin handled it: high-elevation headwaters broke April 14, ran hard through late April, then receded cleanly without ever pushing the lake into the Most Likely peak band. By mid-May the snowpack story was over.',
     updated: 'April 14, 2026',
 };
 
@@ -1942,7 +1942,7 @@ const SWE_CONFIG = {
 const HFC_REF = {
     active: true,
     date:   'April 23, 2026',
-    body:   '<strong>Provincial HFC Flood Bulletin #4 (April 23):</strong> Flood warnings in effect for the Icelandic, Fisher and Assiniboine rivers. Provincial staff supporting preparations across the Interlake and Parkland regions. Significant precipitation system affecting northern Manitoba — up to 40 cm additional snow for The Pas, Flin Flon and Thompson through Sunday, with NE winds gusting to 60 km/h. Impacts on flows and water levels to be analyzed once temperatures warm mid-next week.',
+    body:   '<strong>Provincial HFC Flood Bulletin #4 (April 23) — the season\'s final bulletin.</strong> Flood warnings in effect for the Icelandic, Fisher and Assiniboine rivers. Provincial staff supporting preparations across the Interlake and Parkland regions. Significant precipitation system affecting northern Manitoba — up to 40 cm additional snow for The Pas, Flin Flon and Thompson through Sunday, with NE winds gusting to 60 km/h. No further bulletin was issued; the spring response was managed within existing thresholds.',
     link:   'https://news.gov.mb.ca/news/index.html?item=73501',
     label:  'Full bulletin →',
     history: [
@@ -2668,8 +2668,10 @@ function renderWeather(j) {
             if (snow > 0 && rain > 0)       typeStr = 'Mix';
             else if (snow > 0)               typeStr = 'Snow';
             else if (rain > 0)               typeStr = 'Rain';
-            // Rain-on-snow warning — critical for melt
-            const isRainOnSnow = rain > 2 && new Date().getMonth() < 5;
+            // Rain-on-snow warning — relevant only while snowpack is meaningfully present.
+            // Suppressed once SWE_CONFIG.status indicates the snowpack is residual/closed.
+            const sweActive = !(SWE_CONFIG && (SWE_CONFIG.status === 'CLOSED' || SWE_CONFIG.status === 'RESIDUAL'));
+            const isRainOnSnow = rain > 2 && new Date().getMonth() < 5 && sweActive;
             const tagClass = isRainOnSnow ? 'rain-tag warn' : 'rain-tag';
             precipTag = `<div class="${tagClass}" title="${prob}% chance">${typeStr} ${p.toFixed(1)} mm</div>`;
             if (isRainOnSnow) precipTag += `<div class="rain-tag warn" style="margin-top:2px;font-size:9px;letter-spacing:.03em;">Rain-on-snow</div>`;
