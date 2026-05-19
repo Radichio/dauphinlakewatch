@@ -2429,7 +2429,26 @@ function renderTribs(data) {
         return st.lbl === 'Stalled' || st.lbl === 'Refrozen';
     }).length;
 
-    if (w.cfs > 15 || m.cfs > 15) {
+    // Compute basin-wide trend: is total inflow rising, holding, or receding?
+    // Sum current vs week-ago cfs across all tribs to detect drawdown phase.
+    let totalNow = 0, totalPrev = 0, activeCount = 0;
+    TRIBS.forEach(def => {
+        const d = data[def.key] || SEED.tribs[def.key] || {};
+        const cfs = d.cfs || 0;
+        const prev = d.prev || 0;
+        if (cfs > 5 || prev > 5) {
+            totalNow  += cfs;
+            totalPrev += prev;
+            if (cfs > 15) activeCount++;
+        }
+    });
+    const basinReceding = totalPrev > 50 && totalNow < totalPrev * 0.9;
+
+    if (basinReceding) {
+        // Drawdown phase — tribs carrying flow but trending down basin-wide
+        const pctOff = Math.round((1 - totalNow / totalPrev) * 100);
+        ins.innerHTML = `<strong>Basin in drawdown.</strong> Tributary flows down roughly ${pctOff}% from a week ago. Inflow easing toward baseline; outlet continues to draw harder than inflow. Lake trajectory steady to gently declining.`;
+    } else if (w.cfs > 15 || m.cfs > 15) {
         ins.innerHTML = '<strong>Major inflows active.</strong> High-elevation tributaries are carrying significant flow. Lake rise expected. Watch the outlet monitor closely.';
     } else if (stalledCount >= 2) {
         ins.innerHTML = `<strong>Early melt activity has stalled.</strong> ${stalledCount} tributaries that showed movement in late March have slowed or refrozen under persistent cold and fresh snowfall. The high-elevation headwaters on Riding Mountain remain frozen. When temperatures rebound, all of this water releases at once.`;
