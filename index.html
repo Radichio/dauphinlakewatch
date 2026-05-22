@@ -1866,14 +1866,16 @@ const SEED = {
 // Edit this array to add/update/dismiss banners.
 // Set active: false when a bulletin is no longer current.
 // ─────────────────────────────────────────────────────────
+// BULLETINS array — legacy structure, retained for any code still consulting it.
+// As of May 2026, the banner reads from PHASE instead. This entry stays inactive.
 const BULLETINS = [
     {
-        id:       'watch-apr22',
-        active:   true,
-        date:     'April 22, 2026',
-        severity: 'warning',
-        title:    'Melt Season Watch',
-        text:     'Outlet {OUTLET_STATE}. Rise rate {RISE_STATE}. {ADVISORY_STATE}. {SCENARIO_NOTE}',
+        id:       'legacy',
+        active:   false,
+        date:     '',
+        severity: 'info',
+        title:    '',
+        text:     '',
     },
 ];
 
@@ -3123,11 +3125,10 @@ function renderShareCard() {
 
     document.getElementById('scNote').textContent = THERM_NOTES[st.key] || '';
 
-    // Advisory strip — show if any bulletin is active
-    const activeBulletin = BULLETINS.find(x => x.active);
+    // Advisory strip — shows only when PHASE editorial is active
     const advEl = document.getElementById('scAdvisory');
-    if (activeBulletin) {
-        advEl.textContent = `ADVISORY — ${activeBulletin.title} · ${activeBulletin.date}`;
+    if (PHASE && PHASE.active && PHASE.headline) {
+        advEl.textContent = `READ — ${PHASE.headline}`;
         advEl.style.display = 'block';
     } else {
         advEl.style.display = 'none';
@@ -3138,9 +3139,8 @@ async function shareCard() {
     const ft    = (_shareData.ft || 854.17).toFixed(2);
     const st    = _shareData.st  || lakeStatus(parseFloat(ft));
     const tsStr = _shareData.tsStr || '';
-    const activeBulletin = BULLETINS.find(x => x.active);
-    const advisoryLine = activeBulletin ? `Advisory: ${activeBulletin.title}\n` : '';
-    const text  = `Dauphin Lake Watch\n${ft} ft · ${st.lbl}\n${tsStr ? 'Updated '+tsStr+'\n' : ''}${advisoryLine}dauphinlakewatch.ca`;
+    const readLine = (PHASE && PHASE.active && PHASE.headline) ? `Read: ${PHASE.headline}\n` : '';
+    const text  = `Dauphin Lake Watch\n${ft} ft · ${st.lbl}\n${tsStr ? 'Updated '+tsStr+'\n' : ''}${readLine}dauphinlakewatch.ca`;
     const url   = 'https://dauphinlakewatch.ca';
 
     if (navigator.share) {
