@@ -1005,7 +1005,46 @@
             border-color: rgba(255,255,255,.15);
         }
         .sc-action-btn:hover { background:rgba(255,255,255,.25); }
-        .sc-copied { font-family:var(--mono); font-size:11px; color:#4ade80; text-align:center; margin-top:6px; min-height:16px; }    </style>
+        .sc-copied { font-family:var(--mono); font-size:11px; color:#4ade80; text-align:center; margin-top:6px; min-height:16px; }
+
+        /* ─────────── TAB NAVIGATION — newspaper underline style ─────────── */
+        .tab-bar {
+            display: flex;
+            gap: 0;
+            margin: 0 0 16px;
+            border-bottom: 2px solid var(--paper-dark);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .tab-bar::-webkit-scrollbar { display: none; }
+        .tab-btn {
+            appearance: none;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            padding: 10px 18px 8px;
+            font-family: var(--cond);
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: color .15s, border-color .15s;
+        }
+        .tab-btn:hover { color: var(--navy); }
+        .tab-btn.active {
+            color: var(--navy);
+            border-bottom-color: var(--navy);
+        }
+        .tab-panel[hidden] { display: none; }
+        @media (max-width: 480px) {
+            .tab-btn { padding: 9px 14px 7px; font-size: 14px; }
+        }
+    </style>
 </head>
 <body>
 
@@ -1032,7 +1071,7 @@
     <div class="header-main">
         <div class="header-title">
             <h1>Dauphin Lake Watch</h1>
-            <div class="sub">OCHRE BEACH / DAUPHIN LAKE BASIN &nbsp;·&nbsp; SPRING 2026 FLOOD MONITOR</div>
+            <div class="sub">OCHRE BEACH / DAUPHIN LAKE BASIN &nbsp;·&nbsp; COMMUNITY LAKE MONITOR</div>
         </div>
         <div class="header-live">
             <div class="last-update" id="lastUpdate">Connecting to Water Survey of Canada…</div>
@@ -1066,6 +1105,15 @@
     <div class="demo-banner" id="demoBanner">
         Live API unreachable — displaying verified March 27 readings. For real-time data: <strong>wateroffice.ec.gc.ca</strong>
     </div>
+
+    <!-- ── TAB NAVIGATION — SEASON_MODE drives the default ── -->
+    <nav class="tab-bar" id="tabBar" role="tablist" aria-label="Dashboard sections">
+        <button class="tab-btn active" id="tabBtnToday" role="tab" aria-selected="true" onclick="location.hash='today'">Today</button>
+        <button class="tab-btn" id="tabBtnFlood" role="tab" aria-selected="false" onclick="location.hash='flood'">Flood Watch</button>
+    </nav>
+
+    <!-- ══ TAB PANEL: TODAY (1 of 3) — basin strip · lake level · situation strip · share card ══ -->
+    <div class="tab-panel" data-tab="today" role="tabpanel">
 
     <!-- ── BASIN STRIP — visual lake level indicator ── -->
     <div class="card" id="basinStripCard">
@@ -1625,6 +1673,11 @@
         </div>
     </div>
 
+    </div><!-- /tab-panel today 1 -->
+
+    <!-- ══ TAB PANEL: FLOOD WATCH (1 of 3) — thresholds · tributaries · outlet · scenarios · historic chart ══ -->
+    <div class="tab-panel" data-tab="flood" role="tabpanel" hidden>
+
     <!-- ── 3. THRESHOLD ACTION BAR ── -->
     <div class="card">
         <div class="card-label">Threshold Action Guidance — What property owners should do right now</div>
@@ -1721,9 +1774,14 @@
             <canvas id="histChart"></canvas>
         </div>
         <div class="chart-note">
-            Lake at upper elevated tier — climbing under rain-driven inflow. Outlet at season-high 278% of rated. Trajectory tracking the Most Likely projected peak band.
+            Lake easing off its late-May crest near 856.5 ft — the season's second peak. Outlet still above 230% of rated as the basin drains. Sunday's rain is the next input to watch.
         </div>
     </div>
+
+    </div><!-- /tab-panel flood 1 -->
+
+    <!-- ══ TAB PANEL: TODAY (2 of 3) — 30-day hydrograph ══ -->
+    <div class="tab-panel" data-tab="today" role="tabpanel">
 
     <!-- ── 7. HYDROGRAPH — rolling lake level ── -->
     <div class="card">
@@ -1742,14 +1800,24 @@
         </div>
     </div>
 
+    </div><!-- /tab-panel today 2 -->
+
+    <!-- ══ TAB PANEL: FLOOD WATCH (2 of 3) — snowpack retrospective ══ -->
+    <div class="tab-panel" data-tab="flood" role="tabpanel" hidden>
+
     <!-- ── 8. SWE — historical interest, season retrospective ── -->
     <div class="card" style="background:#e8f2f8;border:1px solid #b8d4e8;">
         <div class="card-label" style="color:var(--blue);">Looking Back &nbsp;·&nbsp; 2026 Snowpack</div>
         <p style="font-size:13px;color:var(--navy-mid);line-height:1.6;">
-            The 2026 season opened with <strong style="color:var(--navy)">160–185 mm SWE</strong> near Riding Mountain — the highest recorded snowpack in this dataset, exceeding even 2011 and 2014. Despite that record-setting starting volume, the basin handled it: high-elevation headwaters broke April 14, ran hard through late April, then receded cleanly without ever pushing the lake into the Most Likely peak band. By mid-May the snowpack story was over.
+            The 2026 season opened with <strong style="color:var(--navy)">160–185 mm SWE</strong> near Riding Mountain — the highest recorded snowpack in this dataset, exceeding even 2011 and 2014. Despite that record-setting starting volume, the basin handled it: high-elevation headwaters broke April 14, ran hard through late April, then receded cleanly without ever pushing the lake into the Most Likely peak band. By mid-May the snowpack story was over. The high water that followed came from rain, not snow.
             <span style="font-family:var(--mono);font-size:10px;display:block;margin-top:8px;color:var(--muted)">Based on HFC field measurements (March 9–12) · Estimated · April 14, 2026</span>
         </p>
     </div>
+
+    </div><!-- /tab-panel flood 2 -->
+
+    <!-- ══ TAB PANEL: TODAY (3 of 3) — current conditions & outlook ══ -->
+    <div class="tab-panel" data-tab="today" role="tabpanel">
 
     <!-- ── 7. WEATHER ── -->
     <div class="card card-weather" style="margin-top:16px;">
@@ -1765,12 +1833,19 @@
             </div>
         </div>
         <div class="wx-note">
-            Watch for: Sustained rain still adds to inflow even as the basin draws down. Strong winds can push effective waterline well above gauge readings on the downwind shore — a real consideration through the open-water season. Above-normal temperatures forecast through June 2026 (IRI / all models agree).
+            Watch for: Sunday's rain (June 7) landing on a saturated basin — even moderate totals slow the drawdown, and heavy cells can reverse it briefly. Strong winds can push the effective waterline well above gauge readings on the downwind shore — a real consideration through the open-water season. Above-normal temperatures forecast through June (IRI / all models agree).
         </div>
         <div id="cydnObs" style="display:none;margin-top:10px;padding:8px 12px;background:var(--paper);border-radius:4px;font-family:var(--mono);font-size:11px;color:var(--muted);line-height:1.5;border-left:3px solid var(--blue);"></div>
     </div>
+    </div><!-- /tab-panel today 3 -->
+
+    <!-- ══ TAB PANEL: FLOOD WATCH (3 of 3) — provincial forecast reference ══ -->
+    <div class="tab-panel" data-tab="flood" role="tabpanel" hidden>
+
     <!-- ── HFC PROVINCIAL FORECAST REFERENCE ── -->
     <div class="hfc-ref" id="hfcRef"></div>
+
+    </div><!-- /tab-panel flood 3 -->
 
     <!-- ── ALERTS SIGNUP ── -->
     <div class="card" style="margin-top:16px;">
@@ -1885,13 +1960,13 @@ const BULLETINS = [
 // Rebuild will pick these up automatically.
 // ─────────────────────────────────────────────────────────
 const SCENARIOS = {
-    revised:  'May 19, 2026',
-    note:     'iConnect Studio analysis — revised May 19. Lake at 855.97 ft and gently declining. Outlet drawing harder than inflow; tributaries well off early-May peaks and easing. Wed–Fri forecast brings ~22 mm cumulative rain — modest input to a basin already drawing down. Probabilities shifted toward Favourable; upper bands trimmed as no forcing event is on the horizon.',
+    revised:  'June 4, 2026',
+    note:     'iConnect Studio analysis — revised June 4. The late-May rain pulse delivered the season\'s second peak, cresting near 856.5 ft before the outlet — running above 230% of rated — pulled the lake back into drawdown. Tributaries remain elevated but stable. The remaining question is Sunday\'s rain (June 7) on a saturated basin: a modest delivery extends the drawdown timeline; a heavy one buys a brief bump. No pathway to the upper bands appears in any forecast model.',
     bands: [
         {
             key:   'fav',
             cls:   's-fav',
-            prob:  '~45%',
+            prob:  '~50%',
             color: 'var(--green)',
             name:  'Favourable',
             range: '855.5 – 856.5 ft',
@@ -1909,7 +1984,7 @@ const SCENARIOS = {
         {
             key:   'unfav',
             cls:   's-unfav',
-            prob:  '~12%',
+            prob:  '~8%',
             color: 'var(--amber)',
             name:  'Unfavourable',
             range: '857.5 – 858.5 ft',
@@ -1918,7 +1993,7 @@ const SCENARIOS = {
         {
             key:   'severe',
             cls:   's-severe',
-            prob:  '~3%',
+            prob:  '~2%',
             color: 'var(--red)',
             name:  'Severe',
             range: '858.5 ft+',
@@ -1934,7 +2009,7 @@ const SCENARIOS = {
 const SWE_CONFIG = {
     swe_mm:  '160–185',
     status:  'CLOSED',
-    context: 'The 2026 season opened with 160–185 mm SWE near Riding Mountain — the highest recorded snowpack in this dataset, exceeding even 2011 and 2014. Despite that record-setting starting volume, the basin handled it: high-elevation headwaters broke April 14, ran hard through late April, then receded cleanly without ever pushing the lake into the Most Likely peak band. By mid-May the snowpack story was over.',
+    context: 'The 2026 season opened with 160–185 mm SWE near Riding Mountain — the highest recorded snowpack in this dataset, exceeding even 2011 and 2014. Despite that record-setting starting volume, the basin handled it: high-elevation headwaters broke April 14, ran hard through late April, then receded cleanly without ever pushing the lake into the Most Likely peak band. By mid-May the snowpack story was over. The high water that followed came from rain, not snow.',
     updated: 'April 14, 2026',
 };
 
@@ -1961,10 +2036,10 @@ const HFC_REF = {
 // inter-pulse · second pulse active · peak · post-peak · recovery · dormancy
 // ─────────────────────────────────────────────────────────
 const PHASE = {
-    active:   false,
-    since:    'May 19, 2026 — morning',
-    headline: '',
-    text:     '',
+    active:   true,
+    since:    'June 4, 2026 — afternoon',
+    headline: 'Eyes on Sunday\'s rain as the basin drains',
+    text:     'The late-May rain pulse crested near 856.5 ft — the season\'s second peak — and has been draining since, with the outlet still working above 230% of rated. Forecast models agree on a warm weekend ending in rain Sunday, June 7. Rain on a saturated basin slows the drawdown, and a heavy delivery could nudge levels back up briefly before the descent resumes. The lake sits a comfortable 2 ft below flood stage. Watchful, not worried.',
 };
 
 // ─────────────────────────────────────────────────────────
@@ -1981,6 +2056,52 @@ const ICE_STATE = {
     state: 'open',
     since: 'May 19, 2026',
 };
+
+// ─────────────────────────────────────────────────────────
+// SEASON_MODE — drives which tab opens on first load
+// mode: 'spring-flood' | 'summer' | 'fall' | 'winter'
+// floodActive: flip to true when flood conditions return —
+// the dashboard then opens to FLOOD WATCH by default.
+// ─────────────────────────────────────────────────────────
+const SEASON_MODE = {
+    mode:        'summer',
+    defaultTab:  'today',
+    floodActive: false,
+};
+
+// ─────────────────────────────────────────────────────────
+// TAB ROUTER — hash-driven (#today / #flood)
+// Panels are fragments marked data-tab; header, PHASE banner,
+// alerts signup and footer stay persistent outside the panels.
+// ─────────────────────────────────────────────────────────
+const TAB_KEYS = ['today', 'flood'];
+
+function activateTab(key) {
+    if (!TAB_KEYS.includes(key)) key = SEASON_MODE.floodActive ? 'flood' : SEASON_MODE.defaultTab;
+    document.querySelectorAll('.tab-panel[data-tab]').forEach(p => {
+        if (p.dataset.tab === key) p.removeAttribute('hidden');
+        else p.setAttribute('hidden', '');
+    });
+    const btnMap = { today: 'tabBtnToday', flood: 'tabBtnFlood' };
+    TAB_KEYS.forEach(k => {
+        const btn = document.getElementById(btnMap[k]);
+        if (!btn) return;
+        btn.classList.toggle('active', k === key);
+        btn.setAttribute('aria-selected', String(k === key));
+    });
+    // Charts initialised while hidden need a resize nudge once visible
+    requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+}
+
+function initTabs() {
+    const fromHash = (location.hash || '').replace('#', '');
+    const start = TAB_KEYS.includes(fromHash)
+        ? fromHash
+        : (SEASON_MODE.floodActive ? 'flood' : SEASON_MODE.defaultTab);
+    if (!TAB_KEYS.includes(fromHash)) history.replaceState(null, '', '#' + start);
+    activateTab(start);
+    window.addEventListener('hashchange', () => activateTab((location.hash || '').replace('#', '')));
+}
 
 // ─────────────────────────────────────────────────────────
 // UNIT HELPERS
@@ -3648,6 +3769,7 @@ async function dashSubscribe() {
     }
 }
 
+initTabs();
 init();
 </script>
 </body>
