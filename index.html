@@ -1117,6 +1117,102 @@
 
     <!-- ── BASIN STRIP — visual lake level indicator ── -->
     <div class="card" id="basinStripCard">
+        <div class="card-label" id="basinStripLabel">The Lake Right Now &nbsp;·&nbsp; Live Portrait</div>
+        <div id="portraitWrap" style="position:relative; display:block; margin-top:6px;">
+            <canvas id="portraitCanvas" style="width:100%; display:block; border-radius:4px;" aria-label="Living portrait of Dauphin Lake — sky, water, and shore rendered from live conditions"></canvas>
+            <div id="ptChipL" style="position:absolute; top:8px; left:8px; font-family:var(--mono); font-size:11px; letter-spacing:.05em; background:rgba(10,20,32,.55); color:#ECF1F8; padding:3px 9px; border-radius:3px;">— ft</div>
+            <div id="ptChipR" style="position:absolute; top:8px; right:8px; font-family:var(--mono); font-size:11px; letter-spacing:.05em; background:rgba(10,20,32,.55); color:#ECF1F8; padding:3px 9px; border-radius:3px;">—</div>
+        </div>
+
+    </div>
+
+    <!-- ── 1. STATUS BEACON ── -->
+    <div class="card">
+        <div class="card-label">Current Lake Level &nbsp;·&nbsp; Dauphin Lake at Outlet</div>
+        <div class="beacon-wrap">
+            <div class="beacon-num-block">
+                <div class="level-num" id="levelNum" style="color:var(--yellow)">—</div>
+                <div class="level-unit">FEET ABOVE SEA LEVEL (ASL) &nbsp;·&nbsp; WSC PROVISIONAL</div>
+                <div class="prev-reading" id="prevReading"></div>
+            </div>
+            <div class="beacon-details">
+                <div class="status-badge badge-yellow" id="statusBadge">
+                    <span>●</span>
+                    <span id="statusLabel">WATCH</span>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-box">
+                        <div class="stat-lbl">vs. Operating Range</div>
+                        <div class="stat-val" id="vsRange">—</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-lbl">to Flood Stage</div>
+                        <div class="stat-val" id="toFlood">—</div>
+                    </div>
+                </div>
+                <div class="context-line">
+                    Normal range below 854.8 ft &nbsp;·&nbsp;
+                    Flood stage <span style="color:var(--amber)">858.0 ft</span> &nbsp;·&nbsp;
+                    2011 peak <span style="color:var(--red)">860.76 ft</span> &nbsp;·&nbsp;
+                    Record low <span style="color:var(--blue)">851.5 ft</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── SITUATION STRIP ── -->
+    <div style="background:linear-gradient(135deg,#0d2137 0%,#0f2a45 100%);border-radius:6px;padding:16px 20px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;border:1px solid rgba(74,159,212,.2);">
+        <div style="flex:1;min-width:90px;border-right:1px solid rgba(255,255,255,.1);padding-right:16px;">
+            <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#7dd3fc;text-transform:uppercase;margin-bottom:6px;font-weight:600;">Outlet Flow</div>
+            <div style="font-family:var(--cond);font-weight:800;font-size:36px;color:white;line-height:1;" id="stripOutlet">—</div>
+            <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;">cfs · Mossy River</div>
+        </div>
+        <div style="flex:1;min-width:90px;border-right:1px solid rgba(255,255,255,.1);padding:0 16px;">
+            <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#f87171;text-transform:uppercase;margin-bottom:6px;font-weight:600;">Headroom Left</div>
+            <div style="font-family:var(--cond);font-weight:800;font-size:36px;color:#f87171;line-height:1;" id="stripHeadroom">—</div>
+            <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;">cfs to capacity</div>
+        </div>
+        <div style="flex:1;min-width:90px;border-right:1px solid rgba(255,255,255,.1);padding:0 16px;">
+            <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#fbbf24;text-transform:uppercase;margin-bottom:6px;font-weight:600;">Basin Inflow</div>
+            <div style="font-family:var(--cond);font-weight:800;font-size:36px;color:#fbbf24;line-height:1;" id="stripInflow">—</div>
+            <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;">cfs entering lake</div>
+        </div>
+        <div style="flex:1;min-width:140px;padding-left:16px;display:flex;flex-direction:column;justify-content:center;">
+            <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:8px;">Get Level Alerts</div>
+            <a href="/alerts" style="display:inline-block;background:#4aafd4;color:white;font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:8px 16px;border-radius:4px;text-decoration:none;text-align:center;">Subscribe Free →</a>
+        </div>
+    </div>
+
+    <!-- ── 2. BULLETIN / SHARE CARD ── -->
+    <div class="card" id="status">
+        <div class="card-label">Current Status Bulletin &nbsp;·&nbsp; Tap to share with neighbours</div>
+        <button class="share-btn" onclick="toggleShareCard()">View &amp; Share Status Card</button>
+        <div id="shareCard">
+            <div class="sc-advisory" id="scAdvisory" style="display:none;background:rgba(200,162,0,.18);border:1px solid rgba(200,162,0,.4);border-radius:4px;padding:6px 10px;margin-bottom:10px;font-family:var(--mono);font-size:10px;color:#f0c040;letter-spacing:.04em;line-height:1.4;"></div>
+            <div class="sc-header">Dauphin Lake Watch</div>
+            <div class="sc-level" id="scLevel">—</div>
+            <div class="sc-unit">FEET ABOVE SEA LEVEL · WSC PROVISIONAL</div>
+            <div class="sc-trend" id="scTrend">—</div>
+            <div class="sc-context">Normal operating range: <strong>853.0 – 854.8 ft</strong><br>Flood stage: <strong>858.0 ft</strong></div>
+            <div class="sc-therm" id="scTherm"></div>
+            <div class="sc-active-note" id="scNote">—</div>
+            <div class="sc-url">dauphinlakewatch.ca</div>
+            <div class="sc-ts" id="scTs">—</div>
+            <div class="sc-actions">
+                <button class="sc-action-btn" onclick="shareCard()">↑ Share</button>
+                <button class="sc-action-btn secondary" onclick="closeShareCard()">Close</button>
+            </div>
+            <div class="sc-copied" id="scCopied"></div>
+        </div>
+    </div>
+
+    </div><!-- /tab-panel today 1 -->
+
+    <!-- ══ TAB PANEL: FLOOD WATCH (1 of 3) — thresholds · tributaries · outlet · scenarios · historic chart ══ -->
+    <div class="tab-panel" data-tab="flood" role="tabpanel" hidden>
+
+    <!-- ── BASIN STRIP — threshold ladder (flood apparatus) ── -->
+    <div class="card" id="ladderCard">
         <div class="card-label">Basin at a Glance &nbsp;·&nbsp; Threshold Ladder</div>
 <svg class="basin-strip-svg" viewBox="0 0 680 200" xmlns="http://www.w3.org/2000/svg" role="img" id="basinSvg" aria-label="Dauphin Lake level relative to threshold zones">
 <title>Dauphin Lake basin water level</title>
@@ -1593,91 +1689,6 @@
 </svg>
     </div>
 
-    <!-- ── 1. STATUS BEACON ── -->
-    <div class="card">
-        <div class="card-label">Current Lake Level &nbsp;·&nbsp; Dauphin Lake at Outlet</div>
-        <div class="beacon-wrap">
-            <div class="beacon-num-block">
-                <div class="level-num" id="levelNum" style="color:var(--yellow)">—</div>
-                <div class="level-unit">FEET ABOVE SEA LEVEL (ASL) &nbsp;·&nbsp; WSC PROVISIONAL</div>
-                <div class="prev-reading" id="prevReading"></div>
-            </div>
-            <div class="beacon-details">
-                <div class="status-badge badge-yellow" id="statusBadge">
-                    <span>●</span>
-                    <span id="statusLabel">WATCH</span>
-                </div>
-                <div class="stat-row">
-                    <div class="stat-box">
-                        <div class="stat-lbl">vs. Operating Range</div>
-                        <div class="stat-val" id="vsRange">—</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-lbl">to Flood Stage</div>
-                        <div class="stat-val" id="toFlood">—</div>
-                    </div>
-                </div>
-                <div class="context-line">
-                    Normal range below 854.8 ft &nbsp;·&nbsp;
-                    Flood stage <span style="color:var(--amber)">858.0 ft</span> &nbsp;·&nbsp;
-                    2011 peak <span style="color:var(--red)">860.76 ft</span> &nbsp;·&nbsp;
-                    Record low <span style="color:var(--blue)">851.5 ft</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ── SITUATION STRIP ── -->
-    <div style="background:linear-gradient(135deg,#0d2137 0%,#0f2a45 100%);border-radius:6px;padding:16px 20px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;border:1px solid rgba(74,159,212,.2);">
-        <div style="flex:1;min-width:90px;border-right:1px solid rgba(255,255,255,.1);padding-right:16px;">
-            <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#7dd3fc;text-transform:uppercase;margin-bottom:6px;font-weight:600;">Outlet Flow</div>
-            <div style="font-family:var(--cond);font-weight:800;font-size:36px;color:white;line-height:1;" id="stripOutlet">—</div>
-            <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;">cfs · Mossy River</div>
-        </div>
-        <div style="flex:1;min-width:90px;border-right:1px solid rgba(255,255,255,.1);padding:0 16px;">
-            <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#f87171;text-transform:uppercase;margin-bottom:6px;font-weight:600;">Headroom Left</div>
-            <div style="font-family:var(--cond);font-weight:800;font-size:36px;color:#f87171;line-height:1;" id="stripHeadroom">—</div>
-            <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;">cfs to capacity</div>
-        </div>
-        <div style="flex:1;min-width:90px;border-right:1px solid rgba(255,255,255,.1);padding:0 16px;">
-            <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:#fbbf24;text-transform:uppercase;margin-bottom:6px;font-weight:600;">Basin Inflow</div>
-            <div style="font-family:var(--cond);font-weight:800;font-size:36px;color:#fbbf24;line-height:1;" id="stripInflow">—</div>
-            <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.5);margin-top:3px;">cfs entering lake</div>
-        </div>
-        <div style="flex:1;min-width:140px;padding-left:16px;display:flex;flex-direction:column;justify-content:center;">
-            <div style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:8px;">Get Level Alerts</div>
-            <a href="/alerts" style="display:inline-block;background:#4aafd4;color:white;font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;padding:8px 16px;border-radius:4px;text-decoration:none;text-align:center;">Subscribe Free →</a>
-        </div>
-    </div>
-
-    <!-- ── 2. BULLETIN / SHARE CARD ── -->
-    <div class="card" id="status">
-        <div class="card-label">Current Status Bulletin &nbsp;·&nbsp; Tap to share with neighbours</div>
-        <button class="share-btn" onclick="toggleShareCard()">View &amp; Share Status Card</button>
-        <div id="shareCard">
-            <div class="sc-advisory" id="scAdvisory" style="display:none;background:rgba(200,162,0,.18);border:1px solid rgba(200,162,0,.4);border-radius:4px;padding:6px 10px;margin-bottom:10px;font-family:var(--mono);font-size:10px;color:#f0c040;letter-spacing:.04em;line-height:1.4;"></div>
-            <div class="sc-header">Dauphin Lake Watch</div>
-            <div class="sc-level" id="scLevel">—</div>
-            <div class="sc-unit">FEET ABOVE SEA LEVEL · WSC PROVISIONAL</div>
-            <div class="sc-trend" id="scTrend">—</div>
-            <div class="sc-context">Normal operating range: <strong>853.0 – 854.8 ft</strong><br>Flood stage: <strong>858.0 ft</strong></div>
-            <div class="sc-therm" id="scTherm"></div>
-            <div class="sc-active-note" id="scNote">—</div>
-            <div class="sc-url">dauphinlakewatch.ca</div>
-            <div class="sc-ts" id="scTs">—</div>
-            <div class="sc-actions">
-                <button class="sc-action-btn" onclick="shareCard()">↑ Share</button>
-                <button class="sc-action-btn secondary" onclick="closeShareCard()">Close</button>
-            </div>
-            <div class="sc-copied" id="scCopied"></div>
-        </div>
-    </div>
-
-    </div><!-- /tab-panel today 1 -->
-
-    <!-- ══ TAB PANEL: FLOOD WATCH (1 of 3) — thresholds · tributaries · outlet · scenarios · historic chart ══ -->
-    <div class="tab-panel" data-tab="flood" role="tabpanel" hidden>
-
     <!-- ── 3. THRESHOLD ACTION BAR ── -->
     <div class="card">
         <div class="card-label">Threshold Action Guidance — What property owners should do right now</div>
@@ -2036,10 +2047,10 @@ const HFC_REF = {
 // inter-pulse · second pulse active · peak · post-peak · recovery · dormancy
 // ─────────────────────────────────────────────────────────
 const PHASE = {
-    active:   true,
+    active:   false,
     since:    'June 4, 2026 — afternoon',
-    headline: 'Eyes on Sunday\'s rain as the basin drains',
-    text:     'The late-May rain pulse crested near 856.5 ft — the season\'s second peak — and has been draining since, with the outlet still working above 230% of rated. Forecast models agree on a warm weekend ending in rain Sunday, June 7. Rain on a saturated basin slows the drawdown, and a heavy delivery could nudge levels back up briefly before the descent resumes. The lake sits a comfortable 2 ft below flood stage. Watchful, not worried.',
+    headline: '',
+    text:     '',
 };
 
 // ─────────────────────────────────────────────────────────
@@ -2787,6 +2798,12 @@ function renderWeather(j) {
 
     document.getElementById('wxTemp').textContent = `${temp}°C`;
     document.getElementById('wxCond').textContent = WMO[j.current.weathercode] || 'Updating';
+    if (window.PORTRAIT) {
+        const pp = j.daily?.precipitation_probability_max || [];
+        const rs = j.daily?.rain_sum || [];
+        const rainSoon = (pp[0] >= 60) || (pp[1] >= 60) || ((rs[0] || 0) >= 4) || ((rs[1] || 0) >= 4);
+        PORTRAIT.set({ wmo: j.current.weathercode, rainSoon: rainSoon, windFallback: wspd });
+    }
 
     // Show gusts if meaningfully higher than sustained speed
     let windStr = `Wind: ${wspd} km/h`;
@@ -3391,6 +3408,7 @@ async function fetchCYDN() {
 function renderCYDN(obs) {
     const el = document.getElementById('cydnObs');
     if (!el || !obs) return;
+    if (window.PORTRAIT) PORTRAIT.set({ windKmh: obs.wspd, wxCode: obs.wx_code });
 
     // ── Override main temp with CYDN ground truth — more accurate than model
     if (obs.temp != null) {
@@ -3485,6 +3503,7 @@ function renderHFC() {
 // RENDER: BASIN STRIP — visual lake level above-the-fold
 // ─────────────────────────────────────────────────────────
 function renderBasinStrip(ft, series) {
+    if (window.PORTRAIT) PORTRAIT.set({ level: ft });
     if (typeof ft !== 'number' || isNaN(ft)) return;
 
     // 7-tier ladder matching the action guidance card and auto-title generator
@@ -3769,8 +3788,439 @@ async function dashSubscribe() {
     }
 }
 
+/*PORTRAIT-BEGIN*/
+// ─────────────────────────────────────────────────────────
+// THE LAKE'S PORTRAIT — living painterly strip (summer face)
+// Driven by: real clock + solar position (computed), CYDN wind,
+// WSC gauge level, forecast (cloud, rain, beacon). Interim
+// daytime palette keys to be retuned from operator photographs.
+// Active only when SEASON_MODE.floodActive is false and water
+// is open; the threshold-ladder SVG remains for flood mode.
+// ─────────────────────────────────────────────────────────
+const PORTRAIT = (function(){
+'use strict';
+const IN = { level:null, windKmh:null, wxCode:null, wmo:null, rainSoon:false, windFallback:null };
+let cv=null, x=null, W=0, Hh=0, horizonY=0, skyH=0, waterH=0, DPR=1;
+let on=false, frame=0, tt=0;
+const SEED=20260606;
+function rng(seed){return function(){let z=seed+=0x6D2B79F5;z=Math.imul(z^z>>>15,z|1);z^=z+Math.imul(z^z>>>7,z|61);return((z^z>>>14)>>>0)/4294967296;}}
+function mx(a,b,u){return [a[0]+(b[0]-a[0])*u, a[1]+(b[1]-a[1])*u, a[2]+(b[2]-a[2])*u];}
+function cl(c,a){const al=Math.max(0,Math.min(1,a));return 'rgba('+Math.round(c[0])+','+Math.round(c[1])+','+Math.round(c[2])+','+al.toFixed(3)+')';}
+
+/* solar position — NOAA approximation */
+function solar(d){
+    const r=Math.PI/180;
+    const jd=d.getTime()/86400000+2440587.5;
+    const T=(jd-2451545)/36525;
+    const L=((280.46646+T*36000.76983)%360+360)%360;
+    const M=357.52911+T*35999.05029;
+    const C=(1.914602-T*0.004817)*Math.sin(M*r)+0.019993*Math.sin(2*M*r);
+    const sun=L+C;
+    const eps=23.439291-0.0130042*T;
+    const dec=Math.asin(Math.sin(eps*r)*Math.sin(sun*r));
+    const y=Math.pow(Math.tan(eps/2*r),2);
+    const eot=(y*Math.sin(2*L*r)-2*0.016708*Math.sin(M*r)+4*0.016708*y*Math.sin(M*r)*Math.cos(2*L*r))/r*4;
+    const utcMin=d.getUTCHours()*60+d.getUTCMinutes()+d.getUTCSeconds()/60;
+    let tst=(utcMin+eot+4*CFG.lon)%1440; if(tst<0)tst+=1440;
+    const ha=(tst/4<0)?tst/4+180:tst/4-180;
+    const lat=CFG.lat*r;
+    const alt=Math.asin(Math.sin(lat)*Math.sin(dec)+Math.cos(lat)*Math.cos(dec)*Math.cos(ha*r));
+    const azr=Math.atan2(Math.sin(ha*r), Math.cos(ha*r)*Math.sin(lat)-Math.tan(dec)*Math.cos(lat));
+    const az=(azr/r+180+360)%360;
+    return {alt:alt/r, az:az};
+}
+function moonFrac(d){
+    const syn=29.530588853;
+    const days=(d.getTime()-947182440000)/86400000;
+    const ph=((days%syn)+syn)%syn/syn;
+    return (1-Math.cos(ph*2*Math.PI))/2;
+}
+
+/* altitude-anchored palette keys — daytime keys are interim */
+const PK=[
+ {a:-18, k:{top:[13,21,48], mid:[21,32,62], low:[35,43,73], sun:[200,170,160]}},
+ {a:-12, k:{top:[18,28,58], mid:[28,40,74], low:[48,52,84], sun:[210,175,160]}},
+ {a:-6,  k:{top:[30,44,80], mid:[52,60,100], low:[84,70,104], sun:[225,180,158]}},
+ {a:-1.5,k:{top:[61,74,120], mid:[154,110,142], low:[224,141,110], sun:[255,196,160]}, m:{top:[58,72,112], mid:[150,118,132], low:[226,142,118], sun:[252,186,156]}},
+ {a:4,   k:{top:[84,108,156], mid:[226,150,104], low:[244,176,98], sun:[255,220,164]}, m:{top:[86,116,168], mid:[196,142,128], low:[240,158,128], sun:[252,200,160]}},
+ {a:10,  k:{top:[104,148,200], mid:[166,196,222], low:[222,216,188], sun:[255,242,210]}},
+ {a:25,  k:{top:[92,150,212], mid:[150,198,234], low:[208,226,238], sun:[255,248,228]}},
+];
+const OVC={top:[118,126,138], mid:[146,152,162], low:[174,178,184], sun:[210,210,212]};
+function paletteFor(alt,morning,cloud){
+    let i=0; while(i<PK.length-2 && alt>PK[i+1].a) i++;
+    const A=PK[i], B=PK[i+1];
+    const u=Math.min(1,Math.max(0,(alt-A.a)/(B.a-A.a)));
+    const ka=(morning&&A.m)?A.m:A.k, kb=(morning&&B.m)?B.m:B.k;
+    const p={top:mx(ka.top,kb.top,u), mid:mx(ka.mid,kb.mid,u), low:mx(ka.low,kb.low,u), sun:mx(ka.sun,kb.sun,u)};
+    const cf=Math.min(0.85,cloud*0.85)*Math.min(1,Math.max(0.25,(alt+10)/18));
+    return {top:mx(p.top,OVC.top,cf), mid:mx(p.mid,OVC.mid,cf), low:mx(p.low,OVC.low,cf), sun:mx(p.sun,OVC.sun,cf*0.7)};
+}
+function skyV(p,v){ return v<0.55?mx(p.top,p.mid,v/0.55):mx(p.mid,p.low,(v-0.55)/0.45); }
+
+/* foliage calendar — Parkland phenology, retune from photos */
+function foliage(doy){
+    const fresh=[106,148,80], deep=[62,102,58], gold=[212,158,52];
+    if(doy<118) return {c:fresh, d:0};
+    if(doy<140) return {c:mx(fresh,[150,176,110],0.3), d:(doy-118)/22*0.5+0.1};
+    if(doy<165) return {c:fresh, d:1};
+    if(doy<205) return {c:mx(fresh,deep,(doy-165)/40), d:1};
+    if(doy<250) return {c:deep, d:1};
+    if(doy<272) return {c:mx(deep,gold,(doy-250)/22), d:1};
+    if(doy<288) return {c:gold, d:1};
+    if(doy<302) return {c:gold, d:1-(doy-288)/14};
+    return {c:fresh, d:0};
+}
+function cloudFrac(){
+    if(IN.wxCode!=null){const c=parseInt(IN.wxCode); if(c>=500&&c<=599)return 0.95; if(c>=100&&c<=199)return 0.95;}
+    const w=IN.wmo;
+    if(w==null) return 0.3;
+    if(w===0) return 0.05; if(w===1) return 0.2; if(w===2) return 0.5; if(w===3) return 0.9;
+    if(w>=45) return 0.95;
+    return 0.3;
+}
+function raining(){
+    if(IN.wxCode!=null){const c=parseInt(IN.wxCode); if((c>=500&&c<=599)||(c>=200&&c<=299))return true;}
+    const w=IN.wmo; return w!=null && ((w>=51&&w<=67)||(w>=80&&w<=99));
+}
+function windNow(){ const v=IN.windKmh!=null?IN.windKmh:(IN.windFallback!=null?IN.windFallback:8); return Math.max(0,Math.min(70,v)); }
+function windWord(v){ if(v<10)return 'calm'; if(v<22)return 'light chop'; if(v<36)return 'choppy'; return 'rough'; }
+
+/* landscape (seeded, from Motion Study A) */
+let TL={a:0,b:0,c:0}, spruces=[], clouds=[], stars=[], boulders=[], segs=[], dabs=[], jit=[];
+const grainCv=document.createElement('canvas'); const gx=grainCv.getContext('2d');
+const strkCv=document.createElement('canvas');  const sx2=strkCv.getContext('2d');
+function build(){
+    const r=rng(SEED);
+    TL={a:r()*6.28,b:r()*6.28,c:r()*6.28};
+    spruces=[]; const ns=3+Math.floor(r()*3);
+    for(let i=0;i<ns;i++) spruces.push({x:0.02+r()*0.40,hx:1.35+r()*0.65,w:0.0035+r()*0.004});
+    clouds=[];
+    for(let c=0;c<6;c++){const puffs=[];const n=7+Math.floor(r()*7);
+        for(let p=0;p<n;p++)puffs.push({dx:(r()-0.5)*120,dy:(r()-0.5)*16,rx:26+r()*42,ry:7+r()*9});
+        clouds.push({x:r(),y:0.10+r()*0.30,sp:0.000012+r()*0.000028,puffs:puffs,a:0.10+r()*0.08});}
+    stars=[]; for(let s=0;s<82;s++)stars.push({x:r(),y:r()*0.62,r:0.5+r()*0.9,tw:r()*6.28});
+    boulders=[]; let bx=-0.01;
+    while(bx<1.03){const rx=9+r()*20; boulders.push({x:bx,rx:rx,ry:rx*(0.45+r()*0.25),dy:(r()-0.5)*5}); bx+=rx*(1.05+r()*0.55)/1100;}
+    segs=[]; dabs=[];
+    (function grow(px,py,ang,len,w,depth){
+        if(depth>6||len<0.0032||segs.length>900)return;
+        let steps=3+Math.floor(r()*3);
+        for(let s=0;s<steps;s++){
+            ang+=(r()-0.5)*0.22+0.045;
+            const nx=px+Math.cos(ang)*len, ny=py+Math.sin(ang)*len;
+            segs.push({x1:px,y1:py,x2:nx,y2:ny,w:w,d:depth});
+            px=nx; py=ny;
+            if(depth>=2&&r()<0.72&&dabs.length<1400){const nl=2+Math.floor(r()*2);
+                for(let k2=0;k2<nl;k2++)dabs.push({x:px+(r()-0.5)*0.012,y:py+(r()-0.5)*0.013,r:1.0+r()*1.5,ph:r()*6.28});}
+            if(r()<0.42)grow(px,py,ang+(r()<0.5?-1:1)*(0.35+r()*0.55)+0.18,len*0.62,w*0.55,depth+1);
+            len*=0.92; w*=0.93;
+        }
+        grow(px,py,ang+(r()-0.5)*0.3+0.1,len*0.7,w*0.6,depth+1);
+    })(1.04,-0.04,2.62,0.062,5.2,0);
+    grainCv.width=180; grainCv.height=180;
+    const im=gx.createImageData(180,180); const r2=rng(SEED+7);
+    for(let i=0;i<im.data.length;i+=4){const v=170+Math.floor(r2()*85);
+        im.data[i]=v;im.data[i+1]=v;im.data[i+2]=v;im.data[i+3]=Math.floor(r2()*22);}
+    gx.putImageData(im,0,0);
+}
+function treeH(p){
+    const hs=0.12+0.88*Math.pow(1-Math.min(1,p/0.62),1.7);
+    const crown=0.62+0.24*Math.sin(p*47+TL.a)+0.16*Math.sin(p*97+TL.b)+0.10*Math.sin(p*191+TL.c);
+    return hs*Math.max(0.18,crown);
+}
+let parts=[];
+function seedParts(){ parts=[]; const N=Math.min(700,Math.round(W*0.6)); const r=rng(SEED+99);
+    for(let i=0;i<N;i++)parts.push({x:r(),y:0.04+r()*0.92,age:40+r()*150,light:r()<0.55,fresh:true,px:0,py:0}); }
+function flow(px,py,k){
+    const meander=(0.55-k*0.38);
+    const a=meander*(0.4*Math.sin(px*6.5+tt*0.45)+0.25*Math.sin(py*14-tt*0.27));
+    const depth=0.45+0.85*py;
+    const sp=(0.22+k*3.1)*depth*(0.7+0.3*Math.sin(px*8.2-py*5+tt*0.5));
+    return {a:a,sp:sp};
+}
+function stepStreaks(k){
+    sx2.globalCompositeOperation='destination-out';
+    sx2.fillStyle='rgba(0,0,0,0.055)'; sx2.fillRect(0,0,W,Hh);
+    sx2.globalCompositeOperation='source-over'; sx2.lineCap='round';
+    for(const p of parts){
+        const f=flow(p.x,p.y,k);
+        const nx=p.x+Math.cos(f.a)*f.sp/W;
+        const ny=p.y+Math.sin(f.a)*f.sp/W*0.35;
+        const sny=horizonY+ny*(waterH-Hh*0.09);
+        if(!p.fresh){
+            const al=0.07+k*0.09;
+            sx2.strokeStyle=p.light?'rgba(234,240,250,'+al+')':'rgba(14,22,40,'+(al*1.15)+')';
+            sx2.lineWidth=(0.7+p.y*1.5)*(0.8+k*0.6);
+            sx2.beginPath(); sx2.moveTo(p.px*W,p.py); sx2.lineTo(nx*W,sny); sx2.stroke();
+        }
+        p.px=nx; p.py=sny; p.x=nx; p.y=ny; p.fresh=false; p.age--;
+        if(p.age<=0||p.x>1.03||p.x<-0.03||p.y<0||p.y>1){
+            p.x=-0.02+Math.random()*0.04; p.y=0.04+Math.random()*0.92;
+            p.age=60+Math.random()*140; p.fresh=true;
+        }
+    }
+}
+let caps=[];
+function stepCaps(v){
+    const ex=v-22;
+    if(ex>0&&Math.random()<ex/27) caps.push({x:Math.random(),y:0.25+Math.random()*0.7,life:34,max:34});
+    caps=caps.filter(c=>{c.life--;return c.life>0;});
+}
+
+function draw(){
+    const now=new Date();
+    const sun=solar(now);
+    const morning=sun.az<180;
+    const cloud=cloudFrac();
+    const rain=raining();
+    const v=windNow();
+    const k=v/60;
+    const pal=paletteFor(sun.alt,morning,rain?Math.max(cloud,0.85):cloud);
+    const doyMs=Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate())-Date.UTC(now.getUTCFullYear(),0,0);
+    const fol=foliage(Math.round(doyMs/86400000));
+    const nightK=Math.max(0,Math.min(1,(-sun.alt-6)/8));
+    const moon=moonFrac(now);
+
+    const STRIPS=64;
+    for(let i=0;i<STRIPS;i++){
+        const vv=i/(STRIPS-1);
+        ctxFill(skyV(pal,vv),1+jit[i%jit.length], 0, Math.floor(vv*skyH), W, Math.ceil(skyH/(STRIPS-1))+1);
+    }
+    /* dawn anti-twilight: rose band + earth-shadow over the far shore */
+    if(morning&&sun.alt>-9&&sun.alt<6&&cloud<0.7){
+        const a=Math.max(0,1-Math.abs(sun.alt+2.5)/6)*(1-cloud);
+        ctxFill([232,140,120],0.22*a, 0, horizonY-skyH*0.22, W, skyH*0.18);
+        ctxFill([90,100,130],0.20*a, 0, horizonY-skyH*0.055, W, skyH*0.055);
+    }
+    /* sun disc: only low in the western cone */
+    let discOn=false, sxp=0, syp=0;
+    const eveDisc=!morning&&sun.alt>-1&&sun.alt<14&&sun.az>225&&sun.az<320;
+    const dawnDisc=morning&&sun.alt>-0.8&&sun.alt<5;
+    if(cloud<0.75&&(eveDisc||dawnDisc)){
+        discOn=true;
+        sxp=morning?W*0.40:W*Math.min(0.62,Math.max(0.28,0.46+(sun.az-290)*0.004));
+        syp=morning?horizonY-(sun.alt/5)*skyH*0.16:horizonY-(sun.alt/14)*skyH*0.66;
+        const vis=Math.min(1,(sun.alt+1)/2)*(1-cloud*0.8);
+        for(let g=4;g>=0;g--){const c=ctx; c.fillStyle=cl(pal.sun,(g===0?0.85:0.05*g)*vis);
+            c.beginPath(); c.arc(sxp,syp,6+g*8,0,6.283); c.fill();}
+    }
+    for(const cd of clouds){
+        cd.x+=cd.sp*(0.5+v/45); if(cd.x>1.18)cd.x=-0.18;
+        const base=skyV(pal,cd.y);
+        const lit=mx(base,pal.sun,0.40), shd=mx(base,[20,26,48],0.35);
+        const cy=cd.y*skyH; const ca=cd.a*(0.7+cloud*0.9);
+        for(const p of cd.puffs){
+            ctx.fillStyle=cl(shd,ca*0.9);
+            ctx.beginPath(); ctx.ellipse(cd.x*W+p.dx,cy+p.dy+2,p.rx,p.ry,0,0,6.283); ctx.fill();
+            ctx.fillStyle=cl(lit,ca);
+            ctx.beginPath(); ctx.ellipse(cd.x*W+p.dx,cy+p.dy,p.rx,p.ry*0.92,0,0,6.283); ctx.fill();
+        }
+    }
+    if(nightK>0){
+        for(const st of stars){
+            const tw=0.55+0.45*Math.sin(tt*1.7+st.tw);
+            ctx.fillStyle='rgba(225,230,245,'+(nightK*tw*0.8*(1-cloud))+')';
+            ctx.fillRect(st.x*W,st.y*skyH,st.r,st.r);
+        }
+    }
+    /* far shore treeline w/ seasonal tint */
+    const dark0=mx(pal.low,[9,15,11],0.84);
+    const dark=mx(dark0, fol.c, 0.18*fol.d);
+    const haze=mx(dark,skyV(pal,1),0.62);
+    const maxT=Math.max(10,Math.min(20,Hh*0.085));
+    ctx.beginPath(); ctx.moveTo(0,horizonY+1.5);
+    const SN=240;
+    for(let i=0;i<=SN;i++){const p=i/SN; ctx.lineTo(p*W,horizonY-treeH(p)*maxT);}
+    ctx.lineTo(W,horizonY+1.5); ctx.closePath();
+    const grd=ctx.createLinearGradient(0,0,W,0);
+    grd.addColorStop(0,cl(dark,1)); grd.addColorStop(0.5,cl(mx(dark,haze,0.55),0.97)); grd.addColorStop(1,cl(haze,0.88));
+    ctx.fillStyle=grd; ctx.fill();
+    ctx.fillStyle=cl(mx(dark,[6,10,8],0.5),1);
+    for(const s of spruces){
+        const bx=s.x*W,hw=s.w*W;
+        const tip=horizonY-treeH(s.x)*maxT*s.hx, base=horizonY-treeH(s.x)*maxT*0.35;
+        ctx.beginPath(); ctx.moveTo(bx,tip); ctx.lineTo(bx-hw,base); ctx.lineTo(bx+hw,base); ctx.closePath(); ctx.fill();
+    }
+    /* water */
+    const WST=40;
+    for(let i=0;i<WST;i++){
+        const vv=1-(i/(WST-1))*0.9;
+        const c=skyV(pal,Math.max(0,vv));
+        const wc=[c[0]*0.50+4,c[1]*0.55+8,c[2]*0.66+16];
+        const ml=nightK*moon*0.18*(1-cloud);
+        ctxFill(mx(wc,[200,212,232],ml),1+jit[(i+30)%jit.length],0,horizonY+Math.floor(i/(WST-1)*waterH),W,Math.ceil(waterH/(WST-1))+1);
+    }
+    ctxFill(mx(pal.low,[255,255,255],0.25),0.18,0,horizonY,W,2);
+    ctx.globalAlpha=0.62; ctx.drawImage(strkCv,0,0,W,Hh); ctx.globalAlpha=1;
+    /* glitter: evening column under disc, or broad midday sparkle */
+    if(discOn){
+        const n=24+Math.round(v*0.7);
+        for(let i=0;i<n;i++){
+            const vv=Math.random(); const y=horizonY+4+vv*waterH*0.85;
+            const spread=6+vv*W*0.05*(1+v/40);
+            const xx=sxp+(Math.random()-0.5)*spread;
+            const len=2+Math.random()*7*(1-vv*0.5);
+            ctx.strokeStyle=cl(pal.sun,0.10+Math.random()*0.30);
+            ctx.lineWidth=1+vv*1.4;
+            ctx.beginPath(); ctx.moveTo(xx-len/2,y); ctx.lineTo(xx+len/2,y); ctx.stroke();
+        }
+    } else if(sun.alt>14&&cloud<0.5){
+        for(let i=0;i<34;i++){
+            const y=horizonY+4+Math.random()*waterH*0.9;
+            const xx=Math.random()*W; const len=1.5+Math.random()*4;
+            ctx.strokeStyle='rgba(255,252,240,'+(0.04+Math.random()*0.10)+')';
+            ctx.lineWidth=1;
+            ctx.beginPath(); ctx.moveTo(xx-len/2,y); ctx.lineTo(xx+len/2,y); ctx.stroke();
+        }
+    } else if(nightK>0.5&&moon>0.15&&cloud<0.6){
+        for(let i=0;i<20;i++){
+            const y=horizonY+6+Math.random()*waterH*0.8; const xx=Math.random()*W;
+            ctx.strokeStyle='rgba(214,226,244,'+(0.03+Math.random()*0.08*moon)+')';
+            ctx.lineWidth=1; const len=1.5+Math.random()*3;
+            ctx.beginPath(); ctx.moveTo(xx-len/2,y); ctx.lineTo(xx+len/2,y); ctx.stroke();
+        }
+    }
+    for(const c of caps){
+        const ph=c.life/c.max;
+        const a=Math.sin(ph*3.14)*Math.min(1,(v-20)/26)*0.5;
+        ctx.strokeStyle='rgba(238,243,250,'+a+')'; ctx.lineWidth=1.4;
+        ctx.beginPath(); ctx.arc(c.x*W,horizonY+c.y*(waterH-Hh*0.08),2.2+c.y*2.4,3.5,5.9); ctx.stroke();
+    }
+    /* rain in scene */
+    if(rain){
+        ctx.strokeStyle='rgba(214,224,238,0.10)'; ctx.lineWidth=1;
+        const slant=4+k*10;
+        for(let i=0;i<60;i++){
+            const xx=Math.random()*W, yy=Math.random()*Hh*0.96, ln=7+Math.random()*9;
+            ctx.beginPath(); ctx.moveTo(xx,yy); ctx.lineTo(xx-slant*0.4,yy+ln); ctx.stroke();
+        }
+    }
+    /* boulders + level */
+    const lvlFt=IN.level!=null?IN.level:855.5;
+    const lvl=Math.max(0,Math.min(1,(lvlFt-854)/4));
+    const rs=Hh/300;
+    const waterlineY=Hh-8*rs-lvl*34*rs;
+    const rockC=mx(pal.top,[12,11,16],0.82), rimC=mx(pal.low,rockC,0.45);
+    for(const b of boulders){
+        const cx=b.x*W, cy=Hh-4*rs-b.ry*rs*0.5+b.dy*rs;
+        ctx.fillStyle=cl(rockC,1);
+        ctx.beginPath(); ctx.ellipse(cx,cy,b.rx*rs,b.ry*rs,0,0,6.283); ctx.fill();
+        ctx.strokeStyle=cl(rimC,0.32); ctx.lineWidth=1;
+        ctx.beginPath(); ctx.ellipse(cx,cy,b.rx*rs*0.95,b.ry*rs*0.95,0,3.5,5.9); ctx.stroke();
+    }
+    if(waterlineY<Hh){
+        const top=Math.max(horizonY+4,waterlineY); const STN=6;
+        for(let i=0;i<STN;i++){
+            const yy=top+(i/STN)*(Hh-top);
+            const vv=1-((yy-horizonY)/waterH)*0.9;
+            const c=skyV(pal,Math.max(0,Math.min(1,vv)));
+            ctxFill([c[0]*0.50+4,c[1]*0.55+8,c[2]*0.66+16],0.86,0,yy,W,(Hh-top)/STN+1);
+        }
+        ctxFill([232,238,248],0.13,0,top,W,1.5);
+    }
+    /* beacon */
+    const bxp=W*0.885, byp=horizonY-6;
+    ctx.fillStyle='rgba(12,16,30,0.9)'; ctx.fillRect(bxp-1.2,byp-11,2.4,11);
+    let lightOn=true, lc=[191,227,192];
+    if(IN.rainSoon){ lightOn=Math.sin(tt*3.6)>0; lc=[244,178,102]; }
+    if(lightOn){
+        const pulse=0.7+0.2*Math.sin(tt*1.3);
+        for(let g=3;g>=0;g--){ctx.fillStyle=cl(lc,(g===0?0.95:0.07*g)*pulse);
+            ctx.beginPath(); ctx.arc(bxp,byp-12,1.8+g*3.2,0,6.283); ctx.fill();}
+        for(let i=0;i<5;i++){
+            const ry=horizonY+3+i*5+Math.sin(tt*2+i)*1.5;
+            ctx.strokeStyle=cl(lc,0.10+Math.random()*0.10); ctx.lineWidth=1;
+            ctx.beginPath(); ctx.moveTo(bxp-3,ry); ctx.lineTo(bxp+3,ry); ctx.stroke();
+        }
+    }
+    /* branch — foliage calendar + wind manners */
+    ctx.lineCap='round';
+    const gust=Math.max(0.18,0.55+0.45*Math.sin(tt*0.21)+0.30*Math.sin(tt*0.53+1.7));
+    const swA=(0.25+k*2.6)*gust;
+    ctx.strokeStyle='rgba(13,12,15,0.95)';
+    for(const sg of segs){
+        const dx=Math.sin(tt*(0.7+k*0.9)+sg.d*1.3)*swA*sg.d*0.55*(fol.d>0?1:1.4)+k*sg.d*0.8;
+        ctx.lineWidth=Math.max(0.6,sg.w*(W/1100));
+        ctx.beginPath(); ctx.moveTo(sg.x1*W+dx*0.6,sg.y1*W); ctx.lineTo(sg.x2*W+dx,sg.y2*W); ctx.stroke();
+    }
+    if(fol.d>0.02){
+        const inkC=[13,12,15], pale=mx(fol.c,[235,240,225],0.45);
+        let lc2=mx(fol.c,inkC,0.20+0.40*(discOn?0.8:0)+(sun.alt<2?0.2:0));
+        lc2=mx(lc2,inkC,nightK*0.7);
+        const step=fol.d>=1?1:Math.max(1,Math.round(1/Math.max(0.08,fol.d)));
+        for(let i=0;i<dabs.length;i+=step){
+            const d=dabs[i];
+            const dx=Math.sin(tt*(0.7+k*0.9)+4.8)*swA*2.0+k*3.2+Math.sin(tt*(4.2+k*4.5)+d.ph)*k*2.2;
+            const flash=Math.sin(tt*6.5+d.ph*9)>(1.85-v/36);
+            ctx.fillStyle=cl(flash?mx(pale,lc2,0.3):lc2,0.88);
+            ctx.beginPath();
+            ctx.ellipse(d.x*W+dx,d.y*W+Math.sin(tt*3.1+d.ph*5)*k*1.1,d.r*(W/1100)*2.1,d.r*(W/1100)*1.05,0.6,0,6.283);
+            ctx.fill();
+        }
+    }
+    ctx.globalAlpha=0.5;
+    const pat=ctx.createPattern(grainCv,'repeat');
+    if(pat){ctx.fillStyle=pat; ctx.fillRect(0,0,W,Hh);}
+    ctx.globalAlpha=1;
+}
+function ctxFill(c,a,x0,y0,w,h){ ctx.fillStyle=cl(c,a); ctx.fillRect(x0,y0,w,h); }
+let ctx=null;
+function size(){
+    const cw=cv.clientWidth||680;
+    const ch=Math.max(170,Math.min(320,Math.round(cw*0.30)));
+    cv.style.height=ch+'px';
+    cv.width=cw*DPR; cv.height=ch*DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    W=cw; Hh=ch; horizonY=Math.round(Hh*0.46); skyH=horizonY; waterH=Hh-horizonY;
+    strkCv.width=W; strkCv.height=Hh;
+    seedParts();
+}
+function chips(){
+    const L=document.getElementById('ptChipL'), R=document.getElementById('ptChipR');
+    if(L) L.textContent=IN.level!=null?IN.level.toFixed(2)+' ft':'— ft';
+    if(R){ const v=windNow();
+        R.textContent=(raining()?'Rain · ':'')+windWord(v)+' · '+Math.round(v)+' km/h'; }
+}
+function loop(){
+    if(!on) return;
+    requestAnimationFrame(loop);
+    frame++;
+    if(document.hidden||frame%2) return;
+    const k=windNow()/60;
+    stepStreaks(k); stepCaps(windNow()); tt+=0.032;
+    try{ draw(); }catch(e){ on=false; console.warn('[portrait]',e.message); }
+}
+function boot(){
+    try{
+        const wrap=document.getElementById('portraitWrap');
+        if(!wrap) return;
+        cv=document.getElementById('portraitCanvas');
+        ctx=cv?cv.getContext('2d'):null;
+        if(!ctx){ if(cv)cv.style.display='none'; chips(); return; }
+        DPR=Math.min(window.devicePixelRatio||1,2);
+        build(); jit=[]; const r=rng(SEED+3); for(let j=0;j<90;j++)jit.push((r()-0.5)*0.05);
+        size();
+        window.addEventListener('resize',size);
+        chips();
+        const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if(reduced){ for(let i=0;i<110;i++){stepStreaks(windNow()/60); tt+=0.032;} try{draw();}catch(e){} return; }
+        on=true; loop();
+    }catch(e){
+        console.warn('[portrait boot]',e.message);
+        if(cv)cv.style.display='none';
+        chips();
+    }
+}
+function set(o){ Object.assign(IN,o||{}); chips(); }
+return {boot:boot, set:set};
+})();
+/*PORTRAIT-END*/
+window.PORTRAIT = PORTRAIT;
+
 initTabs();
 init();
+PORTRAIT.boot();
 </script>
 </body>
 </html>
