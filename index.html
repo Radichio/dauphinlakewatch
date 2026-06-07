@@ -4140,11 +4140,8 @@ function ringGust(){var r=ringEst();return r?r.gust:null;}
 function obsClock(am){var d=new Date(Date.now()-am*60000);var h=d.getHours(),m=d.getMinutes();return h+':'+(m<10?'0':'')+m;}
 function srcTag(){
     var r=ringEst();
-    if(r){
-        var lbl=r.tier===2?(r.n+' stations'):(r.n>1?'stations differ':'1 station');
-        return ' \u00b7 '+lbl+' '+obsClock(r.newest);
-    }
-    if(IN.windKmh!=null&&IN.wxTime&&ageMin(IN.wxTime)<=70)return ' \u00b7 airport '+obsClock(ageMin(IN.wxTime));
+    if(r)return ' \u00b7 '+obsClock(r.newest);
+    if(IN.windKmh!=null&&IN.wxTime&&ageMin(IN.wxTime)<=70)return ' \u00b7 '+obsClock(ageMin(IN.wxTime));
     return ' \u00b7 estimated';
 }
 function windDirNow(){
