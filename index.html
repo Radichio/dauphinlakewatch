@@ -1897,7 +1897,7 @@
         </div>
         <div style="margin-top:4px;font-style:italic;opacity:.7;">Live data and active analysis. iConnect designs, develops and deploys specialized data dashboards for communities.</div>
         <div style="margin-top:8px;">Water level data: Water Survey of Canada, Environment and Climate Change Canada. Provisional real-time data subject to revision. Source: wateroffice.ec.gc.ca</div>
-        <div style="margin-top:4px;">Weather, radar &amp; nowcast data: Environment and Climate Change Canada (MSC GeoMet, surface observations) &nbsp;·&nbsp; Open-Meteo.com (CC BY 4.0).</div>
+        <div style="margin-top:4px;">Weather, radar &amp; nowcast data: Environment and Climate Change Canada (MSC GeoMet, surface observations) &nbsp;·&nbsp; Open-Meteo.com (CC BY 4.0) &nbsp;&middot;&nbsp; Manitoba Agriculture &mdash; Manitoba Ag Weather Program (station observations via ECCC SWOB).</div>
         <div style="margin-top:4px;">Independent community monitoring tool — not an official government forecast. For official provincial flood guidance: <span style="color:rgba(255,255,255,.85)">www.manitoba.ca/floodinfo/</span></div>
         <div style="margin-top:4px;opacity:.45;">Dashboard refreshes every 15 minutes; radar more often.</div>
     </div>
@@ -3827,6 +3827,7 @@ const PORTRAIT = (function(){
 'use strict';
 const IN = { level:null, windKmh:null, wgust:null, wxCode:null, wxTime:null, wmo:null, rainSoon:false, windFallback:null,
              p15Now:null, p15Next:null, radNow:null, cloud15:null, swrNow:null, p15Dir:null, wdir:null, p15Time:null,
+             ringData:null, ringMAE:null,
              radarNow:null, radarUp:null, radarTime:null, stormWarn:false, alertTime:null, wasRaining:false, lastRainEnd:0, _appr:false, _sb:false, _rain:false };
 let cv=null, x=null, W=0, Hh=0, horizonY=0, skyH=0, waterH=0, DPR=1;
 let on=false, frame=0, tt=0;
@@ -3962,10 +3963,12 @@ function westGlow(alt,az,morning,cloud,up){
     const a=Math.max(0,1-Math.abs(alt-1)/5);
     return a*Math.min(1,(cloud-0.4)/0.5);
 }
-function windNow(){ const v=IN.windKmh!=null?IN.windKmh:(IN.windFallback!=null?IN.windFallback:8); return Math.max(0,Math.min(70,v)); }
+function windNowBase(){ const v=IN.windKmh!=null?IN.windKmh:(IN.windFallback!=null?IN.windFallback:8); return Math.max(0,Math.min(70,v)); }
+function windNow(){ const r=ringEst(); if(r)return Math.max(0,Math.min(70,r.spd)); return windNowBase(); }
 function windEffK(){
     const sus=windNow();
-    const g=Math.max(sus, IN.wgust!=null?IN.wgust:sus*1.3);
+    const rg=ringGust();
+    const g=Math.max(sus, rg!=null?rg:(IN.wgust!=null?IN.wgust:sus*1.3));
     const e=Math.max(0,Math.min(1,(0.55+0.45*Math.sin(tt*0.21)+0.30*Math.sin(tt*0.53+1.7)-0.18)/1.12));
     const v=sus*0.25+(g-sus*0.25)*Math.pow(e,1.6);
     return Math.max(0,Math.min(70,v))/60;
@@ -4062,7 +4065,78 @@ let flick=0;
 let flickX=0.5;
 let drips=[];
 let seaE=0, seaSeeded=false;
+const RING=[
+ {id:'sterose',  name:'Ste. Rose',      dist:19.3, brg:106},
+ {id:'cydn',     name:'Dauphin Aprt',   dist:18.6, brg:260},
+ {id:'rorketon', name:'Rorketon',       dist:30.5, brg:43},
+ {id:'laurier',  name:'Laurier',        dist:31.2, brg:155},
+ {id:'keld',     name:'Keld',           dist:34.0, brg:243},
+ {id:'ashville', name:'Ashville',       dist:35.5, brg:276},
+ {id:'drifting', name:'Drifting River', dist:47.0, brg:302},
+ {id:'forkriver',name:'Fork River',     dist:47.6, brg:342},
+];
+function pollRing(){
+    try{
+        if(typeof location==='undefined'||(location.protocol!=='https:'&&location.protocol!=='http:'))return;
+        fetch('/.netlify/functions/wind-ring',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+            if(j&&j.ok&&Array.isArray(j.stations)){IN.ringData={t:Date.now(),stations:j.stations}; ringHoldout(); chips();}
+        }).catch(function(){});
+    }catch(e){}
+}
+function ringFresh(){
+    var rd=IN.ringData; if(!rd||ageMin(rd.t)>20)return [];
+    return rd.stations.filter(function(st){return st&&st.spd!=null&&st.age!=null&&st.age<=25;});
+}
+function circMean(ds,ws){var x=0,y=0;for(var i=0;i<ds.length;i++){var w=ws?ws[i]:1;x+=w*Math.cos(ds[i]*Math.PI/180);y+=w*Math.sin(ds[i]*Math.PI/180);}return (Math.atan2(y,x)*180/Math.PI+360)%360;}
+function fuseRing(excl){
+    var fr=ringFresh().filter(function(st){return st.id!==excl;});
+    if(!fr.length)return null;
+    var withDir=fr.filter(function(st){return st.dir!=null;});
+    var d0=withDir.length?circMean(withDir.map(function(st){return st.dir;})):null;
+    var w=fr.map(function(st){
+        var wd=1;
+        if(d0!=null){var meta=RING.filter(function(r){return r.id===st.id;})[0];
+            if(meta){var dl=Math.abs(((meta.brg-d0)%360+540)%360-180);wd=0.35+1.45*Math.max(0,Math.cos(dl*Math.PI/180));}}
+        var dd=st.dist||30;
+        return wd/Math.max(80,dd*dd);
+    });
+    if(withDir.length){
+        d0=circMean(withDir.map(function(st){return st.dir;}),withDir.map(function(st){return w[fr.indexOf(st)];}));
+    }
+    var W=0,sp=0;for(var i=0;i<fr.length;i++){W+=w[i];sp+=fr[i].spd*w[i];}
+    var spd=sp/W;
+    var g=null,gW=0,gS=0;
+    for(var i2=0;i2<fr.length;i2++){if(fr[i2].gust!=null){gS+=fr[i2].gust*w[i2];gW+=w[i2];}}
+    if(gW>0)g=gS/gW;
+    g=Math.max(g!=null?g:0,spd*1.15);
+    var mx2=-1e9,mn2=1e9,nw=1e9;
+    fr.forEach(function(st){mx2=Math.max(mx2,st.spd);mn2=Math.min(mn2,st.spd);nw=Math.min(nw,st.age);});
+    return {spd:spd,gust:g,dir:d0,n:fr.length,spread:mx2-mn2,newest:nw};
+}
+function ringHoldout(){
+    var fr=ringFresh(); if(fr.length<3)return;
+    var errs=[];
+    fr.forEach(function(st){var p=fuseRing(st.id); if(p)errs.push(Math.abs(p.spd-st.spd));});
+    if(errs.length){var mae=errs.reduce(function(a,b){return a+b;},0)/errs.length;
+        IN.ringMAE=(IN.ringMAE==null)?mae:IN.ringMAE*0.7+mae*0.3;}
+}
+function ringEst(){
+    var f=fuseRing(null); if(!f)return null;
+    var tier=1;
+    if(f.n>=2&&f.spread<=Math.max(10,0.55*Math.max(6,f.spd)))tier=2;
+    if(IN.ringMAE!=null&&IN.ringMAE>9&&tier===2)tier=1;
+    return {spd:Math.round(f.spd),gust:Math.round(f.gust),dir:f.dir,tier:tier,newest:f.newest,n:f.n};
+}
+function ringGust(){var r=ringEst();return r?r.gust:null;}
+function obsClock(am){var d=new Date(Date.now()-am*60000);var h=d.getHours(),m=d.getMinutes();return h+':'+(m<10?'0':'')+m;}
+function srcTag(){
+    var r=ringEst();
+    if(r)return ' \u00b7 '+(r.tier===2?'ring':'stn')+' '+obsClock(r.newest);
+    if(IN.windKmh!=null&&IN.wxTime&&ageMin(IN.wxTime)<=70)return ' \u00b7 obs '+obsClock(ageMin(IN.wxTime));
+    return ' \u00b7 est';
+}
 function windDirNow(){
+    var rr=ringEst(); if(rr&&rr.dir!=null) return rr.dir;
     if(IN.wdir!=null && IN.wxTime && ageMin(IN.wxTime)<=70) return IN.wdir;
     if(IN.p15Dir!=null && IN.p15Time!=null && ageMin(IN.p15Time)<=30) return IN.p15Dir;
     return null;
@@ -4453,7 +4527,7 @@ function chips(){
         let t=(IN._rain?'Rain · ':'')+windWord(v)+' · '+Math.round(v)+' km/h';
         if(IN._sb) t+=' · sun breaking through';
         else if(IN._appr) t+=' · rain approaching';
-        R.textContent=t; }
+        R.textContent=t + srcTag(); }
     const B=document.getElementById('ptChipB');
     if(B){
         let o;
@@ -4490,7 +4564,7 @@ function boot(){
         chips();
         const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if(reduced){ for(let i=0;i<110;i++){stepStreaks(windNow()/60); tt+=0.032;} try{draw();}catch(e){} return; }
-        if(typeof fetch==='function'){ try{ pollRadar(); setInterval(pollRadar,7*60*1000); }catch(e){} }
+        if(typeof fetch==='function'){ try{ pollRadar(); setInterval(pollRadar,7*60*1000); try{pollRing();}catch(e){} try{setInterval(pollRing,450000);}catch(e){} }catch(e){} }
         on=true; loop();
     }catch(e){
         console.warn('[portrait boot]',e.message);

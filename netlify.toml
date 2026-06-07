@@ -1,10 +1,5 @@
 [build]
-  functions = "netlify/functions"
+  publish = "."
 
-[[edge_functions]]
-  function = "og"
-  path = "/"
-
-[[scheduled_functions]]
-  name = "alert-checker"
-  cron = "*/30 * * * *"
+[functions]
+  directory = "netlify/functions"
