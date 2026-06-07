@@ -1108,8 +1108,8 @@
 
     <!-- ── TAB NAVIGATION — SEASON_MODE drives the default ── -->
     <nav class="tab-bar" id="tabBar" role="tablist" aria-label="Dashboard sections">
-        <button class="tab-btn active" id="tabBtnToday" role="tab" aria-selected="true" onclick="location.hash='today'">Today</button>
-        <button class="tab-btn" id="tabBtnFlood" role="tab" aria-selected="false" onclick="location.hash='flood'">Flood Watch</button>
+        <button class="tab-btn active" id="tabBtnToday" role="tab" aria-selected="true" onclick="goTab('today')">Today</button>
+        <button class="tab-btn" id="tabBtnFlood" role="tab" aria-selected="false" onclick="goTab('flood')">Flood Watch</button>
     </nav>
 
     <!-- ══ TAB PANEL: TODAY (1 of 3) — basin strip · lake level · situation strip · share card ══ -->
@@ -1122,6 +1122,7 @@
             <canvas id="portraitCanvas" style="width:100%; display:block; border-radius:4px;" aria-label="Living portrait of Dauphin Lake — sky, water, and shore rendered from live conditions"></canvas>
             <div id="ptChipL" style="position:absolute; top:8px; left:8px; font-family:var(--mono); font-size:11px; letter-spacing:.05em; background:rgba(10,20,32,.55); color:#ECF1F8; padding:3px 9px; border-radius:3px;">— ft</div>
             <div id="ptChipR" style="position:absolute; top:8px; right:8px; font-family:var(--mono); font-size:11px; letter-spacing:.05em; background:rgba(10,20,32,.55); color:#ECF1F8; padding:3px 9px; border-radius:3px;">—</div>
+            <div id="ptChipB" style="position:absolute; bottom:8px; left:8px; font-family:var(--mono); font-size:11px; letter-spacing:.05em; background:rgba(10,20,32,.55); color:#ECF1F8; padding:3px 9px; border-radius:3px;">Next 3 h: reading conditions</div>
         </div>
 
     </div>
@@ -2047,10 +2048,10 @@ const HFC_REF = {
 // inter-pulse · second pulse active · peak · post-peak · recovery · dormancy
 // ─────────────────────────────────────────────────────────
 const PHASE = {
-    active:   false,
-    since:    'June 4, 2026 — afternoon',
-    headline: '',
-    text:     '',
+    active:   true,
+    since:    'June 6, 2026 — evening',
+    headline: 'Storm night — Saturday into Sunday',
+    text:     'Environment Canada has this region in an active severe-weather pattern into Sunday, June 7 — a severe thunderstorm warning crossed the R.M. of Dauphin Saturday afternoon, and more storms are possible overnight and through Sunday, with the weekend\'s heaviest rain aimed at western Manitoba. A regional flood watch rides with it: heavy downpours on a basin still letting down from spring can bring creeks up fast, put water on low roads, and drive gusts that push the lake well up the downwind shore. The strip above reads radar every few minutes; totals and the lake\'s response will be posted as the weekend resolves.',
 };
 
 // ─────────────────────────────────────────────────────────
@@ -2087,6 +2088,11 @@ const SEASON_MODE = {
 // ─────────────────────────────────────────────────────────
 const TAB_KEYS = ['today', 'flood'];
 
+function goTab(k) {
+    try { location.hash = k; }
+    catch (e) { activateTab(k); }
+}
+
 function activateTab(key) {
     if (!TAB_KEYS.includes(key)) key = SEASON_MODE.floodActive ? 'flood' : SEASON_MODE.defaultTab;
     document.querySelectorAll('.tab-panel[data-tab]').forEach(p => {
@@ -2109,7 +2115,7 @@ function initTabs() {
     const start = TAB_KEYS.includes(fromHash)
         ? fromHash
         : (SEASON_MODE.floodActive ? 'flood' : SEASON_MODE.defaultTab);
-    if (!TAB_KEYS.includes(fromHash)) history.replaceState(null, '', '#' + start);
+    if (!TAB_KEYS.includes(fromHash)) { try { history.replaceState(null, '', '#' + start); } catch (e) { /* sandboxed viewers (srcdoc iframes) forbid URL state — cosmetic only */ } }
     activateTab(start);
     window.addEventListener('hashchange', () => activateTab((location.hash || '').replace('#', '')));
 }
@@ -4267,6 +4273,18 @@ function chips(){
         if(IN._sb) t+=' · sun breaking through';
         else if(IN._appr) t+=' · rain approaching';
         R.textContent=t; }
+    const B=document.getElementById('ptChipB');
+    if(B){
+        let o;
+        const radarAppr=IN.radarTime!=null&&ageMin(IN.radarTime)<=12&&(IN.radarUp||0)>=0.2;
+        if(thundering()) o='Now: thunderstorm at the lake';
+        else if(IN._rain) o='Now: rain at the lake'+(((IN.p15Next||0)>(IN.p15Now||0)+0.2)?' · more behind it':'');
+        else if(radarAppr) o='Next hour: rain approaching from the west';
+        else if((IN.p15Next||0)>=0.3) o='Next 3 h: showers likely';
+        else if(IN.rainSoon) o='Next 3 h: holding · storms possible later';
+        else o='Next 3 h: holding steady';
+        B.textContent=o;
+    }
 }
 function loop(){
     if(!on) return;
@@ -4334,9 +4352,9 @@ return {boot:boot, set:set, pollRadar:pollRadar};
 /*PORTRAIT-END*/
 window.PORTRAIT = PORTRAIT;
 
-initTabs();
-init();
-PORTRAIT.boot();
+try { initTabs(); } catch (e) { console.warn('[tabs]', e.message); }
+try { init(); } catch (e) { console.warn('[init]', e.message); }
+try { PORTRAIT.boot(); } catch (e) { console.warn('[portrait]', e.message); }
 </script>
 </body>
 </html>
