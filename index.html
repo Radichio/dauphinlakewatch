@@ -1045,6 +1045,7 @@
             .tab-btn { padding: 9px 14px 7px; font-size: 14px; }
         }
     </style>
+<style>@media(max-width:600px){#ptChipL,#ptChipR,#ptChipB{font-size:9px!important;padding:2px 6px!important;letter-spacing:0!important;line-height:1.25;}#ptChipL{max-width:40%;white-space:nowrap;}#ptChipR{max-width:56%;text-align:right;}#ptChipB{max-width:72%;}}</style>
 </head>
 <body>
 
@@ -4085,7 +4086,7 @@ function pollRing(){
 }
 function ringFresh(){
     var rd=IN.ringData; if(!rd||ageMin(rd.t)>20)return [];
-    var fr=rd.stations.filter(function(st){return st&&st.spd!=null&&st.age!=null&&st.age<=25;});
+    var fr=rd.stations.filter(function(st){var a=staAge(st);return st&&st.spd!=null&&a!=null&&a<=25;});
     /* dead-sensor guard: a 0 reading while healthy neighbours average >=15 is a stuck gauge, not calm */
     if(fr.length>=3){
         var live=fr.filter(function(st){return st.spd>=2;});
@@ -4118,9 +4119,9 @@ function fuseRing(excl){
     for(var i2=0;i2<fr.length;i2++){if(fr[i2].gust!=null){gS+=fr[i2].gust*w[i2];gW+=w[i2];}}
     if(gW>0)g=gS/gW;
     g=Math.max(g!=null?g:0,spd*1.15);
-    var mx2=-1e9,mn2=1e9,nw=1e9;
-    fr.forEach(function(st){mx2=Math.max(mx2,st.spd);mn2=Math.min(mn2,st.spd);nw=Math.min(nw,st.age);});
-    return {spd:spd,gust:g,dir:d0,n:fr.length,spread:mx2-mn2,newest:nw};
+    var mx2=-1e9,mn2=1e9,nw=1e9,nwObs=null;
+    fr.forEach(function(st){var a=staAge(st);mx2=Math.max(mx2,st.spd);mn2=Math.min(mn2,st.spd);if(a<nw){nw=a;nwObs=(st.obs&&!isNaN(Date.parse(st.obs)))?Date.parse(st.obs):(Date.now()-a*60000);}});
+    return {spd:spd,gust:g,dir:d0,n:fr.length,spread:mx2-mn2,newest:nw,newestObs:nwObs};
 }
 function ringHoldout(){
     var fr=ringFresh(); if(fr.length<3)return;
@@ -4134,14 +4135,15 @@ function ringEst(){
     var tier=1;
     if(f.n>=2&&f.spread<=Math.max(10,0.55*Math.max(6,f.spd)))tier=2;
     if(IN.ringMAE!=null&&IN.ringMAE>9&&tier===2)tier=1;
-    return {spd:Math.round(f.spd),gust:Math.round(f.gust),dir:f.dir,tier:tier,newest:f.newest,n:f.n};
+    return {spd:Math.round(f.spd),gust:Math.round(f.gust),dir:f.dir,tier:tier,newest:f.newest,newestObs:f.newestObs,n:f.n};
 }
 function ringGust(){var r=ringEst();return r?r.gust:null;}
-function obsClock(am){var d=new Date(Date.now()-am*60000);var h=d.getHours(),m=d.getMinutes();return h+':'+(m<10?'0':'')+m;}
+function staAge(st){ if(!st)return null; if(st.obs){var p=Date.parse(st.obs); if(!isNaN(p))return Math.max(0,Math.round((Date.now()-p)/60000));} return (st.age!=null)?st.age:null; }
+function clockOf(epoch){ if(epoch==null||isNaN(epoch))return ''; var d=new Date(epoch); var h=d.getHours(),m=d.getMinutes(); return h+':'+(m<10?'0':'')+m; }
 function srcTag(){
     var r=ringEst();
-    if(r)return ' \u00b7 '+obsClock(r.newest);
-    if(IN.windKmh!=null&&IN.wxTime&&ageMin(IN.wxTime)<=70)return ' \u00b7 '+obsClock(ageMin(IN.wxTime));
+    if(r)return ' \u00b7 '+clockOf(r.newestObs);
+    if(IN.windKmh!=null&&IN.wxTime&&ageMin(IN.wxTime)<=70)return ' \u00b7 '+clockOf(Date.parse(IN.wxTime));
     return ' \u00b7 estimated';
 }
 function windDirNow(){
