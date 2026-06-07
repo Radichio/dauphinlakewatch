@@ -3825,7 +3825,7 @@ const PORTRAIT = (function(){
 'use strict';
 const IN = { level:null, windKmh:null, wxCode:null, wxTime:null, wmo:null, rainSoon:false, windFallback:null,
              p15Now:null, p15Next:null, radNow:null, cloud15:null, p15Time:null,
-             radarNow:null, radarUp:null, radarTime:null, wasRaining:false, lastRainEnd:0, _appr:false, _sb:false, _rain:false };
+             radarNow:null, radarUp:null, radarTime:null, stormWarn:false, alertTime:null, wasRaining:false, lastRainEnd:0, _appr:false, _sb:false, _rain:false };
 let cv=null, x=null, W=0, Hh=0, horizonY=0, skyH=0, waterH=0, DPR=1;
 let on=false, frame=0, tt=0;
 const SEED=20260606;
@@ -3908,9 +3908,13 @@ function rainState(){
     const w=IN.wmo; return w!=null && ((w>=51&&w<=67)||(w>=80&&w<=99));
 }
 function thundering(){
+    if(IN.stormWarn&&ageMin(IN.alertTime)<=45) return true;
     const c=IN.wxCode!=null?parseInt(IN.wxCode):null;
     if(c!=null&&c>=200&&c<=299&&ageMin(IN.wxTime)<=70) return true;
-    return IN.wmo!=null&&IN.wmo>=95;
+    if(IN.wmo!=null&&IN.wmo>=95) return true;
+    const rr=(IN.radarTime!=null&&ageMin(IN.radarTime)<=12)?IN.radarNow
+            :((IN.p15Time!=null&&ageMin(IN.p15Time)<=25)?IN.p15Now:null);
+    return rr!=null&&rr>=2.0;
 }
 function cloudF(alt){
     let base;
@@ -4020,6 +4024,7 @@ function stepStreaks(k){
 }
 let caps=[];
 let flick=0;
+let flickX=0.5;
 let drips=[];
 function stepCaps(v){
     const ex=v-22;
@@ -4112,11 +4117,26 @@ function draw(){
             ctx.beginPath(); ctx.ellipse(lx,horizonY-bh*0.45,W*0.16,bh*0.34,0,0,6.283); ctx.fill();
         }
     }
-    /* distant lightning during thunderstorm obs */
-    if(thundering()&&Math.random()<0.012) flick=2;
+    /* distant lightning — soft bursts over the far shore, frequency scales with intensity */
+    if(thundering()&&flick<=0&&Math.random()<(0.006+inten*0.02)){
+        flick=(Math.random()<0.35?5:2);
+        flickX=0.08+Math.random()*0.84;
+    }
     if(flick>0){
-        ctx.fillStyle='rgba(226,229,242,'+(0.10+0.08*flick)+')';
-        ctx.fillRect(0,0,W*0.62,horizonY);
+        const fOn=(flick!==4&&flick!==3);
+        if(fOn){
+            const fx=flickX*W, fy=horizonY-skyH*0.12;
+            const fg=ctx.createRadialGradient(fx,fy,0,fx,fy,skyH*1.15);
+            fg.addColorStop(0,'rgba(230,234,248,0.45)');
+            fg.addColorStop(0.3,'rgba(214,222,244,0.18)');
+            fg.addColorStop(1,'rgba(214,222,244,0)');
+            ctx.fillStyle=fg;
+            ctx.fillRect(0,0,W,horizonY+4);
+            ctx.fillStyle='rgba(226,230,244,0.05)';
+            ctx.fillRect(0,0,W,Hh);
+            ctx.fillStyle='rgba(220,228,246,0.10)';
+            ctx.fillRect(Math.max(0,fx-W*0.12),horizonY,W*0.24,waterH*0.5);
+        }
         flick--;
     }
 
@@ -4241,7 +4261,9 @@ function draw(){
     const swA=(0.25+k*2.6)*gust;
     ctx.strokeStyle='rgba(13,12,15,0.95)';
     for(const sg of segs){
-        const dx=Math.sin(tt*(0.7+k*0.9)+sg.d*1.3+sg.x1*23)*swA*sg.d*0.55*(fol.d>0?1:1.4)+k*sg.d*0.8;
+        const dx=Math.sin(tt*(0.7+k*0.9)+sg.d*1.3+sg.x1*23)*swA*sg.d*0.55*(fol.d>0?1:1.4)
+                +k*k*sg.d*1.6+k*sg.d*0.5
+                +(k>0.4&&sg.d>=4?(Math.random()-0.5)*k*sg.d*0.5:0);
         ctx.lineWidth=Math.max(0.6,sg.w*(W/1100));
         ctx.beginPath(); ctx.moveTo(sg.x1*W+dx*0.6,sg.y1*W); ctx.lineTo(sg.x2*W+dx,sg.y2*W); ctx.stroke();
     }
@@ -4252,12 +4274,19 @@ function draw(){
         const step=fol.d>=1?1:Math.max(1,Math.round(1/Math.max(0.08,fol.d)));
         for(let i=0;i<dabs.length;i+=step){
             const d=dabs[i];
-            const dx=Math.sin(tt*(0.7+k*0.9)+4.8+d.ph*0.9)*swA*1.4+k*3.2
-                    +Math.sin(tt*(3.6+k*3.5+(d.ph%1)*2.4)+d.ph*3)*(0.5+k*3.0);
-            const flash=Math.sin(tt*6.5+d.ph*9)>(1.85-v/36);
+            const j=(d.ph%1);
+            const twist=Math.sin(tt*(6+k*9+j*4)+d.ph*4);
+            const rot=0.6+twist*(0.12+k*0.95);
+            const dx=Math.sin(tt*(0.7+k*0.9)+4.8+d.ph*0.9)*swA*1.3
+                    +k*k*7+k*1.5
+                    +Math.sin(tt*(5+k*9+j*3)+d.ph*3)*(0.4+k*5.2)
+                    +(Math.random()-0.5)*k*k*3.2;
+            const dy=Math.sin(tt*(3+k*6+j*2)+d.ph*5)*(0.3+k*2.4)
+                    +(Math.random()-0.5)*k*k*2.2;
+            const flash=twist>(1.02-k*0.55);
             ctx.fillStyle=cl(flash?mx(pale,lc2,0.3):lc2,0.88);
             ctx.beginPath();
-            ctx.ellipse(d.x*W+dx,d.y*W+Math.sin(tt*(2.4+(d.ph%1)*1.6)+d.ph*5)*(0.3+k*1.4),d.r*(W/1100)*2.1,d.r*(W/1100)*1.05,0.6,0,6.283);
+            ctx.ellipse(d.x*W+dx,d.y*W+dy,d.r*(W/1100)*2.1,d.r*(W/1100)*1.05,rot,0,6.283);
             ctx.fill();
         }
     }
@@ -4360,6 +4389,28 @@ function gfi(lat,lon){
         })
         .catch(()=>null);
 }
+async function pollAlerts(){
+    try{
+        const d=0.02;
+        const url='https://geo.weather.gc.ca/geomet?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetFeatureInfo'
+            +'&LAYERS=ALERTS&QUERY_LAYERS=ALERTS&CRS=EPSG:4326'
+            +'&BBOX='+(CFG.lat-d)+','+(CFG.lon-d)+','+(CFG.lat+d)+','+(CFG.lon+d)
+            +'&WIDTH=3&HEIGHT=3&I=1&J=1&INFO_FORMAT=application/json&FORMAT=image/png&FEATURE_COUNT=8';
+        const r=await fetch(url,{signal:AbortSignal.timeout(6000)});
+        if(!r.ok) return;
+        const j=await r.json();
+        const feats=(j&&j.features)||[];
+        let ts=false;
+        for(const f of feats){
+            const p=f.properties||{};
+            for(const kk in p){
+                if(/thunder|tornado|orage|tornade/i.test(String(p[kk]))){ts=true;break;}
+            }
+            if(ts)break;
+        }
+        IN.stormWarn=ts; IN.alertTime=Date.now();
+    }catch(e){}
+}
 async function pollRadar(){
     try{
         const a=await gfi(CFG.lat,CFG.lon);
@@ -4370,6 +4421,7 @@ async function pollRadar(){
             IN.radarUp=Math.max(b||0,c||0);
             IN.radarTime=Date.now();
         }
+        pollAlerts();
     }catch(e){}
 }
 function set(o){ Object.assign(IN,o||{}); chips(); }
