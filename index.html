@@ -3432,7 +3432,7 @@ async function fetchCYDN() {
 function renderCYDN(obs) {
     const el = document.getElementById('cydnObs');
     if (!el || !obs) return;
-    if (window.PORTRAIT) PORTRAIT.set({ windKmh: obs.wspd, wxCode: obs.wx_code, wxTime: obs.time });
+    if (window.PORTRAIT) PORTRAIT.set({ windKmh: obs.wspd, wgust: obs.wgust, wxCode: obs.wx_code, wxTime: obs.time });
 
     // ── Override main temp with CYDN ground truth — more accurate than model
     if (obs.temp != null) {
@@ -3823,7 +3823,7 @@ async function dashSubscribe() {
 // ─────────────────────────────────────────────────────────
 const PORTRAIT = (function(){
 'use strict';
-const IN = { level:null, windKmh:null, wxCode:null, wxTime:null, wmo:null, rainSoon:false, windFallback:null,
+const IN = { level:null, windKmh:null, wgust:null, wxCode:null, wxTime:null, wmo:null, rainSoon:false, windFallback:null,
              p15Now:null, p15Next:null, radNow:null, cloud15:null, p15Time:null,
              radarNow:null, radarUp:null, radarTime:null, stormWarn:false, alertTime:null, wasRaining:false, lastRainEnd:0, _appr:false, _sb:false, _rain:false };
 let cv=null, x=null, W=0, Hh=0, horizonY=0, skyH=0, waterH=0, DPR=1;
@@ -3912,8 +3912,9 @@ function thundering(){
     const c=IN.wxCode!=null?parseInt(IN.wxCode):null;
     if(c!=null&&c>=200&&c<=299&&ageMin(IN.wxTime)<=70) return true;
     if(IN.wmo!=null&&IN.wmo>=95) return true;
-    const rr=(IN.radarTime!=null&&ageMin(IN.radarTime)<=12)?IN.radarNow
-            :((IN.p15Time!=null&&ageMin(IN.p15Time)<=25)?IN.p15Now:null);
+    const fresh=IN.radarTime!=null&&ageMin(IN.radarTime)<=12;
+    if(fresh&&(IN.radarUp||0)>=2.5) return true;
+    const rr=fresh?IN.radarNow:((IN.p15Time!=null&&ageMin(IN.p15Time)<=25)?IN.p15Now:null);
     return rr!=null&&rr>=2.0;
 }
 function cloudF(alt){
@@ -3945,6 +3946,13 @@ function discState(alt,az,morning,cloud){
     return {on:false,x:0,yf:0,vis:0};
 }
 function windNow(){ const v=IN.windKmh!=null?IN.windKmh:(IN.windFallback!=null?IN.windFallback:8); return Math.max(0,Math.min(70,v)); }
+function windEffK(){
+    const sus=windNow();
+    const g=Math.max(sus, IN.wgust!=null?IN.wgust:sus*1.3);
+    const e=Math.max(0,Math.min(1,(0.55+0.45*Math.sin(tt*0.21)+0.30*Math.sin(tt*0.53+1.7)-0.18)/1.12));
+    const v=sus*0.25+(g-sus*0.25)*Math.pow(e,1.6);
+    return Math.max(0,Math.min(70,v))/60;
+}
 function windWord(v){ if(v<10)return 'calm'; if(v<22)return 'light chop'; if(v<36)return 'choppy'; return 'rough'; }
 
 /* landscape (seeded, from Motion Study A) */
@@ -4043,10 +4051,10 @@ function draw(){
     const sunBreak=!rain&&IN.lastRainEnd>0&&(Date.now()-IN.lastRainEnd)<45*60000&&cloud<0.55&&sun.alt>2;
     const radarFresh=IN.radarTime!=null&&ageMin(IN.radarTime)<=12;
     const approaching=!rain&&((radarFresh&&(IN.radarUp||0)>=0.2)||((IN.p15Next||0)>=0.4));
-    const inten=Math.max(0.15,Math.min(1,((radarFresh?IN.radarNow:null)??IN.p15Now??1.6)/4));
+    const inten=Math.max(0.15,Math.min(1,((radarFresh?Math.max(IN.radarNow||0,(IN.radarUp||0)*0.8):null)??IN.p15Now??1.6)/4));
     IN._sb=sunBreak; IN._appr=approaching; IN._rain=rain;
     const v=windNow();
-    const k=v/60;
+    const k=windEffK();
     let pal=paletteFor(sun.alt,morning,rain?Math.max(cloud,0.85):cloud);
     if(sunBreak){
         pal={top:mx(pal.top,[120,150,190],0.20), mid:mx(pal.mid,[250,210,140],0.32),
@@ -4257,8 +4265,7 @@ function draw(){
     }
     /* branch — foliage calendar + wind manners */
     ctx.lineCap='round';
-    const gust=Math.max(0.18,0.55+0.45*Math.sin(tt*0.21)+0.30*Math.sin(tt*0.53+1.7));
-    const swA=(0.25+k*2.6)*gust;
+    const swA=(0.25+k*2.6)*0.85;
     ctx.strokeStyle='rgba(13,12,15,0.95)';
     for(const sg of segs){
         const dx=Math.sin(tt*(0.7+k*0.9)+sg.d*1.3+sg.x1*23)*swA*sg.d*0.55*(fol.d>0?1:1.4)
@@ -4332,7 +4339,7 @@ function chips(){
     if(B){
         let o;
         const radarAppr=IN.radarTime!=null&&ageMin(IN.radarTime)<=12&&(IN.radarUp||0)>=0.2;
-        if(thundering()) o='Now: thunderstorm at the lake';
+        if(thundering()) o=IN._rain?'Now: thunderstorm at the lake':'Lightning nearby — dry at the lake';
         else if(IN._rain) o='Now: rain at the lake'+(((IN.p15Next||0)>(IN.p15Now||0)+0.2)?' · more behind it':'');
         else if(radarAppr) o='Next hour: rain approaching from the west';
         else if((IN.p15Next||0)>=0.3) o='Next 3 h: showers likely';
@@ -4346,8 +4353,8 @@ function loop(){
     requestAnimationFrame(loop);
     frame++;
     if(document.hidden||frame%2) return;
-    const k=windNow()/60;
-    stepStreaks(k); stepCaps(windNow()); tt+=0.032;
+    const k=windEffK();
+    stepStreaks(k); stepCaps(k*60); tt+=0.032;
     try{ draw(); }catch(e){ on=false; console.warn('[portrait]',e.message); }
 }
 function boot(){
