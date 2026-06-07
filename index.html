@@ -3997,9 +3997,9 @@ function build(){
     })(1.04,-0.04,2.62,0.062,5.2,0);
     {const r2=rng(SEED+17);
      for(const sg of segs){
-        if(dabs.length>=1750) break;
-        if(sg.d>=2&&r2()<0.62){
-            const nl=1+Math.floor(r2()*2);
+        if(dabs.length>=2100) break;
+        if(sg.d>=3&&r2()<0.78){
+            const nl=2+Math.floor(r2()*2);
             for(let k2=0;k2<nl;k2++)dabs.push({x:sg.x2+(r2()-0.5)*0.012,y:sg.y2+(r2()-0.5)*0.013,r:1.0+r2()*1.5,ph:r2()*6.28,ox:0,oy:0,vx:0,vy:0,tp:0,tw:0});
         }
      }}
@@ -4051,6 +4051,12 @@ let caps=[];
 let flick=0;
 let flickX=0.5;
 let drips=[];
+let seaE=0, seaSeeded=false;
+function stepSea(kInst){
+    const tgt=Math.max(kInst*60, windNow()*0.85);
+    seaE+=(tgt-seaE)*(tgt>seaE?1.1e-4:1.6e-5);
+    if(seaE<0)seaE=0;
+}
 function stepCaps(v){
     const ex=v-12;
     if(ex>0){
@@ -4221,7 +4227,7 @@ function draw(){
     ctxFill(mx(pal.low,[255,255,255],0.25),0.18,0,horizonY,W,2);
     ctx.globalAlpha=0.62; ctx.drawImage(strkCv,0,0,W,Hh); ctx.globalAlpha=1;
     /* sea state — swell: lit crests over dark troughs, marching shoreward, height+count rising with wind */
-    const seaK=Math.max(0,Math.min(1.2,(v-6)/44));
+    const seaK=Math.max(0,Math.min(1.2,(seaE-6)/44));
     if(seaK>0.04){
         const nb=Math.round(7+seaK*16);
         const crestC=mx(pal.low,[236,240,247],0.5+seaK*0.3);
@@ -4271,15 +4277,15 @@ function draw(){
         }
     }
     for(const c of caps){
-        const ph=c.life/c.max;
-        const fade=Math.sin(ph*3.1416);
-        const a=fade*Math.min(1,(v-12)/30)*0.72;
+        const ph=1-c.life/c.max;
+        const fade=Math.sin(Math.min(1,ph*1.25)*3.1416);
+        const a=fade*(0.30+0.55*Math.min(1,(seaE-10)/26));
         const yy=horizonY+c.y*(waterH-Hh*0.06);
-        const sz=2.0+c.y*3.6;
-        ctx.strokeStyle=cl([240,244,250],a); ctx.lineWidth=1.3+c.y*1.0;
-        ctx.beginPath(); ctx.arc(c.x*W,yy,sz,3.4,6.02); ctx.stroke();
-        ctx.strokeStyle=cl([230,237,247],a*0.55); ctx.lineWidth=1;
-        ctx.beginPath(); ctx.moveTo(c.x*W-sz,yy+0.6); ctx.lineTo(c.x*W+sz*0.7,yy+0.6); ctx.stroke();
+        const ln=(3.5+c.y*7)*(0.7+ph*0.8);
+        ctx.strokeStyle=cl([244,248,252],a); ctx.lineWidth=1.2+c.y*1.6;
+        ctx.beginPath(); ctx.moveTo(c.x*W-ln*0.5,yy); ctx.lineTo(c.x*W+ln*0.5,yy); ctx.stroke();
+        ctx.strokeStyle=cl([232,239,248],a*0.5); ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(c.x*W-ln*0.35,yy+1.4); ctx.lineTo(c.x*W+ln*0.6,yy+1.4); ctx.stroke();
     }
     /* rain in scene — count and weight follow measured intensity */
     if(rain){
@@ -4347,13 +4353,15 @@ function draw(){
     /* branch — foliage calendar + wind manners */
     ctx.lineCap='round';
     const swA=(0.25+k*2.6)*0.85;
+    const limbX=k*k*5+Math.sin(tt*(0.45+k*0.5))*k*2.6;
+    const limbY=Math.sin(tt*(0.33+k*0.4)+1.7)*k*1.2;
     ctx.strokeStyle='rgba(13,12,15,0.95)';
     for(const sg of segs){
         const dx=Math.sin(tt*(0.7+k*0.9)+sg.d*1.3+sg.x1*23)*swA*sg.d*0.55*(fol.d>0?1:1.4)
                 +k*k*sg.d*4.4+k*sg.d*0.6
                 +(k>0.4&&sg.d>=4?(Math.random()-0.5)*k*sg.d*0.5:0);
         ctx.lineWidth=Math.max(0.6,sg.w*(W/1100));
-        ctx.beginPath(); ctx.moveTo(sg.x1*W+dx*0.6,sg.y1*W); ctx.lineTo(sg.x2*W+dx,sg.y2*W); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(sg.x1*W+dx*0.6+limbX,sg.y1*W+limbY); ctx.lineTo(sg.x2*W+dx+limbX,sg.y2*W+limbY); ctx.stroke();
     }
     if(fol.d>0.02){
         const inkC=[13,12,15], pale=mx(fol.c,[235,240,225],0.45);
@@ -4379,7 +4387,7 @@ function draw(){
             const flash=twist>(1.02-k*0.55);
             ctx.fillStyle=cl(flash?mx(pale2,lc2,0.3):lc2,0.88);
             ctx.beginPath();
-            ctx.ellipse(d.x*W+dx,d.y*W+dy,d.r*(W/1100)*2.1,d.r*(W/1100)*1.05,rot,0,6.283);
+            ctx.ellipse(d.x*W+dx+limbX,d.y*W+dy+limbY,d.r*(W/1100)*2.4,d.r*(W/1100)*1.2,rot,0,6.283);
             ctx.fill();
         }
     }
@@ -4440,7 +4448,7 @@ function loop(){
     frame++;
     if(document.hidden||frame%2) return;
     const k=windEffK();
-    stepStreaks(k); stepCaps(k*60); tt+=0.032;
+    stepSea(k); stepStreaks(k); stepCaps(seaE); tt+=0.032;
     try{ draw(); }catch(e){ on=false; console.warn('[portrait]',e.message); }
 }
 function boot(){
@@ -4517,7 +4525,11 @@ async function pollRadar(){
         pollAlerts();
     }catch(e){}
 }
-function set(o){ Object.assign(IN,o||{}); chips(); }
+function set(o){ Object.assign(IN,o||{}); 
+    if(!seaSeeded&&(IN.windKmh!=null||IN.wgust!=null)){
+        seaE=Math.max(windNow(),(IN.wgust||0)*0.75); seaSeeded=true;
+    }
+    chips(); }
 return {boot:boot, set:set, pollRadar:pollRadar};
 })();
 /*PORTRAIT-END*/
