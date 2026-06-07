@@ -2784,6 +2784,7 @@ async function fetchWeather() {
     const url = `${CFG.weather}?latitude=${CFG.lat}&longitude=${CFG.lon}`
         + `&current=temperature_2m,weathercode,windspeed_10m,winddirection_10m,windgusts_10m`
         + `&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,rain_sum,snowfall_sum,precipitation_probability_max`
+        + `&minutely_15=precipitation,direct_radiation,cloud_cover&past_minutely_15=4&forecast_minutely_15=12`
         + `&timezone=America%2FWinnipeg&forecast_days=4&temperature_unit=celsius`;
     const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (!r.ok) throw new Error('wx failed');
@@ -2802,7 +2803,23 @@ function renderWeather(j) {
         const pp = j.daily?.precipitation_probability_max || [];
         const rs = j.daily?.rain_sum || [];
         const rainSoon = (pp[0] >= 60) || (pp[1] >= 60) || ((rs[0] || 0) >= 4) || ((rs[1] || 0) >= 4);
-        PORTRAIT.set({ wmo: j.current.weathercode, rainSoon: rainSoon, windFallback: wspd });
+        let p15Now=null, p15Next=null, radNow=null, cloud15=null;
+        const m = j.minutely_15;
+        if (m && m.time && m.time.length) {
+            const wallNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Winnipeg' })).getTime();
+            let idx = -1;
+            for (let i = 0; i < m.time.length; i++) { if (new Date(m.time[i]).getTime() <= wallNow) idx = i; }
+            if (idx >= 0) {
+                p15Now  = m.precipitation    ? m.precipitation[idx]    : null;
+                radNow  = m.direct_radiation ? m.direct_radiation[idx] : null;
+                cloud15 = m.cloud_cover      ? m.cloud_cover[idx]      : null;
+                let nx = 0;
+                for (let i = idx + 1; i < Math.min(idx + 5, m.time.length); i++) nx = Math.max(nx, (m.precipitation ? m.precipitation[i] : 0) || 0);
+                p15Next = nx;
+            }
+        }
+        PORTRAIT.set({ wmo: j.current.weathercode, rainSoon: rainSoon, windFallback: wspd,
+                       p15Now: p15Now, p15Next: p15Next, radNow: radNow, cloud15: cloud15, p15Time: Date.now() });
     }
 
     // Show gusts if meaningfully higher than sustained speed
@@ -3408,7 +3425,7 @@ async function fetchCYDN() {
 function renderCYDN(obs) {
     const el = document.getElementById('cydnObs');
     if (!el || !obs) return;
-    if (window.PORTRAIT) PORTRAIT.set({ windKmh: obs.wspd, wxCode: obs.wx_code });
+    if (window.PORTRAIT) PORTRAIT.set({ windKmh: obs.wspd, wxCode: obs.wx_code, wxTime: obs.time });
 
     // ── Override main temp with CYDN ground truth — more accurate than model
     if (obs.temp != null) {
@@ -3799,7 +3816,9 @@ async function dashSubscribe() {
 // ─────────────────────────────────────────────────────────
 const PORTRAIT = (function(){
 'use strict';
-const IN = { level:null, windKmh:null, wxCode:null, wmo:null, rainSoon:false, windFallback:null };
+const IN = { level:null, windKmh:null, wxCode:null, wxTime:null, wmo:null, rainSoon:false, windFallback:null,
+             p15Now:null, p15Next:null, radNow:null, cloud15:null, p15Time:null,
+             radarNow:null, radarUp:null, radarTime:null, wasRaining:false, lastRainEnd:0, _appr:false, _sb:false, _rain:false };
 let cv=null, x=null, W=0, Hh=0, horizonY=0, skyH=0, waterH=0, DPR=1;
 let on=false, frame=0, tt=0;
 const SEED=20260606;
@@ -3871,17 +3890,35 @@ function foliage(doy){
     if(doy<302) return {c:gold, d:1-(doy-288)/14};
     return {c:fresh, d:0};
 }
-function cloudFrac(){
-    if(IN.wxCode!=null){const c=parseInt(IN.wxCode); if(c>=500&&c<=599)return 0.95; if(c>=100&&c<=199)return 0.95;}
-    const w=IN.wmo;
-    if(w==null) return 0.3;
-    if(w===0) return 0.05; if(w===1) return 0.2; if(w===2) return 0.5; if(w===3) return 0.9;
-    if(w>=45) return 0.95;
-    return 0.3;
-}
-function raining(){
-    if(IN.wxCode!=null){const c=parseInt(IN.wxCode); if((c>=500&&c<=599)||(c>=200&&c<=299))return true;}
+function ageMin(t){ if(!t) return 1e9; const ms=(typeof t==='number')?t:new Date(t).getTime(); return (Date.now()-ms)/60000; }
+function rainState(){
+    if(IN.radarTime!=null && ageMin(IN.radarTime)<=12 && IN.radarNow!=null) return IN.radarNow>=0.15;
+    if(IN.p15Time!=null && ageMin(IN.p15Time)<=25 && IN.p15Now!=null) return IN.p15Now>=0.1;
+    if(IN.wxCode!=null && ageMin(IN.wxTime)<=70){
+        const c=parseInt(IN.wxCode);
+        return (c>=500&&c<=599)||(c>=200&&c<=299);
+    }
     const w=IN.wmo; return w!=null && ((w>=51&&w<=67)||(w>=80&&w<=99));
+}
+function thundering(){
+    const c=IN.wxCode!=null?parseInt(IN.wxCode):null;
+    if(c!=null&&c>=200&&c<=299&&ageMin(IN.wxTime)<=70) return true;
+    return IN.wmo!=null&&IN.wmo>=95;
+}
+function cloudF(alt){
+    let base;
+    if(IN.cloud15!=null && ageMin(IN.p15Time)<=30) base=IN.cloud15/100;
+    else{
+        const w=IN.wmo;
+        base = w==null?0.3 : w===0?0.05 : w===1?0.2 : w===2?0.5 : w===3?0.9 : w>=45?0.95 : 0.4;
+    }
+    if(IN.radNow!=null && alt>4 && ageMin(IN.p15Time)<=30){
+        const clearMax=Math.max(60,Math.sin(alt*Math.PI/180)*880);
+        const sunF=Math.max(0,Math.min(1,IN.radNow/(0.72*clearMax)));
+        base=Math.min(base,1-sunF*0.9)*0.5+(1-sunF)*0.5;
+    }
+    if(rainState()) base=Math.max(base,0.8);
+    return Math.max(0,Math.min(1,base));
 }
 function windNow(){ const v=IN.windKmh!=null?IN.windKmh:(IN.windFallback!=null?IN.windFallback:8); return Math.max(0,Math.min(70,v)); }
 function windWord(v){ if(v<10)return 'calm'; if(v<22)return 'light chop'; if(v<36)return 'choppy'; return 'rough'; }
@@ -3962,6 +3999,8 @@ function stepStreaks(k){
     }
 }
 let caps=[];
+let flick=0;
+let drips=[];
 function stepCaps(v){
     const ex=v-22;
     if(ex>0&&Math.random()<ex/27) caps.push({x:Math.random(),y:0.25+Math.random()*0.7,life:34,max:34});
@@ -3972,11 +4011,23 @@ function draw(){
     const now=new Date();
     const sun=solar(now);
     const morning=sun.az<180;
-    const cloud=cloudFrac();
-    const rain=raining();
+    const rain=rainState();
+    if(rain&&!IN.wasRaining){IN.wasRaining=true;}
+    if(!rain&&IN.wasRaining){IN.wasRaining=false;IN.lastRainEnd=Date.now();}
+    const cloud=cloudF(sun.alt);
+    const sunBreak=!rain&&IN.lastRainEnd>0&&(Date.now()-IN.lastRainEnd)<45*60000&&cloud<0.55&&sun.alt>2;
+    const radarFresh=IN.radarTime!=null&&ageMin(IN.radarTime)<=12;
+    const approaching=!rain&&((radarFresh&&(IN.radarUp||0)>=0.2)||((IN.p15Next||0)>=0.4));
+    const inten=Math.max(0.15,Math.min(1,((radarFresh?IN.radarNow:null)??IN.p15Now??1.6)/4));
+    IN._sb=sunBreak; IN._appr=approaching; IN._rain=rain;
     const v=windNow();
     const k=v/60;
-    const pal=paletteFor(sun.alt,morning,rain?Math.max(cloud,0.85):cloud);
+    let pal=paletteFor(sun.alt,morning,rain?Math.max(cloud,0.85):cloud);
+    if(sunBreak){
+        pal={top:mx(pal.top,[120,150,190],0.20), mid:mx(pal.mid,[250,210,140],0.32),
+             low:mx(pal.low,[255,198,108],0.42), sun:mx(pal.sun,[255,230,170],0.5)};
+    }
+    const gm=sunBreak?2:1;
     const doyMs=Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate())-Date.UTC(now.getUTCFullYear(),0,0);
     const fol=foliage(Math.round(doyMs/86400000));
     const nightK=Math.max(0,Math.min(1,(-sun.alt-6)/8));
@@ -4024,6 +4075,24 @@ function draw(){
             ctx.fillRect(st.x*W,st.y*skyH,st.r,st.r);
         }
     }
+    /* approaching rain — a dark bank building over the far shore */
+    if(approaching){
+        const ub=Math.min(1,Math.max(0.2,(IN.radarUp||0)/3+((IN.p15Next||0)/3)));
+        const bh=skyH*(0.10+0.16*ub);
+        const bc=mx(pal.top,[28,32,44],0.7);
+        for(let g=0;g<3;g++){
+            ctx.fillStyle=cl(bc,(0.34-g*0.10)*ub+0.10);
+            ctx.fillRect(0,horizonY-bh+g*bh*0.34,W*0.86,bh*0.4);
+        }
+    }
+    /* distant lightning during thunderstorm obs */
+    if(thundering()&&Math.random()<0.012) flick=2;
+    if(flick>0){
+        ctx.fillStyle='rgba(226,229,242,'+(0.10+0.08*flick)+')';
+        ctx.fillRect(0,0,W*0.62,horizonY);
+        flick--;
+    }
+
     /* far shore treeline w/ seasonal tint */
     const dark0=mx(pal.low,[9,15,11],0.84);
     const dark=mx(dark0, fol.c, 0.18*fol.d);
@@ -4055,7 +4124,7 @@ function draw(){
     ctx.globalAlpha=0.62; ctx.drawImage(strkCv,0,0,W,Hh); ctx.globalAlpha=1;
     /* glitter: evening column under disc, or broad midday sparkle */
     if(discOn){
-        const n=24+Math.round(v*0.7);
+        const n=(24+Math.round(v*0.7))*gm;
         for(let i=0;i<n;i++){
             const vv=Math.random(); const y=horizonY+4+vv*waterH*0.85;
             const spread=6+vv*W*0.05*(1+v/40);
@@ -4066,7 +4135,7 @@ function draw(){
             ctx.beginPath(); ctx.moveTo(xx-len/2,y); ctx.lineTo(xx+len/2,y); ctx.stroke();
         }
     } else if(sun.alt>14&&cloud<0.5){
-        for(let i=0;i<34;i++){
+        for(let i=0;i<34*gm;i++){
             const y=horizonY+4+Math.random()*waterH*0.9;
             const xx=Math.random()*W; const len=1.5+Math.random()*4;
             ctx.strokeStyle='rgba(255,252,240,'+(0.04+Math.random()*0.10)+')';
@@ -4087,12 +4156,13 @@ function draw(){
         ctx.strokeStyle='rgba(238,243,250,'+a+')'; ctx.lineWidth=1.4;
         ctx.beginPath(); ctx.arc(c.x*W,horizonY+c.y*(waterH-Hh*0.08),2.2+c.y*2.4,3.5,5.9); ctx.stroke();
     }
-    /* rain in scene */
+    /* rain in scene — count and weight follow measured intensity */
     if(rain){
-        ctx.strokeStyle='rgba(214,224,238,0.10)'; ctx.lineWidth=1;
-        const slant=4+k*10;
-        for(let i=0;i<60;i++){
-            const xx=Math.random()*W, yy=Math.random()*Hh*0.96, ln=7+Math.random()*9;
+        ctx.strokeStyle='rgba(214,224,238,'+(0.07+inten*0.08)+')'; ctx.lineWidth=1;
+        const slant=4+k*10+inten*6;
+        const nR=Math.round(34+inten*72);
+        for(let i=0;i<nR;i++){
+            const xx=Math.random()*W, yy=Math.random()*Hh*0.96, ln=6+Math.random()*(8+inten*8);
             ctx.beginPath(); ctx.moveTo(xx,yy); ctx.lineTo(xx-slant*0.4,yy+ln); ctx.stroke();
         }
     }
@@ -4159,6 +4229,19 @@ function draw(){
             ctx.fill();
         }
     }
+    if(sunBreak&&fol.d>0.02&&dabs.length){
+        if(drips.length<40&&Math.random()<0.25){
+            const d0=dabs[(Math.random()*dabs.length)|0];
+            drips.push({x:d0.x*W,y:d0.y*W,v:0.4});
+        }
+        ctx.strokeStyle='rgba(214,228,244,0.5)'; ctx.lineWidth=1;
+        drips=drips.filter(dr=>{
+            dr.v+=0.08; dr.y+=dr.v;
+            ctx.beginPath(); ctx.moveTo(dr.x,dr.y-3); ctx.lineTo(dr.x,dr.y); ctx.stroke();
+            return dr.y<Hh-6;
+        });
+    } else if(drips.length) drips=[];
+    chips();
     ctx.globalAlpha=0.5;
     const pat=ctx.createPattern(grainCv,'repeat');
     if(pat){ctx.fillStyle=pat; ctx.fillRect(0,0,W,Hh);}
@@ -4180,7 +4263,10 @@ function chips(){
     const L=document.getElementById('ptChipL'), R=document.getElementById('ptChipR');
     if(L) L.textContent=IN.level!=null?IN.level.toFixed(2)+' ft':'— ft';
     if(R){ const v=windNow();
-        R.textContent=(raining()?'Rain · ':'')+windWord(v)+' · '+Math.round(v)+' km/h'; }
+        let t=(IN._rain?'Rain · ':'')+windWord(v)+' · '+Math.round(v)+' km/h';
+        if(IN._sb) t+=' · sun breaking through';
+        else if(IN._appr) t+=' · rain approaching';
+        R.textContent=t; }
 }
 function loop(){
     if(!on) return;
@@ -4205,6 +4291,7 @@ function boot(){
         chips();
         const reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if(reduced){ for(let i=0;i<110;i++){stepStreaks(windNow()/60); tt+=0.032;} try{draw();}catch(e){} return; }
+        if(typeof fetch==='function'){ try{ pollRadar(); setInterval(pollRadar,7*60*1000); }catch(e){} }
         on=true; loop();
     }catch(e){
         console.warn('[portrait boot]',e.message);
@@ -4212,8 +4299,37 @@ function boot(){
         chips();
     }
 }
+function gfi(lat,lon){
+    const d=0.02;
+    const url='https://geo.weather.gc.ca/geomet?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetFeatureInfo'
+        +'&LAYERS=RADAR_1KM_RRAI&QUERY_LAYERS=RADAR_1KM_RRAI&CRS=EPSG:4326'
+        +'&BBOX='+(lat-d)+','+(lon-d)+','+(lat+d)+','+(lon+d)
+        +'&WIDTH=3&HEIGHT=3&I=1&J=1&INFO_FORMAT=application/json&FORMAT=image/png';
+    return fetch(url,{signal:AbortSignal.timeout(6000)})
+        .then(r=>r.ok?r.json():null)
+        .then(j=>{
+            const f=j&&j.features&&j.features[0];
+            if(!f) return 0;
+            const p=f.properties||{};
+            for(const k in p){ const vv=parseFloat(p[k]); if(Number.isFinite(vv)) return Math.max(0,vv); }
+            return 0;
+        })
+        .catch(()=>null);
+}
+async function pollRadar(){
+    try{
+        const a=await gfi(CFG.lat,CFG.lon);
+        const b=await gfi(CFG.lat+0.06,CFG.lon-0.45);
+        const c=await gfi(CFG.lat+0.25,CFG.lon-0.30);
+        if(a!=null||b!=null||c!=null){
+            IN.radarNow=(a!=null)?a:IN.radarNow;
+            IN.radarUp=Math.max(b||0,c||0);
+            IN.radarTime=Date.now();
+        }
+    }catch(e){}
+}
 function set(o){ Object.assign(IN,o||{}); chips(); }
-return {boot:boot, set:set};
+return {boot:boot, set:set, pollRadar:pollRadar};
 })();
 /*PORTRAIT-END*/
 window.PORTRAIT = PORTRAIT;
