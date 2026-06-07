@@ -3997,8 +3997,8 @@ function build(){
     })(1.04,-0.04,2.62,0.062,5.2,0);
     {const r2=rng(SEED+17);
      for(const sg of segs){
-        if(dabs.length>=1500) break;
-        if(sg.d>=2&&r2()<0.5){
+        if(dabs.length>=1750) break;
+        if(sg.d>=2&&r2()<0.62){
             const nl=1+Math.floor(r2()*2);
             for(let k2=0;k2<nl;k2++)dabs.push({x:sg.x2+(r2()-0.5)*0.012,y:sg.y2+(r2()-0.5)*0.013,r:1.0+r2()*1.5,ph:r2()*6.28,ox:0,oy:0,vx:0,vy:0,tp:0,tw:0});
         }
@@ -4052,8 +4052,16 @@ let flick=0;
 let flickX=0.5;
 let drips=[];
 function stepCaps(v){
-    const ex=v-22;
-    if(ex>0&&Math.random()<ex/27) caps.push({x:Math.random(),y:0.25+Math.random()*0.7,life:34,max:34});
+    const ex=v-12;
+    if(ex>0){
+        const rate=Math.min(2.2,ex/14);
+        let n=Math.floor(rate); if(Math.random()<rate-n) n++;
+        for(let i=0;i<n&&caps.length<90;i++){
+            const yy=0.1+Math.pow(Math.random(),0.8)*0.85;
+            const lf=26+Math.floor(Math.random()*22);
+            caps.push({x:Math.random(),y:yy,life:lf,max:lf});
+        }
+    }
     caps=caps.filter(c=>{c.life--;return c.life>0;});
 }
 
@@ -4212,6 +4220,28 @@ function draw(){
     }
     ctxFill(mx(pal.low,[255,255,255],0.25),0.18,0,horizonY,W,2);
     ctx.globalAlpha=0.62; ctx.drawImage(strkCv,0,0,W,Hh); ctx.globalAlpha=1;
+    /* sea state — swell: lit crests over dark troughs, marching shoreward, height+count rising with wind */
+    const seaK=Math.max(0,Math.min(1.2,(v-6)/44));
+    if(seaK>0.04){
+        const nb=Math.round(7+seaK*16);
+        const crestC=mx(pal.low,[236,240,247],0.5+seaK*0.3);
+        const troughC=mx(skyV(pal,0.5),[10,12,18],0.5);
+        for(let i=0;i<nb;i++){
+            const fy=((i+0.5)/nb+tt*0.018*(0.5+seaK))%1;
+            const yy=horizonY+Math.pow(fy,1.35)*waterH;
+            const amp=(0.8+fy*3.4)*(0.6+seaK*2.6);
+            const lw=0.8+fy*1.8;
+            const vis=Math.min(1,fy*1.5+0.25);
+            ctx.lineWidth=lw; ctx.strokeStyle=cl(troughC,(0.04+seaK*0.12)*vis);
+            ctx.beginPath();
+            for(let x=0;x<=W;x+=14){const wy=yy+Math.sin(x*0.012+tt*(1.0+fy*1.4)+i*2.1)*amp+Math.sin(x*0.031-tt*0.8+i)*amp*0.4+lw+1; if(x===0)ctx.moveTo(x,wy);else ctx.lineTo(x,wy);}
+            ctx.stroke();
+            ctx.strokeStyle=cl(crestC,(0.05+seaK*0.16)*vis);
+            ctx.beginPath();
+            for(let x=0;x<=W;x+=14){const wy=yy+Math.sin(x*0.012+tt*(1.0+fy*1.4)+i*2.1)*amp+Math.sin(x*0.031-tt*0.8+i)*amp*0.4; if(x===0)ctx.moveTo(x,wy);else ctx.lineTo(x,wy);}
+            ctx.stroke();
+        }
+    }
     /* glitter: evening column under disc, or broad midday sparkle */
     if(discOn){
         const n=(24+Math.round(v*0.7))*gm;
@@ -4242,9 +4272,14 @@ function draw(){
     }
     for(const c of caps){
         const ph=c.life/c.max;
-        const a=Math.sin(ph*3.14)*Math.min(1,(v-20)/26)*0.5;
-        ctx.strokeStyle='rgba(238,243,250,'+a+')'; ctx.lineWidth=1.4;
-        ctx.beginPath(); ctx.arc(c.x*W,horizonY+c.y*(waterH-Hh*0.08),2.2+c.y*2.4,3.5,5.9); ctx.stroke();
+        const fade=Math.sin(ph*3.1416);
+        const a=fade*Math.min(1,(v-12)/30)*0.72;
+        const yy=horizonY+c.y*(waterH-Hh*0.06);
+        const sz=2.0+c.y*3.6;
+        ctx.strokeStyle=cl([240,244,250],a); ctx.lineWidth=1.3+c.y*1.0;
+        ctx.beginPath(); ctx.arc(c.x*W,yy,sz,3.4,6.02); ctx.stroke();
+        ctx.strokeStyle=cl([230,237,247],a*0.55); ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(c.x*W-sz,yy+0.6); ctx.lineTo(c.x*W+sz*0.7,yy+0.6); ctx.stroke();
     }
     /* rain in scene — count and weight follow measured intensity */
     if(rain){
@@ -4268,6 +4303,17 @@ function draw(){
         ctx.beginPath(); ctx.ellipse(cx,cy,b.rx*rs,b.ry*rs,0,0,6.283); ctx.fill();
         ctx.strokeStyle=cl(rimC,0.32); ctx.lineWidth=1;
         ctx.beginPath(); ctx.ellipse(cx,cy,b.rx*rs*0.95,b.ry*rs*0.95,0,3.5,5.9); ctx.stroke();
+    }
+    if(seaK>0.3){
+        const fy0=Hh-6*rs, aw=Math.min(0.55,(seaK-0.3)*0.85);
+        for(let x=0;x<=W;x+=8){
+            const on=(Math.sin(x*0.02+tt*3)+1)*0.5;
+            if(on>0.45){
+                const hh=Math.sin(x*0.05+tt*4)*2+Math.sin(x*0.13-tt*5)*1.5;
+                ctx.fillStyle=cl([238,243,250],aw*on*(0.6+Math.random()*0.4));
+                ctx.fillRect(x,fy0+hh-1,7,2.5);
+            }
+        }
     }
     if(waterlineY<Hh){
         const top=Math.max(horizonY+4,waterlineY); const STN=6;
@@ -4304,7 +4350,7 @@ function draw(){
     ctx.strokeStyle='rgba(13,12,15,0.95)';
     for(const sg of segs){
         const dx=Math.sin(tt*(0.7+k*0.9)+sg.d*1.3+sg.x1*23)*swA*sg.d*0.55*(fol.d>0?1:1.4)
-                +k*k*sg.d*3.2+k*sg.d*0.5
+                +k*k*sg.d*4.4+k*sg.d*0.6
                 +(k>0.4&&sg.d>=4?(Math.random()-0.5)*k*sg.d*0.5:0);
         ctx.lineWidth=Math.max(0.6,sg.w*(W/1100));
         ctx.beginPath(); ctx.moveTo(sg.x1*W+dx*0.6,sg.y1*W); ctx.lineTo(sg.x2*W+dx,sg.y2*W); ctx.stroke();
@@ -4327,7 +4373,7 @@ function draw(){
             const twist=Math.sin(d.tp);
             const rot=0.6+twist*(0.12+k*0.95);
             const dx=Math.sin(tt*(0.7+k*0.9)+4.8+d.ph*0.9)*swA*1.3
-                    +k*k*14+k*1.5
+                    +k*k*16+k*1.5
                     +d.ox;
             const dy=d.oy;
             const flash=twist>(1.02-k*0.55);
