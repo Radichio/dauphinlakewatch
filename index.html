@@ -1109,7 +1109,7 @@
 
     <!-- ── TAB NAVIGATION — SEASON_MODE drives the default ── -->
     <nav class="tab-bar" id="tabBar" role="tablist" aria-label="Dashboard sections">
-        <button class="tab-btn active" id="tabBtnToday" role="tab" aria-selected="true" onclick="goTab('today')">Today</button>
+        <button class="tab-btn active" id="tabBtnToday" role="tab" aria-selected="true" onclick="goTab('today')">Wind &amp; Water</button>
         <button class="tab-btn" id="tabBtnFlood" role="tab" aria-selected="false" onclick="goTab('flood')">Flood Watch</button>
     </nav>
 
@@ -3958,10 +3958,10 @@ function cloudF(alt){
 }
 function discState(alt,az,morning,cloud){
     if(cloud>=0.75) return {on:false,x:0,yf:0,vis:0};
-    if(!morning && alt>-1 && alt<=10 && az>225 && az<320){
+    if(!morning && alt>-1 && alt<=24 && az>225 && az<320){
         return {on:true,
             x:Math.min(0.62,Math.max(0.28,0.46+(az-290)*0.004)),
-            yf:(alt/10)*0.55,
+            yf:Math.min(0.80,(alt/24)*0.80),
             vis:Math.min(1,(alt+1)/2)*(1-cloud*0.8)};
     }
     if(morning && alt>-0.8 && alt<5){
@@ -4371,10 +4371,10 @@ function draw(){
     }
     /* golden-hour lane: the low sun's reflected path on the water — peaks near the horizon,
        survives a cloud-hidden disc, broadens over rough water, dies only under full murk */
-    if(sun.az>230&&sun.az<338&&sun.alt>-2.5&&sun.alt<16){
+    if(sun.az>230&&sun.az<338&&sun.alt>-2.5&&sun.alt<45){
         const cloudDim=Math.max(0,1-cloud*0.95);
         const altBell=Math.max(0,1-Math.abs(sun.alt-5)/11);
-        const lane=cloudDim*altBell;
+        const lane=cloudDim*(0.30+0.70*altBell);
         if(lane>0.05){
             const warm=mx(pal.sun,[255,214,150],0.5);
             const rough=1+seaE/22;
@@ -4382,15 +4382,15 @@ function draw(){
             ctx.beginPath();
             ctx.moveTo(sxp-4,horizonY); ctx.lineTo(sxp-W*0.10*rough,Hh); ctx.lineTo(sxp+W*0.10*rough,Hh);
             ctx.closePath(); ctx.fill();
-            const nL=Math.round((40+150*lane)*gm);
+            const nL=Math.round((50+170*lane)*gm);
             for(let i=0;i<nL;i++){
                 const vv=Math.pow(Math.random(),0.85);
                 const y=horizonY+2+vv*waterH*0.96;
-                const spread=3+vv*W*0.085*rough;
+                const spread=3+vv*W*(0.06+0.05*(1-altBell))*rough;
                 const g3=(Math.random()+Math.random()+Math.random())/1.5-1;
                 const xx=sxp+g3*spread;
                 const len=(2+Math.random()*6)*(0.5+vv*1.4);
-                ctx.strokeStyle=cl(warm,(0.10+Math.random()*0.30)*lane*(0.6+vv*0.5));
+                ctx.strokeStyle=cl(warm,(0.10+Math.random()*0.30)*lane*(0.5+vv*(0.35+0.45*altBell)));
                 ctx.lineWidth=1+vv*1.6;
                 ctx.beginPath(); ctx.moveTo(xx-len/2,y); ctx.lineTo(xx+len/2,y); ctx.stroke();
             }
