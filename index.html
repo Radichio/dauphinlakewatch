@@ -4211,6 +4211,19 @@ function stepCaps(v){
     caps=caps.filter(c=>{c.life--;return c.life>0;});
 }
 
+let _spr=null;
+function buildSprites(){
+    function dot(size,inner){
+        var c=document.createElement('canvas'); c.width=size; c.height=size;
+        var x=c.getContext('2d');
+        var g=x.createRadialGradient(size/2,size/2,0,size/2,size/2,size/2);
+        g.addColorStop(0,'rgba(255,255,255,'+inner+')');
+        g.addColorStop(0.4,'rgba(255,255,255,'+(inner*0.5)+')');
+        g.addColorStop(1,'rgba(255,255,255,0)');
+        x.fillStyle=g; x.fillRect(0,0,size,size); return c;
+    }
+    _spr={ spark:dot(24,1.0), foam:dot(30,0.85) };
+}
 function draw(){
     const now=new Date();
     const sun=solar(now);
@@ -4389,83 +4402,61 @@ function draw(){
             ctx.stroke();
         }
     }
-    /* golden-hour lane: the low sun's reflected path on the water — peaks near the horizon,
-       survives a cloud-hidden disc, broadens over rough water, dies only under full murk */
-    if(sun.az>230&&sun.az<338&&sun.alt>-2.5&&sun.alt<45){
+    /* light on water — warm sheen-lane + white micro-sparkle, all soft-edged.
+       Ochre Beach faces NW: the sun reflects toward shore only when it's over the water (evening). */
+    if(_spr===null) buildSprites();
+    if(sun.az>232&&sun.az<338&&sun.alt>-2.5&&sun.alt<46){
         const cloudDim=Math.max(0,1-cloud*0.95);
-        const altBell=Math.max(0,1-Math.abs(sun.alt-5)/11);
-        const lane=cloudDim*(0.30+0.70*altBell);
-        if(lane>0.05){
-            const warm=mx(pal.sun,[255,214,150],0.5);
-            const rough=1+seaE/22;
-            ctx.fillStyle=cl(warm,0.05*lane);
+        const altBell=Math.max(0,1-Math.abs(sun.alt-5)/12);
+        const str=cloudDim*(0.28+0.72*altBell);
+        if(str>0.04){
+            const warm=mx(pal.sun,[255,222,150],0.45);
+            const rough=1+seaE/20;
+            const baseW=W*(0.05+0.05*(1-altBell))*rough;
+            const sg=ctx.createLinearGradient(0,horizonY,0,Hh);
+            sg.addColorStop(0,cl(warm,0.34*str)); sg.addColorStop(0.5,cl(warm,0.16*str)); sg.addColorStop(1,cl(warm,0));
+            ctx.save();
             ctx.beginPath();
-            ctx.moveTo(sxp-4,horizonY); ctx.lineTo(sxp-W*0.10*rough,Hh); ctx.lineTo(sxp+W*0.10*rough,Hh);
-            ctx.closePath(); ctx.fill();
-            const nL=Math.round((50+170*lane)*gm);
-            for(let i=0;i<nL;i++){
-                const vv=Math.pow(Math.random(),0.85);
-                const y=horizonY+2+vv*waterH*0.96;
-                const spread=3+vv*W*(0.06+0.05*(1-altBell))*rough;
+            ctx.moveTo(sxp-baseW*0.18,horizonY); ctx.lineTo(sxp+baseW*0.18,horizonY);
+            ctx.lineTo(sxp+baseW,Hh); ctx.lineTo(sxp-baseW,Hh); ctx.closePath(); ctx.clip();
+            ctx.fillStyle=sg; ctx.fillRect(0,horizonY,W,waterH);
+            ctx.restore();
+            ctx.globalCompositeOperation='lighter';
+            const nS=Math.round((30+150*str)*gm);
+            for(let i=0;i<nS;i++){
+                const vv=Math.pow(Math.random(),0.7);
+                const y=horizonY+2+vv*waterH*0.98;
                 const g3=(Math.random()+Math.random()+Math.random())/1.5-1;
-                const xx=sxp+g3*spread;
-                const len=(2+Math.random()*6)*(0.5+vv*1.4);
-                ctx.strokeStyle=cl(warm,(0.10+Math.random()*0.30)*lane*(0.5+vv*(0.35+0.45*altBell)));
-                ctx.lineWidth=1+vv*1.6;
-                ctx.beginPath(); ctx.moveTo(xx-len/2,y); ctx.lineTo(xx+len/2,y); ctx.stroke();
+                const x=sxp+g3*(baseW*(0.25+vv*0.95));
+                const sz=(1.4+Math.random()*3.6)*(0.6+vv*0.9);
+                const a=(0.22+Math.random()*0.5)*str*(0.55+0.45*altBell)*(0.5+vv*0.6);
+                ctx.globalAlpha=Math.min(0.9,a);
+                ctx.drawImage(_spr.spark, x-sz, y-sz*0.55, sz*2, sz*1.1);
             }
+            ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
         }
     }
-    /* glitter: evening column under disc, or broad midday sparkle */
-    if(discOn){
-        const n=(24+Math.round(v*0.7))*gm;
-        for(let i=0;i<n;i++){
-            const vv=Math.random(); const y=horizonY+4+vv*waterH*0.85;
-            const spread=6+vv*W*0.05*(1+v/40);
-            const xx=sxp+(Math.random()-0.5)*spread;
-            const len=2+Math.random()*7*(1-vv*0.5);
-            ctx.strokeStyle=cl(pal.sun,0.10+Math.random()*0.30);
-            ctx.lineWidth=1+vv*1.4;
-            ctx.beginPath(); ctx.moveTo(xx-len/2,y); ctx.lineTo(xx+len/2,y); ctx.stroke();
-        }
+    if(nightK>0.6&&moon>0.2&&cloud<0.55){
+        if(_spr===null) buildSprites();
+        ctx.globalCompositeOperation='lighter';
+        const nM=Math.round(14*moon*gm);
+        for(let i=0;i<nM;i++){ const vv=Math.random(); const y=horizonY+4+vv*waterH*0.9; const x=W*0.5+(Math.random()-0.5)*W*0.12*(1+vv); const sz=1.2+Math.random()*2; ctx.globalAlpha=(0.06+Math.random()*0.12)*moon; ctx.drawImage(_spr.spark, x-sz, y-sz*0.5, sz*2, sz); }
+        ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
     }
-    if(sun.alt>10){
-        const lit=(typeof lum==='number')?lum:Math.max(0,1-cloud);
-        if(lit>0.22){
-            const rip=Math.max(0.25,Math.min(1,seaE/8))*Math.max(0.45,Math.min(1,1.6-seaE/35));
-            const glF=lit*Math.min(1,sun.alt/40);
-            const n2=Math.round((36+130*glF*rip)*gm);
-            const uw=Math.max(0,Math.min(1,(sun.alt-12)/28));
-            for(let i=0;i<n2;i++){
-                const vv=Math.random(); const y=horizonY+4+vv*waterH*0.92;
-                let xx;
-                if(Math.random()<0.35+0.65*uw){ xx=Math.random()*W; }
-                else { xx=sxp+(Math.random()-0.5)*W*0.10*(1+vv); }
-                const len=(1.5+Math.random()*5)*(0.6+vv*0.9);
-                ctx.strokeStyle=cl([255,252,238],(0.05+Math.random()*0.16)*Math.min(1,lit+0.25));
-                ctx.lineWidth=1+vv*0.8;
-                ctx.beginPath(); ctx.moveTo(xx-len/2,y); ctx.lineTo(xx+len/2,y); ctx.stroke();
-            }
+    /* whitecaps — soft feathered foam, clustered on crests, scaling with wave energy */
+    if(caps.length){
+        if(_spr===null) buildSprites();
+        for(const c of caps){
+            const ph=1-c.life/c.max;
+            const fade=Math.sin(Math.min(1,ph*1.2)*3.1416);
+            const a=fade*(0.30+0.55*Math.min(1,(seaE-10)/26));
+            if(a<=0.01) continue;
+            const yy=horizonY+c.y*(waterH-Hh*0.06);
+            const sz=(4+c.y*9)*(0.8+ph*0.5);
+            ctx.globalAlpha=Math.min(0.85,a);
+            ctx.drawImage(_spr.foam, c.x*W-sz, yy-sz*0.45, sz*2, sz*0.9);
         }
-    }
-    if(nightK>0.5&&moon>0.15&&cloud<0.6){
-        for(let i=0;i<20;i++){
-            const y=horizonY+6+Math.random()*waterH*0.8; const xx=Math.random()*W;
-            ctx.strokeStyle='rgba(214,226,244,'+(0.03+Math.random()*0.08*moon)+')';
-            ctx.lineWidth=1; const len=1.5+Math.random()*3;
-            ctx.beginPath(); ctx.moveTo(xx-len/2,y); ctx.lineTo(xx+len/2,y); ctx.stroke();
-        }
-    }
-    for(const c of caps){
-        const ph=1-c.life/c.max;
-        const fade=Math.sin(Math.min(1,ph*1.25)*3.1416);
-        const a=fade*(0.30+0.55*Math.min(1,(seaE-10)/26));
-        const yy=horizonY+c.y*(waterH-Hh*0.06);
-        const ln=(3.5+c.y*7)*(0.7+ph*0.8);
-        ctx.strokeStyle=cl([244,248,252],a); ctx.lineWidth=1.2+c.y*1.6;
-        ctx.beginPath(); ctx.moveTo(c.x*W-ln*0.5,yy); ctx.lineTo(c.x*W+ln*0.5,yy); ctx.stroke();
-        ctx.strokeStyle=cl([232,239,248],a*0.5); ctx.lineWidth=1;
-        ctx.beginPath(); ctx.moveTo(c.x*W-ln*0.35,yy+1.4); ctx.lineTo(c.x*W+ln*0.6,yy+1.4); ctx.stroke();
+        ctx.globalAlpha=1;
     }
     /* rain in scene — count and weight follow measured intensity */
     if(rain){
@@ -4490,16 +4481,15 @@ function draw(){
         ctx.strokeStyle=cl(rimC,0.32); ctx.lineWidth=1;
         ctx.beginPath(); ctx.ellipse(cx,cy,b.rx*rs*0.95,b.ry*rs*0.95,0,3.5,5.9); ctx.stroke();
     }
-    if(seaK>0.3){
-        const fy0=Hh-6*rs, aw=Math.min(0.55,(seaK-0.3)*0.85);
-        for(let x=0;x<=W;x+=8){
-            const on=(Math.sin(x*0.02+tt*3)+1)*0.5;
-            if(on>0.45){
-                const hh=Math.sin(x*0.05+tt*4)*2+Math.sin(x*0.13-tt*5)*1.5;
-                ctx.fillStyle=cl([238,243,250],aw*on*(0.6+Math.random()*0.4));
-                ctx.fillRect(x,fy0+hh-1,7,2.5);
-            }
+    /* surf on the rip-rap — soft foam where waves meet the boulders */
+    if(seaK>0.32){
+        if(_spr===null) buildSprites();
+        const fy0=Hh-6*rs, aw=Math.min(0.5,(seaK-0.32)*0.8);
+        for(let x=0;x<=W;x+=22){
+            const on=(Math.sin(x*0.018+tt*2.5)+1)*0.5;
+            if(on>0.4){ const sz=6+on*8; const yy=fy0+Math.sin(x*0.05+tt*4)*2; ctx.globalAlpha=aw*(0.5+0.5*on); ctx.drawImage(_spr.foam, x-sz, yy-sz*0.4, sz*2, sz*0.8); }
         }
+        ctx.globalAlpha=1;
     }
     if(waterlineY<Hh){
         const top=Math.max(horizonY+4,waterlineY); const STN=6;
