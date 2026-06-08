@@ -3913,15 +3913,27 @@ function rainState(){
     }
     const w=IN.wmo; return w!=null && ((w>=51&&w<=67)||(w>=80&&w<=99));
 }
-function thundering(){
+function thunderEvidence(){
+    /* reports that storms exist around us — necessary but not sufficient */
     if(IN.stormWarn&&ageMin(IN.alertTime)<=45) return true;
     const c=IN.wxCode!=null?parseInt(IN.wxCode):null;
-    if(c!=null&&c>=200&&c<=299&&ageMin(IN.wxTime)<=70) return true;
+    if(c!=null&&c>=200&&c<=299&&ageMin(IN.wxTime)<=40) return true;
     if(IN.wmo!=null&&IN.wmo>=95) return true;
+    return false;
+}
+function wetAtLake(){
     const fresh=IN.radarTime!=null&&ageMin(IN.radarTime)<=12;
-    if(fresh&&(IN.radarUp||0)>=2.5) return true;
+    if(fresh) return (IN.radarNow||0)>=0.3;
+    if(IN.p15Time!=null&&ageMin(IN.p15Time)<=25) return (IN.p15Now||0)>=0.5;
+    return false;
+}
+function thundering(){
+    /* a present-tense storm claim needs present-tense evidence AT the lake */
+    const fresh=IN.radarTime!=null&&ageMin(IN.radarTime)<=12;
     const rr=fresh?IN.radarNow:((IN.p15Time!=null&&ageMin(IN.p15Time)<=25)?IN.p15Now:null);
-    return rr!=null&&rr>=2.0;
+    if(rr!=null&&rr>=2.0) return true;
+    if(fresh&&(IN.radarUp||0)>=2.5) return true;
+    return thunderEvidence()&&wetAtLake();
 }
 function lumF(alt){
     if(alt<=2) return null;
@@ -4139,7 +4151,7 @@ function ringEst(){
 }
 function ringGust(){var r=ringEst();return r?r.gust:null;}
 function staAge(st){ if(!st)return null; if(st.obs){var p=Date.parse(st.obs); if(!isNaN(p))return Math.max(0,Math.round((Date.now()-p)/60000));} return (st.age!=null)?st.age:null; }
-function clockOf(epoch){ if(epoch==null||isNaN(epoch))return ''; var d=new Date(epoch); var h=d.getHours(),m=d.getMinutes(); return h+':'+(m<10?'0':'')+m; }
+function clockOf(epoch){ if(epoch==null||isNaN(epoch))return ''; var d=new Date(epoch); var h=d.getHours(),m=d.getMinutes(); var ap=h>=12?'p.m.':'a.m.'; h=h%12; if(h===0)h=12; return h+':'+(m<10?'0':'')+m+' '+ap; }
 function srcTag(){
     var r=ringEst();
     if(r)return ' \u00b7 '+clockOf(r.newestObs);
