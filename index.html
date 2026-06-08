@@ -2793,6 +2793,7 @@ async function fetchWeather() {
         + `&current=temperature_2m,weathercode,windspeed_10m,winddirection_10m,windgusts_10m`
         + `&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,rain_sum,snowfall_sum,precipitation_probability_max`
         + `&minutely_15=precipitation,direct_radiation,cloud_cover,shortwave_radiation,wind_direction_10m&past_minutely_15=4&forecast_minutely_15=12`
+        + `&hourly=precipitation_probability,weather_code&forecast_hours=18`
         + `&timezone=America%2FWinnipeg&forecast_days=4&temperature_unit=celsius`;
     const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (!r.ok) throw new Error('wx failed');
@@ -2811,7 +2812,7 @@ function renderWeather(j) {
         const pp = j.daily?.precipitation_probability_max || [];
         const rs = j.daily?.rain_sum || [];
         const rainSoon = (pp[0] >= 60) || (pp[1] >= 60) || ((rs[0] || 0) >= 4) || ((rs[1] || 0) >= 4);
-        let p15Now=null, p15Next=null, radNow=null, cloud15=null, swrNow=null, p15Dir=null;
+        let p15Now=null, p15Next=null, radNow=null, cloud15=null, swrNow=null, p15Dir=null, stepHM=null, stepP=null;
         const m = j.minutely_15;
         if (m && m.time && m.time.length) {
             const wallNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Winnipeg' })).getTime();
@@ -2826,10 +2827,21 @@ function renderWeather(j) {
                 let nx = 0;
                 for (let i = idx + 1; i < Math.min(idx + 5, m.time.length); i++) nx = Math.max(nx, (m.precipitation ? m.precipitation[i] : 0) || 0);
                 p15Next = nx;
+                stepHM = []; stepP = [];
+                for (let i = idx + 1; i < Math.min(idx + 13, m.time.length); i++) {
+                    stepHM.push(String(m.time[i]).slice(11,16));
+                    stepP.push((m.precipitation ? m.precipitation[i] : 0) || 0);
+                }
             }
         }
+        let hr = null;
+        const HH = j.hourly;
+        if (HH && HH.time && HH.time.length) {
+            hr = { hm: HH.time.map(t => String(t).slice(11,16)), prob: HH.precipitation_probability || [], code: HH.weather_code || [] };
+        }
         PORTRAIT.set({ wmo: j.current.weathercode, rainSoon: rainSoon, windFallback: wspd,
-                       p15Now: p15Now, p15Next: p15Next, radNow: radNow, cloud15: cloud15, swrNow: swrNow, p15Dir: p15Dir, p15Time: Date.now() });
+                       p15Now: p15Now, p15Next: p15Next, radNow: radNow, cloud15: cloud15, swrNow: swrNow, p15Dir: p15Dir,
+                       p15Steps: (stepHM ? { hm: stepHM, p: stepP } : null), hr: hr, p15Time: Date.now() });
     }
 
     // Show gusts if meaningfully higher than sustained speed
@@ -3828,7 +3840,7 @@ const PORTRAIT = (function(){
 'use strict';
 const IN = { level:null, windKmh:null, wgust:null, wxCode:null, wxTime:null, wmo:null, rainSoon:false, windFallback:null,
              p15Now:null, p15Next:null, radNow:null, cloud15:null, swrNow:null, p15Dir:null, wdir:null, p15Time:null,
-             ringData:null, ringMAE:null,
+             ringData:null, ringMAE:null, p15Steps:null, hr:null,
              radarNow:null, radarUp:null, radarTime:null, stormWarn:false, alertTime:null, wasRaining:false, lastRainEnd:0, _appr:false, _sb:false, _rain:false };
 let cv=null, x=null, W=0, Hh=0, horizonY=0, skyH=0, waterH=0, DPR=1;
 let on=false, frame=0, tt=0;
@@ -4152,6 +4164,14 @@ function ringEst(){
 function ringGust(){var r=ringEst();return r?r.gust:null;}
 function staAge(st){ if(!st)return null; if(st.obs){var p=Date.parse(st.obs); if(!isNaN(p))return Math.max(0,Math.round((Date.now()-p)/60000));} return (st.age!=null)?st.age:null; }
 function clockOf(epoch){ if(epoch==null||isNaN(epoch))return ''; var d=new Date(epoch); var h=d.getHours(),m=d.getMinutes(); var ap=h>=12?'p.m.':'a.m.'; h=h%12; if(h===0)h=12; return h+':'+(m<10?'0':'')+m+' '+ap; }
+function clock12(hm){ if(!hm)return ''; var h=parseInt(hm.slice(0,2),10), m2=hm.slice(3,5); var ap=h>=12?'p.m.':'a.m.'; h=h%12; if(h===0)h=12; return h+':'+m2+' '+ap; }
+function rainOnset(){ var st=IN.p15Steps; if(!st||!st.p||IN.p15Time==null||ageMin(IN.p15Time)>30)return null;
+    for(var i=0;i<st.p.length;i++){ if(st.p[i]>=0.2) return st.hm[i]; } return null; }
+function stormHour(){ if(!IN.hr||IN.p15Time==null||ageMin(IN.p15Time)>90)return null;
+    var Hh2=IN.hr;
+    for(var i=0;i<Hh2.hm.length;i++){ var c=Hh2.code[i]||0, p=Hh2.prob[i]||0; if(c>=95||(c>=80&&p>=60)) return {hm:Hh2.hm[i],kind:'storms'}; }
+    for(var i2=0;i2<Hh2.hm.length;i2++){ if((Hh2.prob[i2]||0)>=60) return {hm:Hh2.hm[i2],kind:'rain'}; }
+    return null; }
 function srcTag(){
     var r=ringEst();
     if(r)return ' \u00b7 '+clockOf(r.newestObs);
@@ -4597,9 +4617,16 @@ function chips(){
         if(thundering()) o=IN._rain?'Now: thunderstorm at the lake':'Lightning nearby — dry at the lake';
         else if(IN._rain) o='Now: rain at the lake'+(((IN.p15Next||0)>(IN.p15Now||0)+0.2)?' · more behind it':'');
         else if(radarAppr) o='Next hour: rain approaching from the west';
-        else if((IN.p15Next||0)>=0.3) o='Next 3 h: showers likely';
-        else if(IN.rainSoon) o='Next 3 h: holding · storms possible later';
-        else o='Next 3 h: holding steady';
+        else {
+            var on=rainOnset();
+            if(on) o='Rain starting ~'+clock12(on);
+            else {
+                o='Dry next 3 h';
+                var sh=stormHour();
+                if(sh) o+=' \u00b7 '+(sh.kind==='storms'?'storms possible':'rain likely')+' ~'+clock12(sh.hm);
+                else o+=' \u00b7 holding steady';
+            }
+        }
         B.textContent=o;
     }
 }
