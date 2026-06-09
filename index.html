@@ -4390,6 +4390,21 @@ function draw(){
     ctxFill(mx(pal.low,[255,255,255],0.25),0.18,0,horizonY,W,2);
     ctx.globalAlpha=0.62; ctx.drawImage(strkCv,0,0,W,Hh); ctx.globalAlpha=1;
     /* sea state — swell: lit crests over dark troughs, marching shoreward, height+count rising with wind */
+    /* sunF — is the DIRECT sunbeam reaching the water right now?
+       Primary: MEASURED direct radiation vs clear-sky expectation at this sun altitude
+       (measurement over model — same creed as the luminance work). Cloud model is fallback only.
+       All sun-reflection (sheen-lane, sparkle, crest glints) scales by this; chop & foam ignore it. */
+    let sunF=0;
+    {
+        const upK=Math.max(0,Math.min(1,(sun.alt+1.5)/5));
+        const sinA=Math.sin(Math.max(0,sun.alt)*Math.PI/180);
+        if(IN.radNow!=null&&IN.p15Time!=null&&ageMin(IN.p15Time)<=30&&sinA>0.02){
+            const expect=Math.max(40,780*Math.pow(sinA,1.2));
+            sunF=Math.max(0,Math.min(1,(IN.radNow/expect-0.08)*1.55))*upK;
+        } else {
+            sunF=Math.max(0,Math.min(1,1-cloud*1.5))*upK;
+        }
+    }
     /* tonal swell — soft feathered ridges of light heaving shoreward; pure gradient, no lines */
     const seaK=Math.max(0,Math.min(1.2,(seaE-6)/44));
     if(seaK>0.03){
@@ -4421,10 +4436,10 @@ function draw(){
             for(let x=SX;x<=W;x+=SX) ctx.lineTo(x,ty-thick+Math.sin(x*0.012+ph)*amp);
             for(let x=W;x>=0;x-=SX) ctx.lineTo(x,ty+thick+Math.sin(x*0.012+ph)*amp);
             ctx.closePath(); ctx.fill();
-            if(fy>0.62 && _spr && (typeof lum!=='number'||lum>0.28)){
+            if(fy>0.62 && _spr && sunF>0.15){
                 ctx.globalCompositeOperation='lighter';
                 const ns=4+Math.round(seaK*5);
-                for(let q=0;q<ns;q++){ const xx=Math.random()*W; const yy=yMid+Math.sin(xx*0.012+ph)*amp; const sz=1.2+Math.random()*2.4; ctx.globalAlpha=(0.10+Math.random()*0.18)*(0.4+seaK*0.6); ctx.drawImage(_spr.spark,xx-sz,yy-sz*0.5,sz*2,sz); }
+                for(let q=0;q<ns;q++){ const xx=Math.random()*W; const yy=yMid+Math.sin(xx*0.012+ph)*amp; const sz=1.2+Math.random()*2.4; ctx.globalAlpha=(0.10+Math.random()*0.18)*(0.4+seaK*0.6)*sunF; ctx.drawImage(_spr.spark,xx-sz,yy-sz*0.5,sz*2,sz); }
                 ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
             }
         }
@@ -4433,9 +4448,8 @@ function draw(){
        Ochre Beach faces NW: the sun reflects toward shore only when it's over the water (evening). */
     if(_spr===null) buildSprites();
     if(sun.az>232&&sun.az<338&&sun.alt>-2.5&&sun.alt<46){
-        const cloudDim=Math.max(0,1-cloud*0.95);
         const altBell=Math.max(0,1-Math.abs(sun.alt-5)/12);
-        const str=cloudDim*(0.28+0.72*altBell);
+        const str=sunF*(0.30+0.70*altBell);
         if(str>0.04){
             const warm=mx(pal.sun,[255,222,150],0.45);
             const rough=1+seaE/20;
