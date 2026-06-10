@@ -3841,7 +3841,7 @@ const PORTRAIT = (function(){
 const IN = { level:null, windKmh:null, wgust:null, wxCode:null, wxTime:null, wmo:null, rainSoon:false, windFallback:null,
              p15Now:null, p15Next:null, radNow:null, cloud15:null, swrNow:null, p15Dir:null, wdir:null, p15Time:null,
              ringData:null, ringMAE:null, p15Steps:null, hr:null,
-             radarNow:null, radarUp:null, radarTime:null, stormWarn:false, alertTime:null, wasRaining:false, lastRainEnd:0, _appr:false, _sb:false, _rain:false };
+             radarNow:null, radarUp:null, radarTime:null, stormWarn:false, alertTime:null, alertsList:null, alertsTime:null, offSev:0, offGust:null, offRain:null, wasRaining:false, lastRainEnd:0, _appr:false, _sb:false, _rain:false };
 let cv=null, x=null, W=0, Hh=0, horizonY=0, skyH=0, waterH=0, DPR=1;
 let on=false, frame=0, tt=0;
 const SEED=20260606;
@@ -3993,7 +3993,11 @@ function windNow(){ const r=ringEst(); if(r)return Math.max(0,Math.min(70,r.spd)
 function windEffK(){
     const sus=windNow();
     const rg=ringGust();
-    const g=Math.max(sus, rg!=null?rg:(IN.wgust!=null?IN.wgust:sus*1.3));
+    let g=Math.max(sus, rg!=null?rg:(IN.wgust!=null?IN.wgust:sus*1.3));
+    /* official-warning floor — PAINT ONLY: severe warning over the lake AND radar confirms the
+       storm is on the water -> the picture honors ECCC's gust envelope while distant
+       anemometers lag. The chip's number stays the measurement. */
+    if(IN.offSev>=4 && IN.offGust!=null && wetAtLake()) g=Math.max(g, IN.offGust*0.7);
     const e=Math.max(0,Math.min(1,(0.55+0.45*Math.sin(tt*0.21)+0.30*Math.sin(tt*0.53+1.7)-0.18)/1.12));
     const v=sus*0.25+(g-sus*0.25)*Math.pow(e,1.6);
     return Math.max(0,Math.min(70,v))/60;
@@ -4148,9 +4152,9 @@ function fuseRing(excl){
     }
     var W=0,sp=0;for(var i=0;i<fr.length;i++){W+=w[i];sp+=fr[i].spd*w[i];}
     var spd=sp/W;
-    var g=null,gW=0,gS=0;
-    for(var i2=0;i2<fr.length;i2++){if(fr[i2].gust!=null){gS+=fr[i2].gust*w[i2];gW+=w[i2];}}
-    if(gW>0)g=gS/gW;
+    /* gust = MAX among fresh guard-passed stations — peaks don't average (Jun 9 lesson) */
+    var g=null;
+    for(var i2=0;i2<fr.length;i2++){var gg=fr[i2].gust; if(gg!=null&&(g==null||gg>g)) g=gg;}
     g=Math.max(g!=null?g:0,spd*1.15);
     var mx2=-1e9,mn2=1e9,nw=1e9,nwObs=null;
     fr.forEach(function(st){var a=staAge(st);mx2=Math.max(mx2,st.spd);mn2=Math.min(mn2,st.spd);if(a<nw){nw=a;nwObs=(st.obs&&!isNaN(Date.parse(st.obs)))?Date.parse(st.obs):(Date.now()-a*60000);}});
@@ -4637,7 +4641,12 @@ function chips(){
     const L=document.getElementById('ptChipL'), R=document.getElementById('ptChipR');
     if(L) L.textContent=IN.level!=null?IN.level.toFixed(2)+' ft':'— ft';
     if(R){ const v=windNow();
-        let t=(IN._rain?'Rain · ':'')+windWord(v)+' · '+Math.round(v)+' km/h';
+        var sevHere=(IN.offSev>=4)&&wetAtLake();
+        let t=(sevHere?'Severe storm · ':(thundering()?'T-storm · ':(IN._rain?'Rain · ':'')))+windWord(v)+' · '+Math.round(v);
+        var _g=(function(){ var r2=ringEst(); var g=(r2&&r2.gust!=null)?r2.gust:((IN.wgust!=null&&IN.wxTime&&ageMin(IN.wxTime)<=70)?IN.wgust:null);
+            return (g!=null&&(g>=v+12||g>=40))?Math.round(g):null; })();
+        if(_g) t+=' g '+_g;
+        t+=' km/h';
         if(IN._sb) t+=' · sun breaking through';
         else if(IN._appr) t+=' · rain approaching';
         R.textContent=t + srcTag(); }
@@ -4645,12 +4654,31 @@ function chips(){
     if(B){
         let o;
         const radarAppr=IN.radarTime!=null&&ageMin(IN.radarTime)<=12&&(IN.radarUp||0)>=0.2;
-        if(thundering()) o=IN._rain?'Now: thunderstorm at the lake':'Lightning nearby — dry at the lake';
+        var offG=(IN.offGust!=null)?Math.round(IN.offGust):null;
+        if(thundering()){
+            o=IN._rain?(IN.offSev>=4?'Now: severe storm at the lake':'Now: thunderstorm at the lake')
+                      :'Lightning nearby — dry at the lake';
+            if(IN.offSev>=4&&offG) o+=' · gusts to '+offG+' possible';
+        }
+        else if(IN.offSev>=4){
+            o=(IN.offSev>=5?'Tornado warning for the lake area':'Severe t-storm warning for the lake area');
+            if(offG) o+=' · gusts to '+offG+' possible';
+        }
         else if(IN._rain) o='Now: rain at the lake'+(((IN.p15Next||0)>(IN.p15Now||0)+0.2)?' · more behind it':'');
         else if(radarAppr) o='Next hour: rain approaching from the west';
         else {
             var on=rainOnset();
             if(on) o='Rain starting ~'+clock12(on);
+            else if(IN.offSev>=2){
+                o=(function(){var h=offHead().toLowerCase();
+                    if(/tornado/.test(h))return 'Tornado watch in effect';
+                    if(/wind/.test(h)&&/warning/.test(h))return 'Wind warning in effect';
+                    if(/rain/.test(h)&&/warning/.test(h))return 'Rainfall warning in effect';
+                    if(IN.offSev>=3)return 'Weather warning in effect';
+                    return 'Severe t-storm watch in effect';})();
+                if(offG) o+=' · gusts to '+offG+' possible';
+                var sh2=stormHour(); if(sh2) o+=' ~'+clock12(sh2.hm);
+            }
             else {
                 o='Dry next 3 h';
                 var sh=stormHour();
@@ -4709,7 +4737,58 @@ function gfi(lat,lon){
         })
         .catch(()=>null);
 }
+function sevRank(s){ s=String(s).toLowerCase();
+    if(/tornado|tornade/.test(s)&&/warning|avertissement/.test(s)) return 5;
+    if(/(thunderstorm|orage)/.test(s)&&/warning|avertissement/.test(s)) return 4;
+    if(/warning|avertissement/.test(s)) return 3;
+    if(/watch|veille/.test(s)) return 2;
+    return 0;
+}
+function parseAlertFeatures(feats){
+    var list=[];
+    (feats||[]).forEach(function(f){
+        var p=(f&&f.properties)||{};
+        var head=null,exp=null,bestR=0,alltxt='';
+        for(var k in p){
+            var v2=p[k]; if(typeof v2!=='string') continue;
+            alltxt+=' '+v2;
+            if(!/(ended|no longer|terminé)/i.test(v2)){
+                var r0=sevRank(v2);
+                if(r0>bestR||(r0===bestR&&r0>0&&head&&v2.length>head.length)){bestR=r0;head=v2.split(/[\n\r]/)[0].slice(0,90);}
+            }
+            if(/expir|end/i.test(k)){ var t2=Date.parse(v2); if(!isNaN(t2)) exp=t2; }
+        }
+        if(!head||bestR<2) return;
+        if(exp&&exp<Date.now()) return;
+        var mg=null,mr=null;
+        var gm2=alltxt.match(/(?:gust|wind)[^.]{0,60}?(\d{2,3})(?:\s*(?:to|-|\u2013)\s*(\d{2,3}))?\s*\+?\s*km\/?h/i);
+        if(gm2) mg=Math.max(parseInt(gm2[1],10),gm2[2]?parseInt(gm2[2],10):0);
+        if(/rain/i.test(alltxt)){ var rm2=alltxt.match(/(\d{2,3})\s*(?:to\s*(\d{2,3})\s*)?mm/i); if(rm2) mr=Math.max(parseInt(rm2[1],10),rm2[2]?parseInt(rm2[2],10):0); }
+        list.push({head:head,sev:bestR,exp:exp,gustTo:mg,rainTo:mr});
+    });
+    list.sort(function(a,b){return b.sev-a.sev;});
+    var seen={}; list=list.filter(function(a){var k2=a.head.toLowerCase(); if(seen[k2])return false; seen[k2]=true; return true;});
+    return {list:list, storm:list.some(function(a){return a.sev>=4;})};
+}
+function offHead(){ var L=IN.alertsList||[]; return (L[0]&&L[0].head)||''; }
+var _offKey=null;
+function offRefresh(){
+    /* the official ECCC envelope, folded into the engine as data: severity, gust ceiling, rain ceiling */
+    var L=IN.alertsList||[], fresh=IN.alertsTime!=null&&ageMin(IN.alertsTime)<=30;
+    var sev=0,g=null,rn=null;
+    if(fresh){ L.forEach(function(a){ if(!a||(a.exp&&a.exp<Date.now())) return;
+        if(a.sev>sev) sev=a.sev;
+        if(a.gustTo!=null&&(g==null||a.gustTo>g)) g=a.gustTo;
+        if(a.rainTo!=null&&(rn==null||a.rainTo>rn)) rn=a.rainTo; }); }
+    IN.offSev=sev; IN.offGust=g; IN.offRain=rn;
+    IN.stormWarn=(sev>=4); if(sev>=4) IN.alertTime=Date.now();
+    var key=sev+':'+g+':'+rn;
+    if(key!==_offKey){ _offKey=key; try{chips();}catch(e){} }
+}
+function renderWarn(){ offRefresh(); }
 async function pollAlerts(){
+    var merged=[], gotAny=false;
+    /* channel 1 — GeoMet WMS ALERTS at the lake point (browser-direct) */
     try{
         const d=0.02;
         const url='https://geo.weather.gc.ca/geomet?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetFeatureInfo'
@@ -4717,19 +4796,35 @@ async function pollAlerts(){
             +'&BBOX='+(CFG.lat-d)+','+(CFG.lon-d)+','+(CFG.lat+d)+','+(CFG.lon+d)
             +'&WIDTH=3&HEIGHT=3&I=1&J=1&INFO_FORMAT=application/json&FORMAT=image/png&FEATURE_COUNT=8';
         const r=await fetch(url,{signal:AbortSignal.timeout(6000)});
-        if(!r.ok) return;
+        if(!r.ok) throw new Error('http '+r.status);
         const j=await r.json();
-        const feats=(j&&j.features)||[];
-        let ts=false;
-        for(const f of feats){
-            const p=f.properties||{};
-            for(const kk in p){
-                if(/thunder|tornado|orage|tornade/i.test(String(p[kk]))){ts=true;break;}
-            }
-            if(ts)break;
-        }
-        IN.stormWarn=ts; IN.alertTime=Date.now();
-    }catch(e){}
+        parseAlertFeatures((j&&j.features)||[]).list.forEach(function(a){merged.push(a);});
+        gotAny=true;
+    }catch(e){ try{console.warn('[DLW alerts] WMS channel failed:',(e&&e.message)||e);}catch(e2){} }
+    /* channel 2 — ECCC CAP files via our self-reporting function */
+    try{
+        const r2=await fetch('/.netlify/functions/alerts',{signal:AbortSignal.timeout(9000)});
+        if(!r2.ok) throw new Error('http '+r2.status);
+        const j2=await r2.json();
+        ((j2&&j2.alerts)||[]).forEach(function(a){
+            if(!a||!a.head) return;
+            var exp=a.expires?Date.parse(a.expires):null;
+            merged.push({head:String(a.head).slice(0,90),sev:a.sev||2,exp:(exp&&!isNaN(exp))?exp:null,gustTo:(a.gustTo!=null?a.gustTo:null),rainTo:(a.rainTo!=null?a.rainTo:null)});
+        });
+        gotAny=true;
+    }catch(e){ try{console.warn('[DLW alerts] CAP channel failed:',(e&&e.message)||e);}catch(e2){} }
+    if(gotAny){
+        var seen={};
+        merged=merged.filter(function(a){
+            if(a.exp&&a.exp<Date.now()) return false;
+            var k=a.head.toLowerCase();
+            if(seen[k]){ if(a.sev>seen[k].sev)seen[k].sev=a.sev; if(a.exp&&(!seen[k].exp||a.exp>seen[k].exp))seen[k].exp=a.exp; return false; }
+            seen[k]=a; return true;
+        });
+        merged.sort(function(a,b){return b.sev-a.sev;});
+        IN.alertsList=merged; IN.alertsTime=Date.now();
+    }
+    renderWarn();
 }
 async function pollRadar(){
     try{
@@ -4749,7 +4844,11 @@ function set(o){ Object.assign(IN,o||{});
         seaE=Math.max(windNow(),(IN.wgust||0)*0.75)*fetchF(); seaSeeded=true;
     }
     chips(); }
-return {boot:boot, set:set, pollRadar:pollRadar};
+/* warnings: check the moment the page loads, then every 4 minutes, no matter what */
+    try{ pollAlerts(); setInterval(function(){ try{pollAlerts();}catch(e){} }, 4*60000); }catch(e){}
+    /* storm mode: while a severe warning covers the lake, re-pull the wind ring + radar every 5 min */
+    try{ setInterval(function(){ try{ if(IN.offSev>=4){ pollRing(); pollRadar(); } }catch(e){} }, 5*60000); }catch(e){}
+    return {boot:boot, set:set, pollRadar:pollRadar};
 })();
 /*PORTRAIT-END*/
 window.PORTRAIT = PORTRAIT;
