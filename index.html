@@ -4003,6 +4003,12 @@ function windEffK(){
     return Math.max(0,Math.min(70,v))/60;
 }
 function windWord(v){ if(v<10)return 'calm'; if(v<22)return 'light chop'; if(v<36)return 'choppy'; return 'rough'; }
+function seaWord(){
+    /* describes HER WATER, not the anemometer: seaE already knows direction, fetch, and storm memory */
+    const e=seaE;
+    if(e<5.5)return 'glassy'; if(e<11)return 'calm'; if(e<19)return 'light chop';
+    if(e<30)return 'choppy'; if(e<48)return 'rough'; return 'heavy seas';
+}
 
 /* landscape (seeded, from Motion Study A) */
 let TL={a:0,b:0,c:0}, spruces=[], clouds=[], stars=[], boulders=[], segs=[], dabs=[], jit=[];
@@ -4672,7 +4678,7 @@ function chips(){
     if(L) L.textContent=IN.level!=null?IN.level.toFixed(2)+' ft':'— ft';
     if(R){ const v=windNow();
         var sevHere=(IN.offSev>=4)&&wetAtLake();
-        let t=(sevHere?'Severe storm · ':(thundering()?'T-storm · ':(IN._rain?'Rain · ':'')))+windWord(v)+' · '+Math.round(v);
+        let t=(sevHere?'Severe storm · ':(thundering()?'T-storm · ':(IN._rain?'Rain · ':'')))+seaWord()+' · '+Math.round(v);
         var _g=(function(){ var r2=ringEst(); var g=(r2&&r2.gust!=null)?r2.gust:((IN.wgust!=null&&IN.wxTime&&ageMin(IN.wxTime)<=70)?IN.wgust:null);
             return (g!=null&&(g>=v+12||g>=40))?Math.round(g):null; })();
         if(_g) t+=' g '+_g;
