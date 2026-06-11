@@ -105,6 +105,7 @@
         }
         .dot.spinning { background: #facc15; animation: none; }
         .dot.err      { background: #f87171; animation: none; }
+        .dot.warn     { background: #d97706; animation: none; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
         .dot:not(.spinning):not(.err) { animation: blink 2s infinite; }
 
@@ -2229,7 +2230,11 @@ function renderBeacon(ft, series) {
         const ts = series[0].dt;
         const tz = 'America/Winnipeg';
         tsStr = `${ts.toLocaleDateString('en-CA',{month:'short',day:'numeric',timeZone:tz})} ${ts.toLocaleTimeString('en-CA',{hour:'numeric',minute:'2-digit',hour12:true,timeZoneName:'short',timeZone:tz})}`;
-        document.getElementById('lastUpdate').textContent = `Updated: ${tsStr}`;
+        const _chk = LANE.checked ? new Date(LANE.checked) : new Date();
+        const _chkStr = _chk.toLocaleTimeString('en-CA',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:tz});
+        const _gapMin = ts ? Math.round((Date.now() - ts.getTime())/60000) : null;
+        document.getElementById('lastUpdate').textContent =
+            `Checked ${_chkStr} \u00b7 newest reading ${tsStr}` + ((_gapMin!=null && _gapMin>45) ? ' \u00b7 source delayed' : '');
     }
 
     // ── Previous reading — 1 hour ago
@@ -2888,6 +2893,8 @@ function renderWeather(j) {
 // ─────────────────────────────────────────────────────────
 // MAIN
 // ─────────────────────────────────────────────────────────
+const LANE = { checked:null, obs:null, good:false, err:null };
+window.DLW_LANE = LANE;
 async function init() {
     let demo = false;
 
@@ -2897,9 +2904,19 @@ async function init() {
         lakeData = await fetchStn(CFG.st.lake, 48);
         const recent = lakeData.find(r => r.level != null);
         if (recent) lakeFt = mToFt(recent.level);
+        LANE.checked = Date.now(); LANE.err = null; LANE.good = true;
+        if (recent && recent.dt) LANE.obs = recent.dt.getTime();
     } catch (e) {
         console.warn('[lake]', e.message);
-        demo = true;
+        LANE.checked = Date.now(); LANE.err = e.message;
+        if (!LANE.good) { demo = true; }
+        else {
+            try {
+                document.getElementById('liveDot').className = 'dot warn';
+                const _lg = LANE.obs ? new Date(LANE.obs).toLocaleTimeString('en-CA',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:'America/Winnipeg'}) : '—';
+                document.getElementById('liveText').textContent = 'can\u2019t reach Water Survey \u00b7 last good reading ' + _lg;
+            } catch (e2) {}
+        }
     }
 
     // ── Outlet
@@ -3022,7 +3039,7 @@ async function init() {
     }
 
     // ── Render all
-    renderBeacon(lakeFt, lakeData);
+    if (!(LANE.err && LANE.good)) renderBeacon(lakeFt, lakeData);
     renderBasinStrip(lakeFt, lakeData);
     renderLadder(lakeFt);
     renderChart(lakeData);
@@ -4106,6 +4123,7 @@ function stepStreaks(k){
 }
 let caps=[];
 let breakers=[];
+let _dbgSun=0,_dbgInten=0;
 let flick=0;
 let flickX=0.5;
 let drips=[];
@@ -4263,6 +4281,7 @@ function draw(){
     const radarFresh=IN.radarTime!=null&&ageMin(IN.radarTime)<=12;
     const approaching=!rain&&((radarFresh&&(IN.radarUp||0)>=0.2)||((IN.p15Next||0)>=0.4));
     const inten=Math.max(0.15,Math.min(1,((radarFresh?Math.max(IN.radarNow||0,(IN.radarUp||0)*0.8):null)??IN.p15Now??1.6)/4));
+    _dbgInten=inten;
     IN._sb=sunBreak; IN._appr=approaching; IN._rain=rain;
     const v=windNow();
     const k=windEffK();
@@ -4422,6 +4441,7 @@ function draw(){
             sunF=Math.max(0,Math.min(1,1-cloud*1.5))*upK;
         }
     }
+    _dbgSun=sunF;
     /* tonal swell — soft feathered ridges of light heaving shoreward; pure gradient, no lines */
     const seaK=Math.max(0,Math.min(1.2,(seaE-6)/44));
     if(seaK>0.03){
@@ -4957,7 +4977,19 @@ function set(o){ Object.assign(IN,o||{});
     try{ pollAlerts(); setInterval(function(){ try{pollAlerts();}catch(e){} }, 4*60000); }catch(e){}
     /* storm mode: while a severe warning covers the lake, re-pull the wind ring + radar every 5 min */
     try{ setInterval(function(){ try{ if(IN.offSev>=4){ pollRing(); pollRadar(); } }catch(e){} }, 5*60000); }catch(e){}
-    return {boot:boot, set:set, pollRadar:pollRadar};
+    function debug(){
+        var r=null; try{ r=ringEst(); }catch(e){}
+        return { seaE:Math.round(seaE*10)/10, word:seaWord(), wind:Math.round(windNow()||0),
+            gust:(r&&r.gust!=null)?Math.round(r.gust):((IN.wgust!=null)?Math.round(IN.wgust):null),
+            dir:windDirNow(), fetch:Math.round(fetchF()*100)/100,
+            sun:Math.round(_dbgSun*100)/100, inten:Math.round(_dbgInten*100)/100, offSev:IN.offSev,
+            ages:{ ring:(r?r.newest:null),
+                   radar:(IN.radarTime!=null)?Math.round((Date.now()-IN.radarTime)/60000):null,
+                   model:(IN.p15Time!=null)?Math.round(ageMin(IN.p15Time)):null,
+                   alerts:(IN.alertsTime!=null)?Math.round(ageMin(IN.alertsTime)):null,
+                   airport:(IN.wxTime!=null)?Math.round(ageMin(IN.wxTime)):null } };
+    }
+    return {boot:boot, set:set, pollRadar:pollRadar, debug:debug};
 })();
 /*PORTRAIT-END*/
 window.PORTRAIT = PORTRAIT;
@@ -4965,6 +4997,28 @@ window.PORTRAIT = PORTRAIT;
 try { initTabs(); } catch (e) { console.warn('[tabs]', e.message); }
 try { init(); } catch (e) { console.warn('[init]', e.message); }
 try { PORTRAIT.boot(); } catch (e) { console.warn('[portrait]', e.message); }
+</script>
+<script>
+(function(){try{
+  if(!/[?&]debug=1/.test(location.search)) return;
+  var el=document.createElement('div'); el.id='dlwDebug';
+  el.style.cssText='position:fixed;top:8px;left:8px;z-index:9999;background:rgba(10,16,28,.88);color:#cfe3ff;font:10px/1.55 ui-monospace,Menlo,monospace;padding:8px 10px;border-radius:6px;pointer-events:none;white-space:pre;max-width:48ch;';
+  document.body.appendChild(el);
+  function fm(m){return m==null?'\u2014':(m+'m');}
+  function tick(){try{
+    var PP=(typeof PORTRAIT!=='undefined')?PORTRAIT:(window.PORTRAIT||null);
+    var d=(PP&&PP.debug)?PP.debug():null;
+    var L=window.DLW_LANE||{};
+    var t='ENGINE  seaE '+(d?d.seaE:'\u2014')+' \u2192 '+(d?d.word:'\u2014')
+      +'\nwind '+(d?d.wind:'\u2014')+((d&&d.gust)?(' g '+d.gust):'')+' km/h  dir '+((d&&d.dir!=null)?Math.round(d.dir)+'\u00b0':'\u2014')+'  fetch '+(d?d.fetch:'\u2014')
+      +'\nsun '+(d?d.sun:'\u2014')+'  rain '+(d?d.inten:'\u2014')+'  warnSev '+(d?d.offSev:'\u2014')
+      +'\nLANES \u00b7 ages'
+      +'\nlevel  checked '+(L.checked?Math.round((Date.now()-L.checked)/60000)+'m':'\u2014')+'  reading '+(L.obs?Math.round((Date.now()-L.obs)/60000)+'m':'\u2014')+(L.err?('  ERR '+String(L.err).slice(0,26)):'')
+      +(d?('\nring '+fm(d.ages.ring)+'  radar '+fm(d.ages.radar)+'  model '+fm(d.ages.model)+'\nalerts '+fm(d.ages.alerts)+'  airport '+fm(d.ages.airport)):'');
+    el.textContent=t;
+  }catch(e){ el.textContent='debug err: '+e.message; }}
+  tick(); setInterval(tick,2000);
+}catch(e){}})();
 </script>
 </body>
 </html>
