@@ -4105,6 +4105,7 @@ function stepStreaks(k){
     }
 }
 let caps=[];
+let breakers=[];
 let flick=0;
 let flickX=0.5;
 let drips=[];
@@ -4215,6 +4216,12 @@ function stepSea(kInst){
     const dn=seaE>tgt;
     seaE+=(tgt-seaE)*(!dn?1.1e-4:(f<0.3?5e-5:1.6e-5));
     if(seaE<0)seaE=0;
+}
+function stepBreakers(){
+    const sk=Math.max(0,Math.min(1.2,(seaE-6)/44));
+    if(sk>0.34 && Math.random()<(sk-0.30)*0.020 && breakers.length<6)
+        breakers.push({x:Math.random(),t:0,dur:(0.9+Math.random()*0.7)*30,pow:0.5+sk*0.8+Math.random()*0.3});
+    for(let i=breakers.length-1;i>=0;i--){const b=breakers[i];b.t++;if(b.t>b.dur)breakers.splice(i,1);}
 }
 function stepCaps(v){
     const ex=v-12;
@@ -4419,17 +4426,19 @@ function draw(){
     const seaK=Math.max(0,Math.min(1.2,(seaE-6)/44));
     if(seaK>0.03){
         if(_spr===null) buildSprites();
+        const seaHi=Math.max(0,Math.min(1,(seaE-19)/24));
         const nb=Math.round(5+seaK*7);
-        const crest=mx(pal.low,[236,242,250],0.45+seaK*0.30);
+        const crest=mx(pal.low,[238,244,252],Math.min(0.92,0.45+seaK*0.30+0.15*seaHi));
         const trough=mx(skyV(pal,0.5),[8,12,20],0.5);
         const SX=Math.max(8,Math.round(W/26));
         for(let i=0;i<nb;i++){
             const fy=((i+0.5)/nb+tt*0.02*(0.4+seaK))%1;
             const yMid=horizonY+Math.pow(fy,1.3)*waterH;
             const thick=(3+fy*15)*(0.7+seaK*1.7);
-            const amp=(1+fy*4)*(0.5+seaK*1.8);
+            const amp=(1+fy*4)*(0.5+seaK*1.8)*(1+0.22*seaHi);
             const ph=i*1.7+tt*0.5;
-            const lightA=(0.05+seaK*0.13)*(0.45+fy*0.7);
+            let lightA=(0.05+seaK*0.13)*(0.45+fy*0.7);
+            lightA=Math.max(lightA,(0.055+0.10*seaHi)*(0.5+fy*0.6));
             const g=ctx.createLinearGradient(0,yMid-thick-amp,0,yMid+thick+amp);
             g.addColorStop(0,cl(crest,0)); g.addColorStop(0.5,cl(crest,lightA)); g.addColorStop(1,cl(crest,0));
             ctx.fillStyle=g; ctx.beginPath();
@@ -4446,12 +4455,23 @@ function draw(){
             for(let x=SX;x<=W;x+=SX) ctx.lineTo(x,ty-thick+Math.sin(x*0.012+ph)*amp);
             for(let x=W;x>=0;x-=SX) ctx.lineTo(x,ty+thick+Math.sin(x*0.012+ph)*amp);
             ctx.closePath(); ctx.fill();
-            if(fy>0.62 && _spr && sunF>0.15){
+            if(fy>0.62 && _spr && sunF>0.45 && seaE<19){
                 ctx.globalCompositeOperation='lighter';
                 const ns=4+Math.round(seaK*5);
                 for(let q=0;q<ns;q++){ const xx=Math.random()*W; const yy=yMid+Math.sin(xx*0.012+ph)*amp; const sz=1.2+Math.random()*2.4; ctx.globalAlpha=(0.10+Math.random()*0.18)*(0.4+seaK*0.6)*sunF; ctx.drawImage(_spr.spark,xx-sz,yy-sz*0.5,sz*2,sz); }
                 ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
             }
+        }
+        /* distant wave-tops serrating the horizon when it's genuinely rough */
+        if(seaHi>0.06){
+            if(_spr===null) buildSprites();
+            const rsW=Math.max(1,Hh/300), nT=Math.round(W/16);
+            for(let q2=0;q2<nT;q2++){
+                const x2=Math.random()*W;
+                ctx.globalAlpha=(0.10+0.22*seaHi)*Math.random();
+                ctx.drawImage(_spr.foam,x2-2.6,horizonY-(0.8+Math.random()*2.0*seaHi)*rsW-0.6,5.2,1.5);
+            }
+            ctx.globalAlpha=1;
         }
     }
     /* light on water — warm sheen-lane + white micro-sparkle, all soft-edged.
@@ -4494,18 +4514,50 @@ function draw(){
         for(let i=0;i<nM;i++){ const vv=Math.random(); const y=horizonY+4+vv*waterH*0.9; const x=W*0.5+(Math.random()-0.5)*W*0.12*(1+vv); const sz=1.2+Math.random()*2; ctx.globalAlpha=(0.06+Math.random()*0.12)*moon; ctx.drawImage(_spr.spark, x-sz, y-sz*0.5, sz*2, sz); }
         ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
     }
-    /* whitecaps — soft feathered foam, clustered on crests, scaling with wave energy */
+    /* whitecaps — calm states: soft dabs; above choppy: wind-aligned BREAKING CRESTS riding
+       the swell bands, bright at the break, trailing spume downwind. Never lone sparkle dots. */
     if(caps.length){
         if(_spr===null) buildSprites();
+        const seaHi2=Math.max(0,Math.min(1,(seaE-19)/24));
+        const sk2=Math.max(0,Math.min(1.2,(seaE-6)/44));
+        const aDw=streakAngle(), dwx=Math.cos(aDw)||1, tilt=-0.10*seaHi2*(dwx<0?-1:1);
+        const nb2=Math.round(5+sk2*7);
         for(const c of caps){
             const ph=1-c.life/c.max;
             const fade=Math.sin(Math.min(1,ph*1.2)*3.1416);
-            const a=fade*(0.30+0.55*Math.min(1,(seaE-10)/26));
+            let a=fade*(0.30+0.55*Math.min(1,(seaE-10)/26));
             if(a<=0.01) continue;
-            const yy=horizonY+c.y*(waterH-Hh*0.06);
+            let yy=horizonY+c.y*(waterH-Hh*0.06);
             const sz=(4+c.y*9)*(0.8+ph*0.5);
-            ctx.globalAlpha=Math.min(0.85,a);
-            ctx.drawImage(_spr.foam, c.x*W-sz, yy-sz*0.45, sz*2, sz*0.9);
+            if(seaHi2>0.02){
+                /* snap to the nearest swell band's surface and weight toward its crests */
+                let bi=0,bd=9;
+                for(let i2=0;i2<nb2;i2++){
+                    const fyi=(((i2+0.5)/nb2+tt*0.02*(0.4+sk2))%1);
+                    const d2=Math.abs(fyi-c.y); if(d2<bd){bd=d2;bi=i2;}
+                }
+                const fyi=(((bi+0.5)/nb2+tt*0.02*(0.4+sk2))%1);
+                const phB=bi*1.7+tt*0.5;
+                const ampB=(1+fyi*4)*(0.5+sk2*1.8)*(1+0.22*seaHi2);
+                const sn=Math.sin(c.x*W*0.012+phB);
+                yy=horizonY+Math.pow(fyi,1.3)*waterH+sn*ampB;
+                const crestW=Math.max(0,sn);
+                a*=(0.45+0.55*Math.pow(crestW,1.2))*(0.8+0.4*seaHi2);
+                if(ph<0.3) a*=1.25;
+                const aspect=2.2+3.4*seaHi2;
+                const szW=sz*(0.9+0.6*seaHi2), szH=Math.max(1.6,szW*2/aspect);
+                ctx.save(); ctx.translate(c.x*W,yy); ctx.rotate(tilt);
+                ctx.globalAlpha=Math.min(0.9,a);
+                ctx.drawImage(_spr.foam,-szW,-szH*0.5,szW*2,szH);
+                if(ph>0.35){
+                    ctx.globalAlpha=Math.min(0.9,a)*0.4;
+                    ctx.drawImage(_spr.foam,-szW*1.3+dwx*(6+10*seaHi2)*ph,-szH*0.4,szW*2.6,szH*0.8);
+                }
+                ctx.restore();
+            } else {
+                ctx.globalAlpha=Math.min(0.85,a);
+                ctx.drawImage(_spr.foam, c.x*W-sz, yy-sz*0.45, sz*2, sz*0.9);
+            }
         }
         ctx.globalAlpha=1;
     }
@@ -4561,6 +4613,27 @@ function draw(){
         ctx.beginPath(); ctx.ellipse(cx,cy,b.rx*rs,b.ry*rs,0,0,6.283); ctx.fill();
         ctx.strokeStyle=cl(rimC,0.32); ctx.lineWidth=1;
         ctx.beginPath(); ctx.ellipse(cx,cy,b.rx*rs*0.95,b.ry*rs*0.95,0,3.5,5.9); ctx.stroke();
+    }
+    /* shore break — rhythmic surges: splash plumes rising ABOVE the rip-rap line + run-up wash */
+    if(breakers.length){
+        if(_spr===null) buildSprites();
+        const fy0b=Hh-6*rs;
+        for(const b of breakers){
+            const q=Math.min(1,b.t/b.dur), sB=Math.sin(q*Math.PI), bx=b.x*W;
+            const rise=b.pow*(8+15*rs)*sB;
+            const nP=3+Math.round(b.pow*4);
+            for(let p2=0;p2<nP;p2++){
+                const jx=(p2-(nP-1)/2)*3.2*rs+Math.sin(p2*7+tt*9)*1.5;
+                const jr=rise*(0.55+0.45*Math.abs(Math.sin(p2*5.3+tt*6)));
+                const szP=(3.5+b.pow*3)*rs*(1-q*0.4);
+                ctx.globalAlpha=Math.min(0.8,(0.45+0.30*b.pow)*sB);
+                ctx.drawImage(_spr.foam,bx+jx-szP,fy0b-jr-szP*0.6,szP*2,szP*1.2);
+            }
+            const rw=(12+b.pow*26)*rs*(0.4+q*0.8);
+            ctx.globalAlpha=0.35*sB*(0.6+0.4*b.pow);
+            ctx.drawImage(_spr.foam,bx-rw,fy0b-2*rs,rw*2,3.2*rs);
+        }
+        ctx.globalAlpha=1;
     }
     /* surf on the rip-rap — soft foam where waves meet the boulders */
     if(seaK>0.32){
@@ -4731,7 +4804,7 @@ function loop(){
     frame++;
     if(document.hidden||frame%2) return;
     const k=windEffK();
-    stepSea(k); stepStreaks(k); stepCaps(seaE); tt+=0.032;
+    stepSea(k); stepStreaks(k); stepCaps(seaE); stepBreakers(); tt+=0.032;
     try{ draw(); }catch(e){ on=false; console.warn('[portrait]',e.message); }
 }
 function boot(){
