@@ -2208,6 +2208,7 @@ function trendOf(series) {
     return               { t:'→ Steady',  c:'flat' };
 }
 
+var _lastLevelFt = null, _lastLevelSeries = null;
 // ── rate-of-rise: fit recent readings, project the threat ─────────
 function riseRate(series){
     if(!series||series.length<3) return null;
@@ -2254,10 +2255,36 @@ function renderRate(ft, series){
         else { msg+=' '+headroom.toFixed(2)+' ft of headroom — flood stage not in reach at this rate.'; cls='warn'; }
         msg+=' <span style="opacity:.7;font-weight:400">Trend only; tributary inflow can steepen this for 1–2 days after rain.</span>';
     } else if(falling){
-        msg='<b>Falling '+ftStr+'</b> ('+magStr+') over the last '+R.spanH.toFixed(1)+' h.';
-        msg+=' <span style="opacity:.7;font-weight:400">Wind can mask true level on the downwind shore — read the midline, not spikes.</span>';
+        var B=window.DLW_BUDGET;
+        if(B && B.netCfs>200 && Math.abs(rate)<0.10){
+            // gauge dipped, but the water budget says the basin is still filling -> name the contradiction
+            var mult=(B.outflow>0)?(B.inflow/B.outflow):0;
+            var multStr=(mult>=1.5)?(' (inflow '+mult.toFixed(1)+'\u00d7 outflow)'):'';
+            var dip=Math.abs(rate*R.spanH);
+            msg='<b>Gauge dipped '+(dip<0.005?'slightly':dip.toFixed(2)+' ft')+'</b> '
+              + '— within wind/slosh noise. Basin still <b>filling</b>'+multStr
+              + ': inflow ~'+Math.round(B.inflow)+' cfs vs outflow ~'+Math.round(B.outflow)+' cfs.';
+            msg+=' <span style="opacity:.7;font-weight:400">Outlet gauge can wiggle down while the lake fills — watch the trend over hours, not the last reading.</span>';
+            cls='warn';
+        } else {
+            msg='<b>Falling '+ftStr+'</b> ('+magStr+') over the last '+R.spanH.toFixed(1)+' h.';
+            if(B && B.netCfs!=null){
+                msg+=' Net flow '+(B.netCfs>0?'+':'')+Math.round(B.netCfs)+' cfs.';
+            }
+            msg+=' <span style="opacity:.7;font-weight:400">Wind can mask true level on the downwind shore — read the midline, not spikes.</span>';
+        }
     } else {
-        msg='<b>Holding steady</b> — under 0.05 in/h change over the last '+R.spanH.toFixed(1)+' h.';
+        var B2=window.DLW_BUDGET;
+        if(B2 && B2.netCfs>200){
+            var m2=(B2.outflow>0)?(B2.inflow/B2.outflow):0;
+            var m2s=(m2>=1.5)?(' (inflow '+m2.toFixed(1)+'\u00d7 outflow)'):'';
+            msg='<b>Gauge steady</b>, but basin <b>filling</b>'+m2s
+              + ': inflow ~'+Math.round(B2.inflow)+' cfs vs outflow ~'+Math.round(B2.outflow)+' cfs.';
+            msg+=' <span style="opacity:.7;font-weight:400">A flat outlet reading can lag a rising lake — the water budget leads the gauge.</span>';
+            cls='warn';
+        } else {
+            msg='<b>Holding steady</b> — under 0.05 in/h change over the last '+R.spanH.toFixed(1)+' h.';
+        }
     }
     el.className='rate-line'+(cls?(' '+cls):''); el.innerHTML=msg; el.style.display='block';
 }
@@ -2289,6 +2316,7 @@ function renderBeacon(ft, series) {
     }
 
     document.getElementById('toFlood').textContent = `${(CFG.floodStage - ft).toFixed(2)} ft`;
+    _lastLevelFt = ft; _lastLevelSeries = series;
     renderRate(ft, series);
 
     let tsStr = '';
@@ -2784,6 +2812,13 @@ function renderOutlet(cfs, tribData) {
     if (stripHeadroom) stripHeadroom.textContent = overCapacity ? `+${overage} over` : Math.round(Math.max(0, RATED - cfs));
     const stripInflow = document.getElementById('stripInflow');
     if (stripInflow) stripInflow.textContent = Math.round(totalInflow);
+
+    // expose the live water budget so the level card's rate line can cross-check
+    // the measured gauge slope against inflow-vs-outflow physics
+    window.DLW_BUDGET = { inflow: totalInflow, outflow: cfs, netCfs: totalInflow - cfs };
+    if (typeof _lastLevelFt === 'number' && typeof _lastLevelSeries !== 'undefined') {
+        try { renderRate(_lastLevelFt, _lastLevelSeries); } catch(e){}
+    }
 }
 
 // ─────────────────────────────────────────────────────────
