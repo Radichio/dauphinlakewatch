@@ -1816,10 +1816,10 @@
             <div style="display:flex;gap:6px;">
                 <button class="hydro-btn active" onclick="setHydroRange(7,this)">7 days</button>
                 <button class="hydro-btn" onclick="setHydroRange(14,this)">14 days</button>
-                <button class="hydro-btn" disabled title="Available as data accumulates">30 days</button>
+                <button class="hydro-btn" onclick="setHydroRange(30,this)">30 days</button>
             </div>
         </div>
-        <p style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;">Live data collection began March 28, 2026. Additional ranges will unlock as the record builds.</p>
+        <p style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.6;">Live readings from Water Survey of Canada (their realtime feed holds roughly the past few weeks). <span style="color:#9bb3c4;">Faint line</span> = raw gauge swing — the <b>seiche</b>, the lake rocking back and forth on wind and pressure, a real oscillation around the true level. <span style="color:#1a3a52;font-weight:600;">Bold line</span> = the true lake level with that slosh averaged out.</p>
         <div class="chart-wrap" style="height:220px;">
             <canvas id="hydroChart"></canvas>
         </div>
@@ -2062,10 +2062,10 @@ const HFC_REF = {
 // inter-pulse · second pulse active · peak · post-peak · recovery · dormancy
 // ─────────────────────────────────────────────────────────
 const PHASE = {
-    active:   false,  // retired Jun 7 2026 — dated too fast; the portrait carries 'right now'
-    since:    'June 6, 2026 — evening',
-    headline: 'Storm night — Saturday into Sunday',
-    text:     'Environment Canada has this region in an active severe-weather pattern into Sunday, June 7 — a severe thunderstorm warning crossed the R.M. of Dauphin Saturday afternoon, and more storms are possible overnight and through Sunday, with the weekend\'s heaviest rain aimed at western Manitoba. A regional flood watch rides with it: heavy downpours on a basin still letting down from spring can bring creeks up fast, put water on low roads, and drive gusts that push the lake well up the downwind shore. The strip above reads radar every few minutes; totals and the lake\'s response will be posted as the weekend resolves.',
+    active:   true,   // storm event Jun 29 2026 — auto-hide when effect passes
+    since:    'June 29, 2026 — evening',
+    headline: 'Heavy rain — basin filling',
+    text:     'Environment Canada warning tonight: 30\u201360 mm on saturated ground. Lake ~856.4 ft, about 1.6 ft below flood stage. Inflow ~3\u00d7 outflow \u2014 the lake is filling even when the gauge dips. Levels will keep rising 1\u20132 days after the rain stops; wind can push water higher on exposed shores. Not an official forecast \u2014 manitoba.ca/floodinfo.',
 };
 
 // ─────────────────────────────────────────────────────────
@@ -2209,6 +2209,22 @@ function trendOf(series) {
 }
 
 var _lastLevelFt = null, _lastLevelSeries = null;
+// de-noised "true level": median of gauge readings within a trailing window,
+// stripping fast wind/seiche slosh that oscillates around the real value.
+function trueLevel(series, ft){
+    if(!series||series.length<3) return ft;
+    var newest=series[0].dt?series[0].dt.getTime():Date.now();
+    var win=35*60000, ys=[];
+    for(var i=0;i<series.length;i++){
+        var r=series[i]; if(!r||r.level==null||!r.dt) continue;
+        if(newest-r.dt.getTime()>win) break;
+        ys.push(mToFt(r.level));
+    }
+    if(ys.length<3) return ft;
+    ys.sort(function(a,b){return a-b;});
+    var m=ys.length>>1;
+    return (ys.length%2)?ys[m]:(ys[m-1]+ys[m])/2;
+}
 // ── rate-of-rise: fit recent readings, project the threat ─────────
 function riseRate(series){
     if(!series||series.length<3) return null;
@@ -2298,7 +2314,8 @@ function renderBeacon(ft, series) {
     const colorMap = { g:'#1a6b3a', y:'#8a6500', a:'#b84c00', r:'#8b0000' };
     const bgMap    = { g:'#ebf7f0', y:'#fdf8e0', a:'#fff1e8', r:'#ffe8e8' };
 
-    document.getElementById('levelNum').textContent = ft.toFixed(2);
+    var _trueFt = trueLevel(series, ft);
+    document.getElementById('levelNum').textContent = _trueFt.toFixed(2);
     document.getElementById('levelNum').style.color = colorMap[st.cls];
 
     const badge = document.getElementById('statusBadge');
@@ -2316,8 +2333,8 @@ function renderBeacon(ft, series) {
     }
 
     document.getElementById('toFlood').textContent = `${(CFG.floodStage - ft).toFixed(2)} ft`;
-    _lastLevelFt = ft; _lastLevelSeries = series;
-    renderRate(ft, series);
+    _lastLevelFt = _trueFt; _lastLevelSeries = series;
+    renderRate(_trueFt, series);
 
     let tsStr = '';
     if (series && series.length) {
@@ -3194,7 +3211,7 @@ function setHydroRange(days, btn) {
 async function fetchHydroData() {
     try {
         // WSC API returns last 30 days max — fetch max records available
-        const rows = await fetchStn(CFG.st.lake, 500);
+        const rows = await fetchStn(CFG.st.lake, 4000);
         hydroAllData = [...rows].reverse()
             .filter(r => r.level != null)
             .map(r => ({
@@ -3270,17 +3287,43 @@ function renderHydro() {
         type: 'line',
         data: {
             datasets: [{
-                label: 'Lake Level (ft)',
+                label: 'True level (ft)',
+                data: (function(){
+                    // centered rolling median strips the seiche; window scales with range
+                    var pts=chartData.map(p=>({x:(p.x instanceof Date?p.x.getTime():new Date(p.x).getTime()), y:p.y}));
+                    var k = hydroDays<=1?3 : hydroDays<=7?7 : hydroDays<=14?13 : 21;
+                    var half=k>>1, out=[];
+                    for(var i=0;i<pts.length;i++){
+                        var a=Math.max(0,i-half), b=Math.min(pts.length-1,i+half);
+                        // near the live edge there's no 'future' data — widen the trailing side
+                        // so the most recent point is still de-seiched, not left raw
+                        if(b-i<half){ a=Math.max(0,i-(2*half-(b-i))); }
+                        var w=[]; for(var j=a;j<=b;j++) w.push(pts[j].y);
+                        w.sort(function(x,y){return x-y;});
+                        out.push({x:pts[i].x, y:w[w.length>>1]});
+                    }
+                    return out;
+                })(),
+                borderColor: '#1a3a52',
+                borderWidth: 2.2,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                tension: 0.3,
+                fill: { target: 'origin', above: 'rgba(44,95,124,.07)' },
+                order: 1
+            },{
+                label: 'Gauge swing — seiche (ft)',
                 data: chartData.map(p => ({
                     x: p.x instanceof Date ? p.x.getTime() : new Date(p.x).getTime(),
                     y: p.y
                 })),
-                borderColor: '#2c5f7c',
-                borderWidth: 2,
+                borderColor: 'rgba(155,179,196,.55)',
+                borderWidth: 1,
                 pointRadius: 0,
-                pointHoverRadius: 4,
-                tension: 0.3,
-                fill: { target: 'origin', above: 'rgba(44,95,124,.08)' }
+                pointHoverRadius: 3,
+                tension: 0.25,
+                fill: false,
+                order: 2
             }]
         },
         options: {
