@@ -474,6 +474,16 @@
             line-height: 1.5;
         }
 
+        /* ─────────── RATE OF RISE ─────────── */
+        .rate-line {
+            font-family: var(--mono); font-size: 12px; line-height:1.5;
+            margin-top: 10px; padding: 9px 12px; border-radius: 8px;
+            border-left: 3px solid var(--muted); background: rgba(0,0,0,.03);
+            color: var(--ink);
+        }
+        .rate-line.warn { border-left-color:#b84c00; background:#fff1e8; }
+        .rate-line.alarm{ border-left-color:#8b0000; background:#ffe8e8; color:#5c0000; font-weight:600; }
+        .rate-line b { font-weight:700; }
         /* ─────────── PREV READING + CONTEXT LINE ─────────── */
         .prev-reading {
             font-family: var(--mono);
@@ -1153,6 +1163,7 @@
                         <div class="stat-val" id="toFlood">—</div>
                     </div>
                 </div>
+                <div class="rate-line" id="rateLine" style="display:none;"></div>
                 <div class="context-line">
                     Normal range below 854.8 ft &nbsp;·&nbsp;
                     Flood stage <span style="color:var(--amber)">858.0 ft</span> &nbsp;·&nbsp;
@@ -2197,6 +2208,60 @@ function trendOf(series) {
     return               { t:'→ Steady',  c:'flat' };
 }
 
+// ── rate-of-rise: fit recent readings, project the threat ─────────
+function riseRate(series){
+    if(!series||series.length<3) return null;
+    var pts=[];
+    for(var i=0;i<series.length;i++){
+        var r=series[i]; if(!r||r.level==null||!r.dt) continue;
+        pts.push({t:r.dt.getTime(), y:mToFt(r.level)});
+        if(pts.length>=18) break;
+    }
+    if(pts.length<3) return null;
+    var tNew=pts[0].t, tOld=pts[pts.length-1].t;
+    var spanH=(tNew-tOld)/3600000;
+    if(spanH<0.25) return null;
+    var n=pts.length, sx=0,sy=0,sxx=0,sxy=0;
+    for(var k=0;k<n;k++){
+        var x=(pts[k].t-tOld)/3600000, y=pts[k].y;
+        sx+=x; sy+=y; sxx+=x*x; sxy+=x*y;
+    }
+    var denom=(n*sxx - sx*sx);
+    if(Math.abs(denom)<1e-9) return null;
+    var slope=(n*sxy - sx*sy)/denom;
+    return { ftPerH:slope, spanH:spanH, n:n, latest:pts[0].y };
+}
+function renderRate(ft, series){
+    var el=document.getElementById('rateLine'); if(!el) return;
+    var R=riseRate(series);
+    if(!R){ el.style.display='none'; return; }
+    var rate=R.ftPerH, inPerH=rate*12;
+    var headroom=CFG.floodStage-ft;
+    var rising=rate>0.003, falling=rate<-0.003;
+    var msg='', cls='';
+    var mag=Math.abs(inPerH);
+    var magStr=(mag>=1)?mag.toFixed(1)+' in/h':(Math.abs(rate*12).toFixed(2)+' in/h');
+    var ftStr=(Math.abs(rate)>=0.1)?Math.abs(rate).toFixed(2)+' ft/h':Math.abs(rate).toFixed(3)+' ft/h';
+    if(rising){
+        var hrs=headroom/rate;
+        msg='<b>Rising '+ftStr+'</b> ('+magStr+') over the last '+R.spanH.toFixed(1)+' h.';
+        if(headroom>0 && hrs>0 && hrs<96){
+            var when=new Date(Date.now()+hrs*3600000), tz='America/Winnipeg';
+            var wStr=when.toLocaleString('en-CA',{weekday:'short',hour:'numeric',minute:'2-digit',hour12:true,timeZone:tz});
+            msg+=' At this pace, flood stage ('+CFG.floodStage.toFixed(1)+' ft) in <b>~'+(hrs<1?Math.round(hrs*60)+' min':hrs.toFixed(hrs<10?1:0)+' h')+'</b> (~'+wStr+').';
+            cls=(hrs<18)?'alarm':'warn';
+        } else if(headroom<=0){ msg+=' Already above flood stage.'; cls='alarm'; }
+        else { msg+=' '+headroom.toFixed(2)+' ft of headroom — flood stage not in reach at this rate.'; cls='warn'; }
+        msg+=' <span style="opacity:.7;font-weight:400">Trend only; tributary inflow can steepen this for 1–2 days after rain.</span>';
+    } else if(falling){
+        msg='<b>Falling '+ftStr+'</b> ('+magStr+') over the last '+R.spanH.toFixed(1)+' h.';
+        msg+=' <span style="opacity:.7;font-weight:400">Wind can mask true level on the downwind shore — read the midline, not spikes.</span>';
+    } else {
+        msg='<b>Holding steady</b> — under 0.05 in/h change over the last '+R.spanH.toFixed(1)+' h.';
+    }
+    el.className='rate-line'+(cls?(' '+cls):''); el.innerHTML=msg; el.style.display='block';
+}
+
 // ─────────────────────────────────────────────────────────
 // RENDER: BEACON
 // ─────────────────────────────────────────────────────────
@@ -2224,6 +2289,7 @@ function renderBeacon(ft, series) {
     }
 
     document.getElementById('toFlood').textContent = `${(CFG.floodStage - ft).toFixed(2)} ft`;
+    renderRate(ft, series);
 
     let tsStr = '';
     if (series && series.length) {
