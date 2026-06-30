@@ -2065,7 +2065,7 @@ const PHASE = {
     active:   true,   // storm event Jun 29 2026 — auto-hide when effect passes
     since:    'June 29, 2026 — evening',
     headline: 'Heavy rain — basin filling',
-    text:     'Environment Canada warning tonight: 30\u201360 mm on saturated ground. Lake ~856.4 ft, about 1.6 ft below flood stage. Inflow ~3\u00d7 outflow \u2014 the lake is filling even when the gauge dips. Levels will keep rising 1\u20132 days after the rain stops; wind can push water higher on exposed shores. Not an official forecast \u2014 manitoba.ca/floodinfo.',
+    text:     'Environment Canada warning tonight: 30\u201360 mm on saturated ground. Lake ~856.4 ft, about 1.6 ft below flood stage. Inflow ~3\u00d7 outflow \u2014 the lake is filling even when the gauge dips. Levels will keep rising 1\u20132 days after the rain stops; wind can push water higher on exposed shores.',
 };
 
 // ─────────────────────────────────────────────────────────
@@ -2212,9 +2212,14 @@ var _lastLevelFt = null, _lastLevelSeries = null;
 // de-noised "true level": median of gauge readings within a trailing window,
 // stripping fast wind/seiche slosh that oscillates around the real value.
 function trueLevel(series, ft){
+    // The displayed lake level = the steady water level in the bowl, with the seiche
+    // (wind/pressure slosh) averaged out. Median over a multi-hour window so a single
+    // reading — or a slosh swing — cannot move the number. The seiche cycles over
+    // minutes-to-an-hour and oscillates around the true value, so a 3-hour median
+    // sits on the real level and barely moves between readings.
     if(!series||series.length<3) return ft;
     var newest=series[0].dt?series[0].dt.getTime():Date.now();
-    var win=35*60000, ys=[];
+    var win=3*3600000, ys=[];
     for(var i=0;i<series.length;i++){
         var r=series[i]; if(!r||r.level==null||!r.dt) continue;
         if(newest-r.dt.getTime()>win) break;
@@ -3156,10 +3161,13 @@ async function init() {
         document.getElementById('wxCond').textContent = 'Check weather.gc.ca';
     }
 
+    // ── Single source of truth: the de-seiched lake level, computed once and
+    //    shown identically on the card, the portrait, and the ladder.
+    const trueFt = trueLevel(lakeData, lakeFt);
     // ── Render all
     if (!(LANE.err && LANE.good)) renderBeacon(lakeFt, lakeData);
-    renderBasinStrip(lakeFt, lakeData);
-    renderLadder(lakeFt);
+    renderBasinStrip(trueFt, lakeData);
+    renderLadder(trueFt);
     renderChart(lakeData);
     renderTribs(tribData);
     renderOutlet(outCfs, tribData);
@@ -3291,7 +3299,17 @@ function renderHydro() {
                 data: (function(){
                     // centered rolling median strips the seiche; window scales with range
                     var pts=chartData.map(p=>({x:(p.x instanceof Date?p.x.getTime():new Date(p.x).getTime()), y:p.y}));
-                    var k = hydroDays<=1?3 : hydroDays<=7?7 : hydroDays<=14?13 : 21;
+                    // size the median window by actual reading cadence, targeting a ~4-hour
+                    // smoothing span so the seiche (minutes-to-an-hour slosh) is averaged out
+                    // while the real daily trend survives.
+                    var cadenceMin = 10;
+                    if(pts.length>2){
+                        var totalMin=(pts[pts.length-1].x-pts[0].x)/60000;
+                        cadenceMin=Math.max(1, totalMin/(pts.length-1));
+                    }
+                    var targetSpanMin = hydroDays<=1 ? 60 : 240;   // 1h for intraday, 4h otherwise
+                    var k = Math.max(3, Math.round(targetSpanMin/cadenceMin) | 1);
+                    if(k>pts.length) k=(pts.length|1);
                     var half=k>>1, out=[];
                     for(var i=0;i<pts.length;i++){
                         var a=Math.max(0,i-half), b=Math.min(pts.length-1,i+half);
@@ -3703,6 +3721,7 @@ function renderHFC() {
 // RENDER: BASIN STRIP — visual lake level above-the-fold
 // ─────────────────────────────────────────────────────────
 function renderBasinStrip(ft, series) {
+    // ft here is already the de-seiched true level (passed from the orchestrator)
     if (window.PORTRAIT) PORTRAIT.set({ level: ft });
     if (typeof ft !== 'number' || isNaN(ft)) return;
 
