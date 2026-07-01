@@ -4985,6 +4985,79 @@ function draw(){
         }
         ctxFill([232,238,248],0.13,0,top,W,1.5);
     }
+    /* ── STAFF GAUGE (Phase A) — flood ladder as an in-water post ──
+       Post stands in the water; thresholds are marks ON the post (no lines across
+       the lake). The gauge's own waterline = the current true level; marks above it
+       are crisp ink (dry, threat ahead), marks below it are faint water-tinted
+       "drowned etchings" (already passed). All positions recompute live from lvlFt. */
+    (function(){
+        var GX  = W*0.80;                    // post x (tunable)
+        var yWL = horizonY + 0.34*waterH;    // gauge waterline = current level
+        var S   = 0.12*Hh;                   // pixels per foot
+        var lv  = lvlFt;
+        var marks = [
+            {ft:858.0, lab:'FLOOD 858'},
+            {ft:857.0, lab:'CRIT 857'},
+            {ft:856.5, lab:'HIGH 856.5'},
+            {ft:855.5, lab:'ELEV 855.5'}
+        ];
+        var tickY = function(ft){ return yWL - (ft - lv)*S; };
+        var ys = marks.map(function(m){ return tickY(m.ft); });
+        var topY = Math.max(horizonY+4, Math.min.apply(null, ys) - 10*rs);
+        var botY = Math.min(Hh-3*rs, Math.max.apply(null, ys) + 8*rs);
+        var pw   = Math.max(3, 3.2*rs);
+        var inkC = [26,22,20];
+        var postC= mx(pal.low, inkC, 0.55);
+
+        ctx.save();
+        ctx.lineCap='butt';
+        // wet part of the post (below waterline) — water-tinted, faint
+        if(botY > yWL){
+            ctx.fillStyle = cl(postC, 0.30);
+            ctx.fillRect(GX - pw/2, yWL, pw, botY - yWL);
+            ctx.fillStyle = cl([120,150,180], 0.22);
+            ctx.fillRect(GX - pw/2, yWL, pw, botY - yWL);
+        }
+        // dry part of the post (above waterline) — solid ink
+        if(yWL > topY){
+            ctx.fillStyle = cl(postC, 0.82);
+            ctx.fillRect(GX - pw/2, topY, pw, yWL - topY);
+            ctx.fillStyle = cl([235,230,220], 0.14);      // lit left edge
+            ctx.fillRect(GX - pw/2, topY, 1, yWL - topY);
+        }
+        // cap so it reads as a deliberate gauge post
+        ctx.fillStyle = cl(postC, 0.82);
+        ctx.fillRect(GX - pw*0.9, topY, pw*1.8, 2*rs);
+
+        // waterline accent where the lake meets the post
+        ctx.strokeStyle = cl([232,238,248], 0.5); ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(GX - pw*1.4, yWL + Math.sin(tt*1.6)*0.6);
+        ctx.lineTo(GX + pw*1.4, yWL);
+        ctx.stroke();
+
+        // marks + monochrome ink labels
+        var fs = Math.max(8, Math.min(11, Math.round(9*rs)));
+        ctx.font = '600 ' + fs + 'px ui-monospace, "SFMono-Regular", Menlo, monospace';
+        ctx.textBaseline='middle'; ctx.textAlign='right';
+        for(var i=0;i<marks.length;i++){
+            var y = tickY(marks[i].ft);
+            if(y < horizonY+2 || y > Hh-2) continue;        // stay within the water scene
+            var submerged = (marks[i].ft < lv - 0.001);
+            var tl = pw*1.9;
+            if(submerged){                                   // drowned etching
+                ctx.strokeStyle = cl([150,180,205], 0.42); ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.moveTo(GX - tl, y); ctx.lineTo(GX + tl, y); ctx.stroke();
+                ctx.fillStyle = cl([150,180,205], 0.55);
+            } else {                                         // crisp ink
+                ctx.strokeStyle = cl(inkC, 0.85); ctx.lineWidth = 1.4;
+                ctx.beginPath(); ctx.moveTo(GX - tl, y); ctx.lineTo(GX + tl, y); ctx.stroke();
+                ctx.fillStyle = cl(inkC, 0.9);
+            }
+            ctx.fillText(marks[i].lab, GX - tl - 3*rs, y);
+        }
+        ctx.restore();
+    })();
     /* beacon */
     const bxp=W*0.885, byp=horizonY-6;
     ctx.fillStyle='rgba(12,16,30,0.9)'; ctx.fillRect(bxp-1.2,byp-11,2.4,11);
