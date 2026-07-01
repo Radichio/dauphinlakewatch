@@ -1783,7 +1783,7 @@
 
         <!-- SCENARIO TRACKER -->
         <div class="card" style="margin-bottom:0">
-            <div class="card-label">Spring Scenario Tracker &nbsp;·&nbsp; Projected Peak Range</div>
+            <div class="card-label">Scenario Tracker &nbsp;·&nbsp; Projected Peak Range</div>
             <div class="scenario-stack" id="scenarioStack">
                 <!-- Rendered from SCENARIOS config in JS -->
             </div>
@@ -1986,44 +1986,35 @@ const BULLETINS = [
 // Rebuild will pick these up automatically.
 // ─────────────────────────────────────────────────────────
 const SCENARIOS = {
-    revised:  'June 4, 2026',
-    note:     'iConnect Studio analysis — revised June 4. The late-May rain pulse delivered the season\'s second peak, cresting near 856.5 ft before the outlet — running above 230% of rated — pulled the lake back into drawdown. Tributaries remain elevated but stable. The remaining question is Sunday\'s rain (June 7) on a saturated basin: a modest delivery extends the drawdown timeline; a heavy one buys a brief bump. No pathway to the upper bands appears in any forecast model.',
+    revised:  'June 30, 2026',
+    note:     'Bands map onto the Manitoba Hydrologic Forecast Centre\'s official envelope (Flood Bulletin #8, June 29): Dauphin Lake forecast to rise 1\u20133 ft over the coming days. From the current 857.2 ft, that puts the entire official range at or above flood stage (858.0) \u2014 so crossing flood stage is the floor of the forecast, not a scenario. Probabilities below distribute the province\'s stated 1\u20133 ft range from 857.2, with the outlet capped (inflow far exceeds drainable outflow, current computed rise ~0.9 ft/day) and a severe tail for wind setup, which can stack additional feet on the downwind shore. Verified inputs: level 857.2 ft (Water Survey), flood stage 858.0, 2011 record 860.76. Distribution within the official range carries iConnect Studio judgment; the envelope itself is the province\'s.',
     bands: [
         {
-            key:   'fav',
-            cls:   's-fav',
-            prob:  '~50%',
-            color: 'var(--green)',
-            name:  'Favourable',
-            range: '855.5 – 856.5 ft',
-            desc:  'Rain inputs offset by ongoing drawdown. Lake holds near current level or continues easing toward operating range. Minor low-lying impacts only.',
+            key:   'hold',
+            cls:   's-unfav',
+            prob:  '~15%',
+            color: 'var(--amber)',
+            name:  'Low end holds',
+            range: '857.2 – 858.2 ft',
+            desc:  'Drainage catches up faster than modeled and the rise stalls near the bottom of the province\'s range \u2014 just crossing flood stage. Best realistic case given the official forecast. Active sandbagging still warranted.',
         },
         {
             key:   'likely',
-            cls:   's-likely',
-            prob:  '~40%',
-            color: 'var(--yellow)',
+            cls:   's-severe',
+            prob:  '~60%',
+            color: 'var(--red)',
             name:  'Most Likely',
-            range: '856.5 – 857.5 ft',
-            desc:  'Forecast rain delivers above expectation or arrives faster than the basin can drain. Brief bump into mid-band before drawdown resumes. Above operating range, low-lying impacts.',
-        },
-        {
-            key:   'unfav',
-            cls:   's-unfav',
-            prob:  '~8%',
-            color: 'var(--amber)',
-            name:  'Unfavourable',
-            range: '857.5 – 858.5 ft',
-            desc:  'Significant above-forecast rain combined with reduced drainage. Approaching flood stage. Active sandbagging warranted.',
+            range: '858.2 – 859.5 ft',
+            desc:  'Central case: the mid-range of the province\'s 1\u20133 ft forecast. Solidly above flood stage (858.0). Low-lying properties flood; sandbag vulnerable points now.',
         },
         {
             key:   'severe',
             cls:   's-severe',
-            prob:  '~2%',
+            prob:  '~25%',
             color: 'var(--red)',
             name:  'Severe',
-            range: '858.5 ft+',
-            desc:  'Unforeseen storm forcing not currently in any forecast model. Flooding above historical operating range.',
+            range: '859.5 – 860.5 ft+',
+            desc:  'High end of the province\'s range, or wind setup stacking on top of the base level, pushes toward the 2011 record (860.76). Significant shoreline flooding and wave damage possible. Follow RM and provincial emergency guidance.',
         },
     ],
 };
@@ -2575,8 +2566,8 @@ function renderChart(liveData) {
                 // 2026 live — bold blue solid
                 { label:'2026  Live',              data:live26,     borderColor:'#2c5f7c', borderWidth:3.5, showLine:true, pointRadius:0, tension:.3, borderDash:[] },
                 // Projections — dashed, thinner
-                { label:'2026  Most Likely (55%)', data:scenLikely, borderColor:'#2c5f7c', borderWidth:1.5, showLine:true, pointRadius:0, tension:.4, borderDash:[7,4] },
-                { label:'2026  Unfavourable (25%)',data:scenUnfav,  borderColor:'#b84c00', borderWidth:1.5, showLine:true, pointRadius:0, tension:.4, borderDash:[7,4] },
+                { label:'2026  Most Likely (60%)', data:scenLikely, borderColor:'#b84c00', borderWidth:1.5, showLine:true, pointRadius:0, tension:.4, borderDash:[7,4] },
+                { label:'2026  Severe (25%)',data:scenUnfav,  borderColor:'#8b0000', borderWidth:1.5, showLine:true, pointRadius:0, tension:.4, borderDash:[7,4] },
             ]
         },
         options: {
@@ -3579,7 +3570,15 @@ function renderBulletin(lakeFt, outCfs, tribData, lakeData) {
     document.getElementById('bulletinTitle').textContent = bannerTitle;
 
     // ── Phase: the entire substance of the banner now
-    document.getElementById('bulletinPhase').textContent = PHASE.text;
+    // Render bulletin body as HTML so official source URLs become clickable.
+    // Only the two known provincial URLs are linkified; nothing else is interpreted.
+    (function(){
+        var t = PHASE.text
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        t = t.replace(/manitoba\.ca\/floodinfo/g,'<a href="https://www.manitoba.ca/floodinfo/" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">manitoba.ca/floodinfo</a>');
+        t = t.replace(/manitoba511\.ca/g,'<a href="https://www.manitoba511.ca/" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">manitoba511.ca</a>');
+        document.getElementById('bulletinPhase').innerHTML = t;
+    })();
 
     // Data line removed — redundant with cards below. Leave element empty.
     document.getElementById('bulletinText').textContent  = '';
