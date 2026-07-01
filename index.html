@@ -2116,7 +2116,7 @@ const PHASE = {
     active:   true,   // storm event Jun 29 2026 — auto-hide when effect passes
     since:    'June 30, 2026',
     headline: 'FLOOD WARNING — lake in CRITICAL, rising toward flood stage',
-    text:     'Dauphin Lake is at 857.5 ft \u2014 in the CRITICAL band, about 0.5 ft below flood stage (858.0). Manitoba\'s Hydrologic Forecast Centre (Flood Bulletin #8) has an overland flood warning in effect and forecasts lakes including Dauphin to rise 1\u20133 ft over the coming days, which would cross flood stage. Inflow still far exceeds what the outlet can drain, so the lake keeps filling even when the hourly gauge dips on wind. Sandbag vulnerable low points now \u2014 the RM has sandbags available. Avoid flooded roads and fast-moving water; conditions can change with little notice. Official guidance: manitoba.ca/floodinfo \u00b7 road closures: manitoba511.ca.',
+    text:     'Dauphin Lake is at {STATE}. Manitoba\'s Hydrologic Forecast Centre (Flood Bulletin #8) has an overland flood warning in effect and forecasts lakes including Dauphin to rise 1\u20133 ft over the coming days, which would cross flood stage. Inflow still far exceeds what the outlet can drain, so the lake keeps filling even when the hourly gauge dips on wind. Sandbag vulnerable low points now \u2014 the RM has sandbags available. Avoid flooded roads and fast-moving water; conditions can change with little notice. Official guidance: manitoba.ca/floodinfo \u00b7 road closures: manitoba511.ca.',
 };
 
 // ─────────────────────────────────────────────────────────
@@ -2366,7 +2366,7 @@ function renderRate(ft, series){
             msg='<b>Rising \u2014 flood stage likely in '+vEtaStr+'.</b> '
               + 'The outlet gauge is jumping faster right now, but that\'s partly wind pushing water onto the gauge; '
               + 'measured by actual inflow (\u2248'+Math.round(Bv.inflow)+' cfs entering vs '+Math.round(Bv.outflow)+' draining), the lake is truly filling about '+volFtDay.toFixed(2)+' ft/day. '
-              + '<span style="opacity:.7;font-weight:400">Matches the provincial forecast of a 1\u20133 ft rise over the coming days. Sandbag now; the rise is steady, not sudden.</span>';
+              + '<span style="opacity:.7;font-weight:400">This treats the lake as a fixed basin; because it spreads onto flat shoreland as it rises, the true climb runs somewhat slower. The provincial forecast of a 1\u20133 ft rise over the coming days already accounts for that spread \u2014 plan against it. Sandbag now; the rise is steady, not sudden.</span>';
             cls='warn';
         } else {
             msg='<b>Rising '+ftStr+'</b> ('+magStr+') over the last '+R.spanH.toFixed(1)+' h.';
@@ -2915,11 +2915,11 @@ function renderOutlet(cfs, tribData) {
     if (overCapacity) {
         const LAKE_AREA_FT2 = 5597233408; // Dauphin Lake 520 km2 (verified) * 10,763,910.4 ft2/km2
         const ratePerDay = (gap * 86400) / LAKE_AREA_FT2;
-        note = `Outlet is being forced ${overage} cfs above its rated channel capacity by hydraulic head from the elevated lake. This is not additional relief — the channel is under pressure. At current net inflow, the lake rises ~${ratePerDay.toFixed(2)} ft/day. When inflow increases, that rate accelerates — the outlet stays capped near ~${RATED} cfs.${offlineCaveat}`;
+        note = `Outlet is being forced ${overage} cfs above its rated channel capacity by hydraulic head from the elevated lake. This is not additional relief — the channel is under pressure. At current net inflow, the lake rises ~${ratePerDay.toFixed(2)} ft/day (fixed-basin estimate; spreading onto flat shoreland eases the real rise). When inflow increases, that rate accelerates — the outlet stays capped near ~${RATED} cfs.${offlineCaveat}`;
     } else if (cfs / RATED > 0.8) {
         const LAKE_AREA_FT2 = 5597233408; // Dauphin Lake 520 km2 (verified) * 10,763,910.4 ft2/km2
         const ratePerDay = (gap * 86400) / LAKE_AREA_FT2;
-        note = `Outlet at ${pctOfRated.toFixed(0)}% of rated capacity. At current net inflow, the lake rises ~${ratePerDay.toFixed(2)} ft/day. When inflow increases, that rate accelerates — but the outlet stays capped at ~${RATED} cfs.${offlineCaveat}`;
+        note = `Outlet at ${pctOfRated.toFixed(0)}% of rated capacity. At current net inflow, the lake rises ~${ratePerDay.toFixed(2)} ft/day (fixed-basin estimate; spreading onto flat shoreland eases the real rise). When inflow increases, that rate accelerates — but the outlet stays capped at ~${RATED} cfs.${offlineCaveat}`;
     } else {
         note = `Outlet has capacity available. Net inflow ~${gap > 0 ? '+'+gap : gap} cfs.${offlineCaveat}`;
     }
@@ -3288,7 +3288,7 @@ async function init() {
     renderChart(lakeData);
     renderTribs(tribData);
     renderOutlet(outCfs, tribData);
-    renderBulletin(lakeFt, outCfs, tribData, lakeData);
+    renderBulletin(lakeFt, outCfs, tribData, lakeData, trueFt);
     try{ renderRM(); }catch(e){}
     renderScenarios();
     renderHFC();
@@ -3656,7 +3656,7 @@ function renderRM(){
 // ─────────────────────────────────────────────────────────
 // RENDER: BULLETIN BANNER
 // ─────────────────────────────────────────────────────────
-function renderBulletin(lakeFt, outCfs, tribData, lakeData) {
+function renderBulletin(lakeFt, outCfs, tribData, lakeData, trueFt) {
     const banner = document.getElementById('bulletinBanner');
     if (!banner) return;
 
@@ -3725,6 +3725,26 @@ function renderBulletin(lakeFt, outCfs, tribData, lakeData) {
             .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
         t = t.replace(/manitoba\.ca\/floodinfo/g,'<a href="https://www.manitoba.ca/floodinfo/" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">manitoba.ca/floodinfo</a>');
         t = t.replace(/manitoba511\.ca/g,'<a href="https://www.manitoba511.ca/" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">manitoba511.ca</a>');
+        // Live state clause — locked to the SAME true level the card's big number shows
+        // (both come from trueLevel(lakeData, lakeFt)), so the bulletin and card can't drift apart.
+        (function(){
+            var Lb  = (typeof trueFt==='number' && isFinite(trueFt)) ? trueFt : lakeFt;
+            var FSb = (typeof CFG!=='undefined' && CFG.floodStage) ? CFG.floodStage : 858.0;
+            var gapb= FSb - Lb, stateb;
+            if (gapb <= 0.05) {
+                var overb = Lb - FSb;
+                stateb = (overb >= 0.05)
+                    ? Lb.toFixed(2)+' ft \u2014 '+overb.toFixed(1)+' ft over flood stage ('+FSb.toFixed(1)+')'
+                    : Lb.toFixed(2)+' ft \u2014 right at flood stage ('+FSb.toFixed(1)+')';
+            } else {
+                var bandb = (Lb>=857.0)?'in the CRITICAL band'
+                          : (Lb>=856.5)?'in the HIGH band'
+                          : (Lb>=855.5)?'in the ELEVATED band'
+                          : 'below the ELEVATED band';
+                stateb = Lb.toFixed(2)+' ft \u2014 '+bandb+', about '+gapb.toFixed(1)+' ft below flood stage ('+FSb.toFixed(1)+')';
+            }
+            t = t.replace('{STATE}', stateb);
+        })();
         document.getElementById('bulletinPhase').innerHTML = t;
     })();
 
@@ -4985,98 +5005,109 @@ function draw(){
         }
         ctxFill([232,238,248],0.13,0,top,W,1.5);
     }
-    /* ── STAFF GAUGE (Phase A) — flood ladder as an in-water post ──
-       Post stands in the water; thresholds are marks ON the post (no lines across
-       the lake). The gauge's own waterline = the current true level; marks above it
-       are crisp ink (dry, threat ahead), marks below it are faint water-tinted
-       "drowned etchings" (already passed). All positions recompute live from lvlFt. */
+    /* -- FLOOD BEACON GAUGE -- the lighted tower at the far shore reads the lake.
+       Threshold marks run up the tower (ELEV at the waterline, FLOOD at the lamp).
+       A warm glow rises from the base to the current true level; the crowning light
+       intensifies and reddens as the lake climbs toward flood stage. Live from lvlFt. */
     (function(){
-        var GX  = W*0.80;                    // post x (tunable)
-        var yWL = horizonY + 0.34*waterH;    // gauge waterline = current level
-        var S   = 0.12*Hh;                   // pixels per foot
-        var lv  = lvlFt;
-        var marks = [
-            {ft:858.0, lab:'FLOOD 858'},
-            {ft:857.0, lab:'CRIT 857'},
-            {ft:856.5, lab:'HIGH 856.5'},
-            {ft:855.5, lab:'ELEV 855.5'}
-        ];
-        var tickY = function(ft){ return yWL - (ft - lv)*S; };
-        var ys = marks.map(function(m){ return tickY(m.ft); });
-        var topY = Math.max(horizonY+4, Math.min.apply(null, ys) - 10*rs);
-        var botY = Math.min(Hh-3*rs, Math.max.apply(null, ys) + 8*rs);
-        var pw   = Math.max(3, 3.2*rs);
-        var inkC = [26,22,20];
-        var postC= mx(pal.low, inkC, 0.55);
+        var GX    = W*0.855;
+        var baseY = horizonY + 2;                 // planted at the far-shore waterline
+        var H     = Math.max(82, Hh*0.28);        // tower height (prominent, legible)
+        var topY  = baseY - H;
+        var ftLo  = 855.5, ftHi = 858.0;          // ELEV at base -> FLOOD at the lamp
+        var yFor  = function(ft){ var f=(ft-ftLo)/(ftHi-ftLo); f=Math.max(0,Math.min(1,f)); return baseY - f*H; };
+        var wB    = Math.max(5.5, 6*rs);          // base half-width
+        var wT    = Math.max(3.4, 3.8*rs);        // top half-width
+        var halfAt= function(y){ var t=(baseY-y)/H; t=Math.max(0,Math.min(1,t)); return wB+(wT-wB)*t; };
+
+        var lv    = Math.max(ftLo, Math.min(ftHi, lvlFt));
+        var frac  = (lv-ftLo)/(ftHi-ftLo);        // 0 at ELEV, 1 at FLOOD
+        var fillTopY = yFor(lv);
+
+        var night = Math.max(0, Math.min(1, (typeof nightK==='number')?nightK:0));
+        var inkC  = [ 26+(232-26)*night, 22+(232-22)*night, 20+(224-20)*night ]; // dark by day, light by night
+        var bodyC = mx(pal.mid, [232,234,238], 0.55);
+        var fillC = mx([232,176,74], [214,64,42], frac);   // amber -> flood red
 
         ctx.save();
-        ctx.lineCap='butt';
-        // wet part of the post (below waterline) — water-tinted, faint
-        if(botY > yWL){
-            ctx.fillStyle = cl(postC, 0.30);
-            ctx.fillRect(GX - pw/2, yWL, pw, botY - yWL);
-            ctx.fillStyle = cl([120,150,180], 0.22);
-            ctx.fillRect(GX - pw/2, yWL, pw, botY - yWL);
-        }
-        // dry part of the post (above waterline) — solid ink
-        if(yWL > topY){
-            ctx.fillStyle = cl(postC, 0.82);
-            ctx.fillRect(GX - pw/2, topY, pw, yWL - topY);
-            ctx.fillStyle = cl([235,230,220], 0.14);      // lit left edge
-            ctx.fillRect(GX - pw/2, topY, 1, yWL - topY);
-        }
-        // cap so it reads as a deliberate gauge post
-        ctx.fillStyle = cl(postC, 0.82);
-        ctx.fillRect(GX - pw*0.9, topY, pw*1.8, 2*rs);
+        ctx.lineJoin='round';
 
-        // waterline accent where the lake meets the post
-        ctx.strokeStyle = cl([232,238,248], 0.5); ctx.lineWidth = 1;
+        // tower silhouette (tapered)
         ctx.beginPath();
-        ctx.moveTo(GX - pw*1.4, yWL + Math.sin(tt*1.6)*0.6);
-        ctx.lineTo(GX + pw*1.4, yWL);
+        ctx.moveTo(GX-wB, baseY); ctx.lineTo(GX+wB, baseY);
+        ctx.lineTo(GX+wT, topY);  ctx.lineTo(GX-wT, topY);
+        ctx.closePath();
+        ctx.fillStyle = cl(bodyC, night>0.5?0.82:0.93);
+        ctx.fill();
+
+        // clipped interior: form shade + rising level fill
+        ctx.save(); ctx.clip();
+        ctx.fillStyle = cl(mx(bodyC,[10,12,20],0.5), 0.26);
+        ctx.fillRect(GX, topY, wB+2, H);                        // right-side form shading
+        if(baseY - fillTopY > 0.5){
+            var gg = ctx.createLinearGradient(0, baseY, 0, fillTopY);
+            gg.addColorStop(0, cl(fillC, 0.32));
+            gg.addColorStop(1, cl(fillC, 0.60));
+            ctx.fillStyle = gg;
+            ctx.fillRect(GX-wB-1, fillTopY, (wB+1)*2, baseY-fillTopY);
+        }
+        ctx.restore();                                          // release clip
+
+        // bright current-level surface line (the reading)
+        var hwF = halfAt(fillTopY);
+        ctx.strokeStyle = cl(mx(fillC,[255,246,232],0.5), 0.96);
+        ctx.lineWidth = 1.8;
+        ctx.beginPath(); ctx.moveTo(GX-hwF-2, fillTopY); ctx.lineTo(GX+hwF+2, fillTopY); ctx.stroke();
+
+        // tower edges
+        ctx.strokeStyle = cl(mx(bodyC,[12,14,22],0.55), night>0.5?0.5:0.72);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(GX-wB, baseY); ctx.lineTo(GX-wT, topY);
+        ctx.moveTo(GX+wB, baseY); ctx.lineTo(GX+wT, topY);
         ctx.stroke();
 
-        // marks + monochrome ink labels
-        var fs = Math.max(8, Math.min(11, Math.round(9*rs)));
-        ctx.font = '600 ' + fs + 'px ui-monospace, "SFMono-Regular", Menlo, monospace';
+        // threshold marks + labels (left of the tower)
+        var marks=[{ft:858.0,lab:'FLOOD 858'},{ft:857.0,lab:'CRIT 857'},{ft:856.5,lab:'HIGH 856.5'},{ft:855.5,lab:'ELEV 855.5'}];
+        var fs = Math.max(9, Math.min(11, Math.round(10*rs)));
+        ctx.font = '600 '+fs+'px ui-monospace, Menlo, monospace';
         ctx.textBaseline='middle'; ctx.textAlign='right';
         for(var i=0;i<marks.length;i++){
-            var y = tickY(marks[i].ft);
-            if(y < horizonY+2 || y > Hh-2) continue;        // stay within the water scene
-            var submerged = (marks[i].ft < lv - 0.001);
-            var tl = pw*1.9;
-            if(submerged){                                   // drowned etching
-                ctx.strokeStyle = cl([150,180,205], 0.42); ctx.lineWidth = 1;
-                ctx.beginPath(); ctx.moveTo(GX - tl, y); ctx.lineTo(GX + tl, y); ctx.stroke();
-                ctx.fillStyle = cl([150,180,205], 0.55);
-            } else {                                         // crisp ink
-                ctx.strokeStyle = cl(inkC, 0.85); ctx.lineWidth = 1.4;
-                ctx.beginPath(); ctx.moveTo(GX - tl, y); ctx.lineTo(GX + tl, y); ctx.stroke();
-                ctx.fillStyle = cl(inkC, 0.9);
-            }
-            ctx.fillText(marks[i].lab, GX - tl - 3*rs, y);
+            var y=yFor(marks[i].ft), hwm=halfAt(y);
+            var reached=(marks[i].ft <= lv + 0.001);
+            if(reached){ ctx.strokeStyle=cl(mx(fillC,[255,246,228],0.45),0.96); ctx.lineWidth=1.9; }
+            else       { ctx.strokeStyle=cl(inkC,0.9); ctx.lineWidth=1.3; }
+            ctx.beginPath(); ctx.moveTo(GX-hwm-3, y); ctx.lineTo(GX+hwm+3, y); ctx.stroke();
+            ctx.fillStyle = reached ? cl(mx(fillC,[255,244,224],0.5),0.98) : cl(inkC,0.94);
+            ctx.fillText(marks[i].lab, GX-hwm-6, y);
         }
-        ctx.restore();
-    })();
-    /* beacon */
-    const bxp=W*0.885, byp=horizonY-6;
-    ctx.fillStyle='rgba(12,16,30,0.9)'; ctx.fillRect(bxp-1.2,byp-11,2.4,11);
-    let lightOn=true, lc=[191,227,192];
-    if(IN.rainSoon){ lightOn=Math.sin(tt*3.6)>0; lc=[244,178,102]; }
-    if(lightOn){
-        const pulse=0.7+0.2*Math.sin(tt*1.3);
-        const rg2=ctx.createRadialGradient(bxp,byp-12,0,bxp,byp-12,12);
+
+        // lamp housing + crowning light (flood-proximity coloured)
+        ctx.fillStyle = cl(mx(bodyC,[12,14,22],0.5), 0.92);
+        ctx.fillRect(GX-wT-1, topY-5*rs, (wT+1)*2, 5*rs);
+        var lc, spd=1.3, glow=0.6;
+        if(frac>=0.92){ lc=[236,92,72];  spd=3.4; glow=0.86; }      // at/over flood: urgent red, fast
+        else if(frac>=0.72){ lc=[247,188,110]; spd=2.2; glow=0.76; }// approaching: amber
+        else { lc=[150,214,164]; spd=1.3; glow=0.60; }              // calm: green
+        if(IN.rainSoon && frac<0.72){ lc=[244,178,102]; spd=3.0; }
+        var pulse=glow+0.22*Math.sin(tt*spd);
+        var glowY=topY-4*rs, R=Math.max(14,16*rs);
+        var rg2=ctx.createRadialGradient(GX,glowY,0,GX,glowY,R);
         rg2.addColorStop(0, cl(lc,0.95*pulse));
-        rg2.addColorStop(0.22, cl(lc,0.42*pulse));
+        rg2.addColorStop(0.24, cl(lc,0.44*pulse));
         rg2.addColorStop(1, cl(lc,0));
         ctx.fillStyle=rg2;
-        ctx.beginPath(); ctx.arc(bxp,byp-12,12,0,6.283); ctx.fill();
-        for(let i=0;i<5;i++){
-            const ry=horizonY+3+i*5+Math.sin(tt*2+i)*1.5;
-            ctx.strokeStyle=cl(lc,0.10+Math.random()*0.10); ctx.lineWidth=1;
-            ctx.beginPath(); ctx.moveTo(bxp-3,ry); ctx.lineTo(bxp+3,ry); ctx.stroke();
+        ctx.beginPath(); ctx.arc(GX,glowY,R,0,6.283); ctx.fill();
+
+        // light reflection shimmer on the near water
+        for(var r2=0;r2<6;r2++){
+            var ry=horizonY+3+r2*5+Math.sin(tt*2+r2)*1.5;
+            ctx.strokeStyle=cl(lc,(0.10+Math.random()*0.10)*pulse); ctx.lineWidth=1;
+            ctx.beginPath(); ctx.moveTo(GX-3, ry); ctx.lineTo(GX+3, ry); ctx.stroke();
         }
-    }
+
+        ctx.restore();
+    })();
     /* branch — foliage calendar + wind manners */
     ctx.lineCap='round';
     const swA=(0.25+k*2.6)*0.85;
