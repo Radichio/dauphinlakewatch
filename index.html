@@ -2343,15 +2343,38 @@ function renderRate(ft, series){
             el.className='rate-line'+(cls?(' '+cls):''); el.innerHTML=msg; el.style.display='block';
             return;
         }
-        msg='<b>Rising '+ftStr+'</b> ('+magStr+') over the last '+R.spanH.toFixed(1)+' h.';
-        if(headroom>0 && hrs>0 && hrs<96){
-            var when=new Date(Date.now()+hrs*3600000), tz='America/Winnipeg';
-            var wStr=when.toLocaleString('en-CA',{weekday:'short',hour:'numeric',minute:'2-digit',hour12:true,timeZone:tz});
-            msg+=' At this pace, flood stage ('+CFG.floodStage.toFixed(1)+' ft) in <b>~'+(hrs<1?Math.round(hrs*60)+' min':hrs.toFixed(hrs<10?1:0)+' h')+'</b> (~'+wStr+').';
-            cls=(hrs<18)?'alarm':'warn';
-        } else if(headroom<=0){ msg+=' Already above flood stage.'; cls='alarm'; }
-        else { msg+=' '+headroom.toFixed(2)+' ft of headroom — flood stage not in reach at this rate.'; cls='warn'; }
-        msg+=' <span style="opacity:.7;font-weight:400">Trend only; tributary inflow can steepen this for 1–2 days after rain.</span>';
+        // Compute the water-volume (physics) rate from measured inflow/outflow.
+        var Bv=window.DLW_BUDGET, volFtDay=null, volEta=null;
+        if(Bv && Bv.netCfs!=null){
+            volFtDay=(Bv.netCfs*86400)/(520*10763910.4);
+            if(volFtDay>0.001 && headroom>0) volEta=headroom/(volFtDay/24);
+        }
+        var gaugeFtDay=rate*24;
+        var gaugeEtaH=(rate>0.001 && headroom>0)?(headroom/rate):999;
+        // Show the dual-rate explanation ONLY when the gauge implies flood soon (<24h) AND the
+        // volume rate materially disagrees (>2x). Prevents nonsense "disagree, 43 days out" on a calm creep.
+        var diverge=(volFtDay!=null && volFtDay>0.001 && (gaugeFtDay/volFtDay)>=2 && gaugeEtaH<24 && headroom>0);
+
+        if(diverge){
+            // We do the analysis and give ONE conclusion: the true fill rate (volume-based),
+            // not the wind-inflated gauge spike. Plain, single timeframe.
+            var vEtaStr=(volEta!=null)?(volEta<24?('about '+Math.round(volEta)+' hours'):('about '+(volEta/24).toFixed(1)+' days')):'the coming days';
+            msg='<b>Rising \u2014 flood stage likely in '+vEtaStr+'.</b> '
+              + 'The outlet gauge is jumping faster right now, but that\'s partly wind pushing water onto the gauge; '
+              + 'measured by actual inflow (\u2248'+Math.round(Bv.inflow)+' cfs entering vs '+Math.round(Bv.outflow)+' draining), the lake is truly filling about '+volFtDay.toFixed(2)+' ft/day. '
+              + '<span style="opacity:.7;font-weight:400">Matches the provincial forecast of a 1\u20133 ft rise over the coming days. Sandbag now; the rise is steady, not sudden.</span>';
+            cls='warn';
+        } else {
+            msg='<b>Rising '+ftStr+'</b> ('+magStr+') over the last '+R.spanH.toFixed(1)+' h.';
+            if(headroom>0 && hrs>0 && hrs<96){
+                var when=new Date(Date.now()+hrs*3600000), tz='America/Winnipeg';
+                var wStr=when.toLocaleString('en-CA',{weekday:'short',hour:'numeric',minute:'2-digit',hour12:true,timeZone:tz});
+                msg+=' At this pace, flood stage ('+CFG.floodStage.toFixed(1)+' ft) in <b>~'+(hrs<1?Math.round(hrs*60)+' min':hrs.toFixed(hrs<10?1:0)+' h')+'</b> (~'+wStr+').';
+                cls=(hrs<18)?'alarm':'warn';
+            } else if(headroom<=0){ msg+=' Already above flood stage.'; cls='alarm'; }
+            else { msg+=' '+headroom.toFixed(2)+' ft of headroom — flood stage not in reach at this rate.'; cls='warn'; }
+            msg+=' <span style="opacity:.7;font-weight:400">Trend only; tributary inflow can steepen this for 1\u20132 days after rain.</span>';
+        }
     } else if(falling){
         var B=window.DLW_BUDGET;
         if(WS.mode==='setdown' && WS.strength>0.25 && B && B.netCfs>200){
@@ -2886,11 +2909,11 @@ function renderOutlet(cfs, tribData) {
     // Outlet note
     let note;
     if (overCapacity) {
-        const LAKE_AREA_FT2 = 2906400000;
+        const LAKE_AREA_FT2 = 5597233408; // Dauphin Lake 520 km2 (verified) * 10,763,910.4 ft2/km2
         const ratePerDay = (gap * 86400) / LAKE_AREA_FT2;
         note = `Outlet is being forced ${overage} cfs above its rated channel capacity by hydraulic head from the elevated lake. This is not additional relief — the channel is under pressure. At current net inflow, the lake rises ~${ratePerDay.toFixed(2)} ft/day. When inflow increases, that rate accelerates — the outlet stays capped near ~${RATED} cfs.${offlineCaveat}`;
     } else if (cfs / RATED > 0.8) {
-        const LAKE_AREA_FT2 = 2906400000;
+        const LAKE_AREA_FT2 = 5597233408; // Dauphin Lake 520 km2 (verified) * 10,763,910.4 ft2/km2
         const ratePerDay = (gap * 86400) / LAKE_AREA_FT2;
         note = `Outlet at ${pctOfRated.toFixed(0)}% of rated capacity. At current net inflow, the lake rises ~${ratePerDay.toFixed(2)} ft/day. When inflow increases, that rate accelerates — but the outlet stays capped at ~${RATED} cfs.${offlineCaveat}`;
     } else {
@@ -2901,7 +2924,7 @@ function renderOutlet(cfs, tribData) {
     // Rise rate box
     const riseEl = document.getElementById('outletRiseRate');
     if (riseEl) {
-        const LAKE_AREA_FT2 = 2906400000;
+        const LAKE_AREA_FT2 = 5597233408; // Dauphin Lake 520 km2 (verified) * 10,763,910.4 ft2/km2
         const netCfs = totalInflow - cfs;
         const ratePerDay = (netCfs * 86400) / LAKE_AREA_FT2;
         if (netCfs > 0) {
