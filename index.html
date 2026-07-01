@@ -2094,15 +2094,18 @@ const RM_INFO = {
     lines: [
         'The RM of Lakeshore has declared a <b>State of Local Emergency</b> (effective June 30, in effect until July 30 unless ended earlier) due to heavy rainfall, overland flooding, and washed-out roads.',
         '<b>Sandbags</b> are available at the RM <b>Ochre River office</b>.',
-        '<b>After-hours sandbag assistance:</b> Mike Brunen.',
         '<b>Water is flowing across several roadways</b> — use extreme caution on gravel roads over the next 48 hours. Public Works is placing signs and closing roads as conditions require.',
     ],
-    phone:    '204-648-6471',
-    phoneLabel:'Call Mike Brunen (after-hours sandbags)',
-    fbUrl:    'https://www.facebook.com/people/RM-of-Lakeshore/',
+    phones: [
+        { num:'204-732-2333', label:'RM office' },
+        { num:'204-648-6471', label:'After-hours sandbags (Mike Brunen)' },
+    ],
+    fbUrl:    'https://www.facebook.com/profile.php?id=100068951268047',
     fbLabel:  'RM of Lakeshore on Facebook',
-    govLabel: 'Provincial flood info',
-    govUrl:   'https://www.manitoba.ca/floodinfo/',
+    bulletinUrl:   'https://news.gov.mb.ca/news/index.html?item=74378',
+    bulletinLabel: 'Province: current Dauphin Lake flood bulletin',
+    bulletinsIndexUrl:  'https://news.gov.mb.ca/news/index.html',
+    bulletinsIndexLabel:'All Manitoba flood bulletins (newest)',
 };
 
 const PHASE = {
@@ -2253,6 +2256,18 @@ function trendOf(series) {
 }
 
 var _lastLevelFt = null, _lastLevelSeries = null;
+var OUTLET_BEARING = 0;   // Mossy River outlet is at the NORTH end of the lake (verified: Wikipedia, Dauphin Lake IWMP)
+function windSetup(){
+    // returns {mode:'setup'|'setdown'|'cross'|null, strength:0..1, dir, kmh}
+    var B=window.DLW_BUDGET; if(!B||B.windDir==null||B.windKmh==null||B.windKmh<12) return {mode:null};
+    var toward=(B.windDir+180)%360;                 // direction water is pushed
+    var toOutlet=Math.abs(((toward-OUTLET_BEARING)%360+540)%360-180);   // 0 = straight at outlet
+    var away=Math.abs(((toward-((OUTLET_BEARING+180)%360))%360+540)%360-180); // 0 = straight away
+    var sp=Math.min(1,(B.windKmh-12)/28);           // 12->0, 40->1
+    if(toOutlet<=55) return {mode:'setup',   strength:sp*(1-toOutlet/55), dir:B.windDir, kmh:B.windKmh};
+    if(away<=55)     return {mode:'setdown', strength:sp*(1-away/55),     dir:B.windDir, kmh:B.windKmh};
+    return {mode:'cross', strength:0, dir:B.windDir, kmh:B.windKmh};
+}
 // de-noised "true level": median of gauge readings within a trailing window,
 // stripping fast wind/seiche slosh that oscillates around the real value.
 function trueLevel(series, ft){
@@ -2308,8 +2323,26 @@ function renderRate(ft, series){
     var mag=Math.abs(inPerH);
     var magStr=(mag>=1)?mag.toFixed(1)+' in/h':(Math.abs(rate*12).toFixed(2)+' in/h');
     var ftStr=(Math.abs(rate)>=0.1)?Math.abs(rate).toFixed(2)+' ft/h':Math.abs(rate).toFixed(3)+' ft/h';
+    var WS=windSetup();
     if(rising){
         var hrs=headroom/rate;
+        // Wind-setup guard: gauge rise partly wind pushed onto the outlet -> don't alarm on it.
+        if(WS.mode==='setup' && WS.strength>0.25){
+            var Bb=window.DLW_BUDGET, note='';
+            if(Bb && Bb.netCfs>0){
+                // volume-balance rate: net cfs over Dauphin Lake's 520 km^2 surface
+                var volFtPerDay=(Bb.netCfs*86400)/(520*10763910.4);
+                var volEta=headroom/(volFtPerDay/24);
+                note=' By water volume (inflow minus outflow), the true fill is about '
+                    +volFtPerDay.toFixed(2)+' ft/day'
+                    +(volEta>0&&volEta<240?(' \u2014 flood stage roughly '+(volEta<24?Math.round(volEta)+' h':(volEta/24).toFixed(1)+' days')+' out at that pace'):'')+'.';
+            }
+            msg='<b>Gauge rising '+ftStr+'</b>, but a '+Math.round(WS.kmh)+' km/h wind is pushing water toward the outlet \u2014 part of this reading is wind setup, not fill.'+note
+                +' <span style="opacity:.7;font-weight:400">The provincial forecast (rise over days) is the better guide than the short-term gauge rate.</span>';
+            cls='warn';
+            el.className='rate-line'+(cls?(' '+cls):''); el.innerHTML=msg; el.style.display='block';
+            return;
+        }
         msg='<b>Rising '+ftStr+'</b> ('+magStr+') over the last '+R.spanH.toFixed(1)+' h.';
         if(headroom>0 && hrs>0 && hrs<96){
             var when=new Date(Date.now()+hrs*3600000), tz='America/Winnipeg';
@@ -2321,6 +2354,15 @@ function renderRate(ft, series){
         msg+=' <span style="opacity:.7;font-weight:400">Trend only; tributary inflow can steepen this for 1–2 days after rain.</span>';
     } else if(falling){
         var B=window.DLW_BUDGET;
+        if(WS.mode==='setdown' && WS.strength>0.25 && B && B.netCfs>200){
+            var volFtPerDay2=(B.netCfs*86400)/(520*10763910.4);
+            msg='<b>Gauge dropping</b>, but a '+Math.round(WS.kmh)+' km/h wind is pushing water away from the outlet \u2014 this is wind setdown, not the lake emptying. '
+              + 'Inflow still exceeds outflow (~'+Math.round(B.inflow)+' vs '+Math.round(B.outflow)+' cfs); by volume the lake is filling ~'+volFtPerDay2.toFixed(2)+' ft/day.'
+              + ' <span style="opacity:.7;font-weight:400">Watch the trend over hours, not the last reading.</span>';
+            cls='warn';
+            el.className='rate-line'+(cls?(' '+cls):''); el.innerHTML=msg; el.style.display='block';
+            return;
+        }
         if(B && B.netCfs>200 && Math.abs(rate)<0.10){
             // gauge dipped, but the water budget says the basin is still filling -> name the contradiction
             var mult=(B.outflow>0)?(B.inflow/B.outflow):0;
@@ -2881,7 +2923,9 @@ function renderOutlet(cfs, tribData) {
 
     // expose the live water budget so the level card's rate line can cross-check
     // the measured gauge slope against inflow-vs-outflow physics
-    window.DLW_BUDGET = { inflow: totalInflow, outflow: cfs, netCfs: totalInflow - cfs };
+    window.DLW_BUDGET = { inflow: totalInflow, outflow: cfs, netCfs: totalInflow - cfs,
+                          windKmh: (IN.windKmh!=null?IN.windKmh:null),
+                          windDir: (typeof windDirNow==='function'? windDirNow() : (IN.wdir!=null?IN.wdir:null)) };
     if (typeof _lastLevelFt === 'number' && typeof _lastLevelSeries !== 'undefined') {
         try { renderRate(_lastLevelFt, _lastLevelSeries); } catch(e){}
     }
@@ -3569,12 +3613,13 @@ function renderRM(){
     document.getElementById('rmBody').innerHTML =
         (RM_INFO.lines||[]).map(function(l){ return '<div class="rm-line">'+l+'</div>'; }).join('');
     var acts=[];
-    if(RM_INFO.phone){
-        var tel=RM_INFO.phone.replace(/[^0-9]/g,'');
-        acts.push('<a class="rm-btn call" href="tel:+1'+tel+'">'+ (RM_INFO.phoneLabel||('Call '+RM_INFO.phone)) +' · '+RM_INFO.phone+'</a>');
-    }
+    (RM_INFO.phones||[]).forEach(function(p){
+        var tel=p.num.replace(/[^0-9]/g,'');
+        acts.push('<a class="rm-btn call" href="tel:+1'+tel+'">\u260e '+p.label+' · '+p.num+'</a>');
+    });
+    if(RM_INFO.bulletinUrl) acts.push('<a class="rm-btn gov" href="'+RM_INFO.bulletinUrl+'" target="_blank" rel="noopener">'+(RM_INFO.bulletinLabel||'Provincial flood bulletin')+'</a>');
+    if(RM_INFO.bulletinsIndexUrl) acts.push('<a class="rm-btn gov" href="'+RM_INFO.bulletinsIndexUrl+'" target="_blank" rel="noopener">'+(RM_INFO.bulletinsIndexLabel||'All flood bulletins')+'</a>');
     if(RM_INFO.fbUrl) acts.push('<a class="rm-btn fb" href="'+RM_INFO.fbUrl+'" target="_blank" rel="noopener">'+(RM_INFO.fbLabel||'RM Facebook')+'</a>');
-    if(RM_INFO.govUrl) acts.push('<a class="rm-btn gov" href="'+RM_INFO.govUrl+'" target="_blank" rel="noopener">'+(RM_INFO.govLabel||'Provincial flood info')+'</a>');
     document.getElementById('rmActions').innerHTML = acts.join('');
     card.style.display='block';
 }
