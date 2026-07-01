@@ -374,6 +374,29 @@
             line-height: 1.5;
         }
 
+        /* ─────────── RM LOCAL EMERGENCY CARD ─────────── */
+        .rm-card {
+            background:#fff; border:1px solid rgba(13,33,55,.12); border-left:5px solid var(--red);
+            border-radius:12px; padding:16px 18px; margin:14px 0 4px;
+            box-shadow:0 2px 10px rgba(13,33,55,.06);
+        }
+        .rm-head { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:10px; }
+        .rm-badge {
+            font-family:var(--mono); font-size:11px; font-weight:700; letter-spacing:.06em;
+            background:var(--red); color:#fff; padding:4px 9px; border-radius:5px; white-space:nowrap;
+        }
+        .rm-auth { font-family:var(--mono); font-size:11px; color:var(--muted); letter-spacing:.02em; }
+        .rm-body { font-size:14px; line-height:1.6; color:var(--ink); }
+        .rm-body .rm-line { margin:5px 0; }
+        .rm-body b { font-weight:700; }
+        .rm-actions { margin-top:12px; display:flex; flex-wrap:wrap; gap:10px; }
+        .rm-btn {
+            font-family:var(--mono); font-size:12px; font-weight:600; letter-spacing:.03em;
+            text-decoration:none; padding:9px 14px; border-radius:7px; display:inline-block;
+        }
+        .rm-btn.call { background:var(--red); color:#fff; }
+        .rm-btn.fb   { background:var(--navy); color:#fff; }
+        .rm-btn.gov  { background:var(--paper); color:var(--navy); border:1px solid rgba(13,33,55,.2); }
         /* ─────────── SCENARIO TRACKER ─────────── */
         .scenario-stack { display: flex; flex-direction: column; gap: 8px; }
         .s-band {
@@ -1123,6 +1146,16 @@
         <button class="tab-btn active" id="tabBtnToday" role="tab" aria-selected="true" onclick="goTab('today')">Wind &amp; Water</button>
         <button class="tab-btn" id="tabBtnFlood" role="tab" aria-selected="false" onclick="goTab('flood')">Flood Watch</button>
     </nav>
+
+    <!-- ══ RM OF LAKESHORE — LOCAL EMERGENCY (operator-curated, sourced) ══ -->
+    <div class="rm-card" id="rmCard" style="display:none;">
+        <div class="rm-head">
+            <span class="rm-badge" id="rmBadge">STATE OF LOCAL EMERGENCY</span>
+            <span class="rm-auth">RM of Lakeshore · local authority for Ochre Beach</span>
+        </div>
+        <div class="rm-body" id="rmBody"></div>
+        <div class="rm-actions" id="rmActions"></div>
+    </div>
 
     <!-- ══ TAB PANEL: TODAY (1 of 3) — basin strip · lake level · situation strip · share card ══ -->
     <div class="tab-panel" data-tab="today" role="tabpanel">
@@ -2052,6 +2085,26 @@ const HFC_REF = {
 // pre-melt · early melt · first pulse active · first pulse winding down ·
 // inter-pulse · second pulse active · peak · post-peak · recovery · dormancy
 // ─────────────────────────────────────────────────────────
+// ── RM of Lakeshore local-authority notices (operator-curated; sourced from the RM).
+//    Update these as the RM posts. Set active:false to hide the whole card. ──
+const RM_INFO = {
+    active:   true,
+    badge:    'STATE OF LOCAL EMERGENCY',
+    since:    'June 30, 2026',
+    lines: [
+        'The RM of Lakeshore has declared a <b>State of Local Emergency</b> (effective June 30, in effect until July 30 unless ended earlier) due to heavy rainfall, overland flooding, and washed-out roads.',
+        '<b>Sandbags</b> are available at the RM <b>Ochre River office</b>.',
+        '<b>After-hours sandbag assistance:</b> Mike Brunen.',
+        '<b>Water is flowing across several roadways</b> — use extreme caution on gravel roads over the next 48 hours. Public Works is placing signs and closing roads as conditions require.',
+    ],
+    phone:    '204-648-6471',
+    phoneLabel:'Call Mike Brunen (after-hours sandbags)',
+    fbUrl:    'https://www.facebook.com/people/RM-of-Lakeshore/',
+    fbLabel:  'RM of Lakeshore on Facebook',
+    govLabel: 'Provincial flood info',
+    govUrl:   'https://www.manitoba.ca/floodinfo/',
+};
+
 const PHASE = {
     active:   true,   // storm event Jun 29 2026 — auto-hide when effect passes
     since:    'June 30, 2026',
@@ -3163,6 +3216,7 @@ async function init() {
     renderTribs(tribData);
     renderOutlet(outCfs, tribData);
     renderBulletin(lakeFt, outCfs, tribData, lakeData);
+    try{ renderRM(); }catch(e){}
     renderScenarios();
     renderHFC();
 
@@ -3503,6 +3557,26 @@ async function shareCard() {
         el.textContent = '✓ Link copied — paste to share';
         setTimeout(() => el.textContent = '', 3000);
     } catch(e) {}
+}
+
+// ─────────────────────────────────────────────────────────
+// RENDER: RM LOCAL-AUTHORITY CARD
+// ─────────────────────────────────────────────────────────
+function renderRM(){
+    var card=document.getElementById('rmCard'); if(!card) return;
+    if(!(RM_INFO && RM_INFO.active)){ card.style.display='none'; return; }
+    document.getElementById('rmBadge').textContent = RM_INFO.badge || 'LOCAL NOTICE';
+    document.getElementById('rmBody').innerHTML =
+        (RM_INFO.lines||[]).map(function(l){ return '<div class="rm-line">'+l+'</div>'; }).join('');
+    var acts=[];
+    if(RM_INFO.phone){
+        var tel=RM_INFO.phone.replace(/[^0-9]/g,'');
+        acts.push('<a class="rm-btn call" href="tel:+1'+tel+'">'+ (RM_INFO.phoneLabel||('Call '+RM_INFO.phone)) +' · '+RM_INFO.phone+'</a>');
+    }
+    if(RM_INFO.fbUrl) acts.push('<a class="rm-btn fb" href="'+RM_INFO.fbUrl+'" target="_blank" rel="noopener">'+(RM_INFO.fbLabel||'RM Facebook')+'</a>');
+    if(RM_INFO.govUrl) acts.push('<a class="rm-btn gov" href="'+RM_INFO.govUrl+'" target="_blank" rel="noopener">'+(RM_INFO.govLabel||'Provincial flood info')+'</a>');
+    document.getElementById('rmActions').innerHTML = acts.join('');
+    card.style.display='block';
 }
 
 // ─────────────────────────────────────────────────────────
