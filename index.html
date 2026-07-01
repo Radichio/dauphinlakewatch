@@ -2946,9 +2946,11 @@ function renderOutlet(cfs, tribData) {
 
     // expose the live water budget so the level card's rate line can cross-check
     // the measured gauge slope against inflow-vs-outflow physics
+    // Read wind from the portrait's PUBLIC interface (debug()), never the inner IN scope.
+    var _wKmh=null, _wDir=null;
+    try{ if(window.PORTRAIT && typeof PORTRAIT.debug==='function'){ var _d=PORTRAIT.debug(); if(_d){ _wKmh=(_d.wind!=null?_d.wind:null); _wDir=(_d.dir!=null?_d.dir:null); } } }catch(e){}
     window.DLW_BUDGET = { inflow: totalInflow, outflow: cfs, netCfs: totalInflow - cfs,
-                          windKmh: (IN.windKmh!=null?IN.windKmh:null),
-                          windDir: (typeof windDirNow==='function'? windDirNow() : (IN.wdir!=null?IN.wdir:null)) };
+                          windKmh: _wKmh, windDir: _wDir };
     if (typeof _lastLevelFt === 'number' && typeof _lastLevelSeries !== 'undefined') {
         try { renderRate(_lastLevelFt, _lastLevelSeries); } catch(e){}
     }
